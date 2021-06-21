@@ -357,7 +357,7 @@ Map<String, dynamic> data = formeKey.data;
 ### validate
 
 ``` Dart
-Map<FormeValueFieldController,String> errors = formKey.validate({bool quietly = false});
+Map<FormeValueFieldController,String> errors = formKey.validate({bool quietly = false,bool notify = true});
 ```
 
 ### set form data
@@ -474,6 +474,12 @@ ValueListenable<bool> focusListenable = field.focusListenable;
 ValueListenable<bool> readOnlyListenable = field.readOnlyListenable;
 ```
 
+### get modelListenable
+
+``` Dart
+ValueListenable<FormeModel> modelListenable = field.modelListenable;
+```
+
 ## Forme Value Field Methods
 
 **FormeValueFieldController is extended FormeFieldController**
@@ -499,7 +505,7 @@ valueField.reset();
 ### validate field
 
 ``` Dart
-String? errorText = valueField.validate({bool quietly = false});
+String? errorText = valueField.validate({bool quietly = false,bool notify = true});
 ```
 
 ### get error
@@ -524,6 +530,12 @@ ValueListenable<FormeValidateError?>  errorTextListenable = valueField.errorText
 
 ``` Dart
 ValueListenable<dynamic> valueListenable = valueField.valueListenable;
+```
+
+### get oldValue
+
+``` Dart
+dynamic value = valueField.oldValue;
 ```
 
 ## build your field

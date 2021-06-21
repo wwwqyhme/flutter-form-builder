@@ -1,3 +1,7 @@
+## 2.0.4+1
+
+1. bug fix: timer in `FormeRawAutocomplete` will be cancelled in dispose !
+
 ## 2.0.4
 
 1. add `modelListenable` on `FormeFieldController`
