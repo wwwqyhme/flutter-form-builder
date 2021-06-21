@@ -141,9 +141,7 @@ class _DemoPageState extends State<DemoPage> {
                 formKey.field('column').model as FormeFlexModel;
             formKey.field('column').model = model.append(FormeNumberField(
               name: Random.secure().nextDouble().toString(),
-              model: FormeNumberFieldModel(
-                textFieldModel: FormeTextFieldModel(),
-              ),
+              decoration: const InputDecoration(),
             ));
           },
           child: Text('append field into dynamic column'),
@@ -225,11 +223,10 @@ class _DemoPageState extends State<DemoPage> {
               },
               decoration: InputDecoration(
                 labelText: 'Text',
-                suffixIcon: Builder(
-                  builder: (context) {
+                suffixIcon: FormeValueFieldBuilder(
+                  builder: (context, controller) {
                     return ValueListenableBuilder<FormeValidateError?>(
-                      valueListenable:
-                          formKey.fieldListenable('text').errorTextListenable,
+                      valueListenable: controller.errorTextListenable,
                       builder: (context, focus, child) {
                         return focus == null || !focus.hasError
                             ? Icon(Icons.check)
@@ -269,14 +266,11 @@ class _DemoPageState extends State<DemoPage> {
             name: 'datetime',
             decoration: InputDecoration(
               labelText: 'DateTime',
-              prefixIcon: Builder(
-                builder: (context) {
+              prefixIcon: FormeValueFieldBuilder(
+                builder: (context, controller) {
                   return IconButton(
                       icon: Icon(Icons.tab),
                       onPressed: () {
-                        FormeValueFieldController<DateTime,
-                                FormeDateTimeFieldModel> controller =
-                            FormeFieldController.of(context);
                         controller.updateModel(FormeDateTimeFieldModel(
                           type: FormeDateTimeFieldType.DateTime,
                         ));
@@ -297,14 +291,11 @@ class _DemoPageState extends State<DemoPage> {
             name: 'cupertinoDatetime',
             decoration: InputDecoration(
               labelText: 'Cupertino DateTime',
-              prefixIcon: Builder(
-                builder: (context) {
+              prefixIcon: FormeValueFieldBuilder(
+                builder: (context, controller) {
                   return IconButton(
                       icon: Icon(Icons.tab),
                       onPressed: () {
-                        FormeValueFieldController<DateTime,
-                                FormeCupertinoDateFieldModel> controller =
-                            FormeFieldController.of(context);
                         controller.updateModel(FormeCupertinoDateFieldModel(
                           type: FormeDateTimeFieldType.Date,
                         ));
@@ -465,16 +456,11 @@ class _DemoPageState extends State<DemoPage> {
           min: 1,
           max: 100,
         ),
-        FormeColumn(
-          name: 'column',
-          children: [],
-        ),
         FormeCupertinoSegmentedControl<String>(
           model: FormeCupertinoSegmentedControlModel<String>(
             padding: const EdgeInsets.symmetric(vertical: 10),
           ),
           decoration: InputDecoration(labelText: 'CupertinoSegmentedControl'),
-          onValueChanged: (c, v) => print('value changed,current value is $v'),
           name: 'segmentedControl',
           chidren: {
             'A': ReadOnlyWidget(
@@ -513,14 +499,8 @@ class _DemoPageState extends State<DemoPage> {
           autovalidateMode: AutovalidateMode.onUserInteraction,
         ),
         FormeCupertinoSlidingSegmentedControl<String>(
-          decoratorBuilder: FormeInputDecoratorBuilder(
-              wrapper: (child) => Padding(
-                    padding: EdgeInsets.symmetric(vertical: 10),
-                    child: child,
-                  ),
-              decoration: InputDecoration(
-                  labelText: 'CupertinoSlidingSegmentedControl')),
-          onValueChanged: (c, v) => print('value changed,current value is $v'),
+          decoration:
+              InputDecoration(labelText: 'CupertinoSlidingSegmentedControl'),
           name: 'segmentedSlidingControl',
           chidren: {
             'A': ReadOnlyWidget(
@@ -655,8 +635,6 @@ class _DemoPageState extends State<DemoPage> {
             });
           },
           decoration: InputDecoration(labelText: 'Autocomplete Text'),
-          model: FormeAutocompleteTextModel<User>(
-              textFieldModel: FormeTextFieldModel(maxLines: 1)),
           name: 'autocomplete',
           validator: (v) => v == null ? 'pls select one !' : null,
         ),
@@ -677,7 +655,7 @@ class _DemoPageState extends State<DemoPage> {
               labelText: 'Async Autocomplete Text',
               suffixIcon: IconButton(
                 onPressed: () {
-                  formKey.valueField('asyncAutocomplete').value = null;
+                  formKey.valueField('asyncAutocomplete').clearValue();
                 },
                 icon: Icon(Icons.clear),
               )),
@@ -691,35 +669,38 @@ class _DemoPageState extends State<DemoPage> {
           name: 'asyncAutocomplete',
           validator: (v) => v == null ? 'pls select one !' : null,
         ),
-        Row(children: [
-          Flexible(
-            flex: 1,
-            child: FormeSlider(
-              decoration: InputDecoration(labelText: 'Slider'),
-              onValueChanged: (m, v) {
-                formKey.valueField('test').value = v!.round();
-              },
-              min: 0,
-              max: 100,
-              name: 'testSlider',
-            ),
+        FormeAsnycAutocompleteChip<User>(
+          optionsBuilder: (v) {
+            if (v.text == '') {
+              return Future.delayed(Duration.zero, () {
+                return Iterable.empty();
+              });
+            }
+            return Future.delayed(Duration(seconds: 8), () {
+              return _userOptions.where((User option) {
+                return option.toString().contains(v.text.toLowerCase());
+              });
+            });
+          },
+          decoration: InputDecoration(labelText: 'Autocomplete Chip'),
+          name: 'autocompleteChip',
+          validator: (v) => v!.isEmpty ? 'pls select one !' : null,
+          model: FormeAsyncAutocompleteChipModel<User>(
+            emptyOptionBuilder: (context) => Text('empty'),
           ),
-          Expanded(
-              child: FormeNumberField(
-            name: 'test',
-            onValueChanged: (m, v) {
-              formKey.valueField('testSlider').value = v?.toDouble() ?? 0.0;
-            },
-            model: FormeNumberFieldModel(allowNegative: false, max: 100),
-          ))
-        ])
+        ),
+        FormeColumn(
+          name: 'column',
+          children: [],
+        ),
       ],
     );
     return Forme(
       child: child,
       key: formKey,
       onValueChanged: (a, b) {
-        print('${a.name} ... value: $b');
+        print(
+            '${a.name}\'s value changed ... value: $b ... old value: ${a.oldValue}');
       },
       onErrorChanged: (a, b) {
         print('${a.name} ... error: ${b?.text}');

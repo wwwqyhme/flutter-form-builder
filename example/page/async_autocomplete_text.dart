@@ -15,6 +15,7 @@ class AsyncAutocompleteText
     return Column(
       children: [
         FormeAsnycAutocompleteText<User>(
+          onFocusChanged: (c, f) => print(f),
           optionsBuilder: (v) {
             if (v.text == '') {
               return Future.delayed(Duration.zero, () {

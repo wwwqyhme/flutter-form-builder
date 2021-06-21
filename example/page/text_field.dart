@@ -26,12 +26,27 @@ class TextFieldPage extends BasePage<String, FormeTextFieldModel> {
               ),
             )));
           },
-          onValueChanged: (c, m) =>
-              print('value changed , current value is $m'),
+          onValueChanged: (c, m) {
+            print(
+                'value changed , current value is $m , old value is ${c.oldValue}');
+          },
           name: name,
-          model: FormeTextFieldModel(
-            autofocus: true,
-            decoration: InputDecoration(labelText: 'TextField'),
+          decoration: InputDecoration(
+            labelText: 'TextField',
+            suffixIcon: Builder(builder: (context) {
+              return ValueListenableBuilder<FormeTextFieldModel>(
+                  valueListenable: controller.modelListenable,
+                  builder: (context, model, child) {
+                    bool sec = model.obscureText ?? false;
+                    return IconButton(
+                        onPressed: () {
+                          controller.updateModel(
+                              FormeTextFieldModel(obscureText: !sec));
+                        },
+                        icon: Icon(
+                            sec ? Icons.visibility : Icons.visibility_off));
+                  });
+            }),
           ),
           validator: FormeValidates.any([
             FormeValidates.size(min: 20),

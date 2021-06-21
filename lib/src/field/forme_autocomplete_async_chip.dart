@@ -65,10 +65,27 @@ class FormeAsnycAutocompleteChip<T extends Object>
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                FormeRawAutoComplete<T>(
+                FormeRawAutocomplete<T>(
                   model: model,
-                  readOnly: readOnly,
-                  controller: state,
+                  readOnly: state.readOnly,
+                  removeOverlayNotifier: state.removeOverlayNotifier,
+                  textEditingController: state.textEditingController,
+                  focusNode: state.focusNode,
+                  multi: true,
+                  onSelected: (value) {
+                    List<T> values = List.of(state.value!);
+                    if (values.remove(value)) {
+                      state.didChange(values);
+                    } else {
+                      if (state.model.max != null &&
+                          values.length >= state.model.max!) {
+                        state.model.exceedCallback?.call();
+                        return;
+                      }
+                      state.didChange(values..add(value));
+                    }
+                  },
+                  isSelected: (v) => state.value!.contains(v),
                 ),
                 FormeRenderUtils.wrap(
                     state.model.wrapRenderData,
@@ -89,8 +106,9 @@ class FormeAsnycAutocompleteChip<T extends Object>
 }
 
 class _FormeAutocompleteTextState<T extends Object>
-    extends ValueFieldState<List<T>, FormeAsyncAutocompleteChipModel<T>>
-    with RawAutocompleteController<T> {
+    extends ValueFieldState<List<T>, FormeAsyncAutocompleteChipModel<T>> {
+  final TextEditingController textEditingController = TextEditingController();
+  final ValueNotifier<int> removeOverlayNotifier = ValueNotifier(0);
   Widget defaultChipBuilder(
       BuildContext context, T value, VoidCallback onDeleted) {
     return Padding(
@@ -106,6 +124,17 @@ class _FormeAutocompleteTextState<T extends Object>
   }
 
   @override
+  FormeAsyncAutocompleteChipModel<T> beforeUpdateModel(
+      FormeAsyncAutocompleteChipModel<T> old,
+      FormeAsyncAutocompleteChipModel<T> current) {
+    if (current.max != null && current.max! < value!.length) {
+      List<T> items = List.of(value!);
+      setValue(items.sublist(0, current.max!));
+    }
+    return current;
+  }
+
+  @override
   FormeAsyncAutocompleteChipModel<T> beforeSetModel(
       FormeAsyncAutocompleteChipModel<T> old,
       FormeAsyncAutocompleteChipModel<T> current) {
@@ -116,42 +145,21 @@ class _FormeAutocompleteTextState<T extends Object>
   }
 
   @override
-  void afterUpdateModel(FormeAsyncAutocompleteChipModel<T> old,
-      FormeAsyncAutocompleteChipModel<T> current) {
-    rebuild(model);
-    if (current.optionsBuilder != null) loadOptions();
-  }
-
-  @override
   FormeValueFieldController<List<T>, FormeAsyncAutocompleteChipModel<T>>
       createFormeFieldController() {
     return _FormeValueFieldController(super.createFormeFieldController(), this);
   }
 
   void clearValue() {
-    selection = null;
+    textEditingController.text = '';
     didChange(null);
   }
 
   @override
-  void afterFocusChanged(bool hasFocus) {
-    if (widget.onFocusChanged != null)
-      widget.onFocusChanged!(controller, hasFocus);
-  }
-
-  @override
-  void onSelected(T value) {
-    List<T> values = List.of(this.value!);
-    if (values.contains(value))
-      didChange(values..remove(value));
-    else
-      didChange(values..add(value));
-    rebuildOptionsView();
-  }
-
-  @override
-  bool isSelected(T option) {
-    return value!.contains(option);
+  void dispose() {
+    removeOverlayNotifier.dispose();
+    textEditingController.dispose();
+    super.dispose();
   }
 }
 
@@ -160,6 +168,8 @@ class FormeAsyncAutocompleteChipModel<T extends Object>
   final Widget Function(BuildContext context, T value, VoidCallback onDeleted)?
       chipBuilder;
   final FormeWrapRenderData? wrapRenderData;
+  final int? max;
+  final VoidCallback? exceedCallback;
   const FormeAsyncAutocompleteChipModel({
     AutocompleteOptionToString<T>? displayStringForOption,
     AutocompleteAsyncOptionsBuilder<T>? optionsBuilder,
@@ -176,6 +186,8 @@ class FormeAsyncAutocompleteChipModel<T extends Object>
         optionBuilder,
     this.chipBuilder,
     this.wrapRenderData,
+    this.max,
+    this.exceedCallback,
   }) : super(
           displayStringForOption: displayStringForOption,
           optionsBuilder: optionsBuilder,
@@ -214,6 +226,8 @@ class FormeAsyncAutocompleteChipModel<T extends Object>
       chipBuilder: chipBuilder ?? old.chipBuilder,
       optionBuilder: optionBuilder ?? old.optionBuilder,
       wrapRenderData: wrapRenderData ?? old.wrapRenderData,
+      exceedCallback: exceedCallback ?? old.exceedCallback,
+      max: max ?? old.max,
     );
   }
 }
@@ -225,9 +239,6 @@ class _FormeValueFieldController<T extends Object>
   final FormeValueFieldController<List<T>, FormeAsyncAutocompleteChipModel<T>>
       delegate;
   _FormeValueFieldController(this.delegate, this.state);
-
-  @override
-  bool get hasFocus => state.hasFocus;
 
   @override
   void clearValue() {

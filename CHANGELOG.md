@@ -1,3 +1,10 @@
+## 2.0.4
+
+1. add `modelListenable` on `FormeFieldController`
+2. after value changed , you can get old value via `FormeValueFieldController`'s `oldValue`
+3. validate method add parameter `notify` , used to determine  whether trigger `errorListenable`
+4. `FormeAsnycAutocompleteChipModel` support `max` and `exceedCallback`.
+
 ## 2.0.3+1
 
 1. bug fix: readOnlyNotifier will be disposed !

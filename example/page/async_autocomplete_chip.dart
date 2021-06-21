@@ -45,49 +45,50 @@ class AsyncAutocompleteChip extends BasePage<List<AppProfile>,
               return mockResults;
             });
           },
-          model: FormeAsyncAutocompleteChipModel<AppProfile>(
-              optionBuilder: (context, profile, isSelected) {
-                return Padding(
-                  padding: EdgeInsets.symmetric(vertical: 5),
-                  child: ListTile(
-                    leading: CircleAvatar(
-                      backgroundImage: NetworkImage(profile.imageUrl),
-                    ),
-                    enabled: !isSelected,
-                    title: Text(profile.name),
-                    subtitle: Text(profile.email),
-                  ),
-                );
-              },
-              chipBuilder:
-                  (context, AppProfile profile, VoidCallback onDeleted) {
-                return Padding(
-                  padding: EdgeInsets.all(5),
-                  child: InputChip(
-                    key: ObjectKey(profile),
-                    label: Text(profile.name),
-                    avatar: CircleAvatar(
-                      backgroundImage: NetworkImage(profile.imageUrl),
-                    ),
-                    onDeleted: onDeleted,
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                );
-              },
-              emptyOptionBuilder: (context) {
-                return Text('no options found');
-              },
-              textFieldModel: FormeTextFieldModel(
-                maxLines: 1,
-                decoration: InputDecoration(
-                    labelText: 'Async Autocomplete Chip',
-                    suffixIcon: IconButton(
-                      onPressed: () {
-                        controller.clearValue();
-                      },
-                      icon: Icon(Icons.clear),
-                    )),
+          decoration: InputDecoration(
+              labelText: 'Async Autocomplete Chip',
+              suffixIcon: IconButton(
+                onPressed: () {
+                  controller.clearValue();
+                },
+                icon: Icon(Icons.clear),
               )),
+          model: FormeAsyncAutocompleteChipModel<AppProfile>(
+            max: 2,
+            exceedCallback: () {
+              print('max is 2');
+            },
+            optionBuilder: (context, profile, isSelected) {
+              return Padding(
+                padding: EdgeInsets.symmetric(vertical: 5),
+                child: ListTile(
+                  leading: CircleAvatar(
+                    backgroundImage: NetworkImage(profile.imageUrl),
+                  ),
+                  enabled: !isSelected,
+                  title: Text(profile.name),
+                  subtitle: Text(profile.email),
+                ),
+              );
+            },
+            chipBuilder: (context, AppProfile profile, VoidCallback onDeleted) {
+              return Padding(
+                padding: EdgeInsets.all(5),
+                child: InputChip(
+                  key: ObjectKey(profile),
+                  label: Text(profile.name),
+                  avatar: CircleAvatar(
+                    backgroundImage: NetworkImage(profile.imageUrl),
+                  ),
+                  onDeleted: onDeleted,
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+              );
+            },
+            emptyOptionBuilder: (context) {
+              return Text('no options found');
+            },
+          ),
           name: name,
           validator: (v) => v!.isEmpty ? 'pls select one !' : null,
         ),

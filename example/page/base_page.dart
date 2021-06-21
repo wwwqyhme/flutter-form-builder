@@ -67,7 +67,11 @@ abstract class BasePage<T, E extends FormeModel> extends StatelessWidget {
       body: Padding(
         padding: EdgeInsets.symmetric(horizontal: 20),
         child: Forme(
-          child: body,
+          child: Builder(
+            builder: (context) {
+              return body;
+            },
+          ),
           key: formKey,
         ),
       ),

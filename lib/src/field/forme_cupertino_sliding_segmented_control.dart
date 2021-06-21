@@ -45,7 +45,13 @@ class FormeCupertinoSlidingSegmentedControl<T extends Object>
             decoratorBuilder: decoratorBuilder ??
                 (decoration == null
                     ? null
-                    : FormeInputDecoratorBuilder(decoration: decoration)),
+                    : FormeInputDecoratorBuilder(
+                        decoration: decoration,
+                        wrapper: (child) => Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          child: child,
+                        ),
+                      )),
             model: (model ?? FormeCupertinoSlidingSegmentedControlModel<T>())
                 .copyWith(FormeCupertinoSlidingSegmentedControlModel(
                     children: chidren)),

@@ -22,7 +22,7 @@ typedef FormeErrorChanged<T extends FormeValueFieldController> = void Function(
 class FormeKey extends LabeledGlobalKey<State> implements FormeController {
   FormeKey({String? debugLabel}) : super(debugLabel);
 
-  final List<_LazyFieldListenable> _listenables = [];
+  final List<_LazyFormeFieldListenable> _listenables = [];
 
   /// whether formKey is initialized
   bool get initialized {
@@ -61,8 +61,9 @@ class FormeKey extends LabeledGlobalKey<State> implements FormeController {
   bool hasField(String name) => _currentController.hasField(name);
 
   @override
-  Map<FormeValueFieldController, String> validate({bool quietly = false}) =>
-      _currentController.validate(quietly: quietly);
+  Map<FormeValueFieldController, String> validate(
+          {bool quietly = false, bool notify = true}) =>
+      _currentController.validate(quietly: quietly, notify: notify);
 
   @override
   void reset() => _currentController.reset();
@@ -87,17 +88,19 @@ class FormeKey extends LabeledGlobalKey<State> implements FormeController {
   /// create LazyFieldListenable
   ///
   /// no need to wrap in builder!
-  FormeFieldListenable lazyFieldListenable(String name) {
+  LazyFormeFieldListenable lazyFieldListenable(String name) {
     State? currentState = super.currentState;
     if (currentState == null || currentState is! _FormeState) {
-      Iterable<_LazyFieldListenable> iterable =
+      Iterable<_LazyFormeFieldListenable> iterable =
           this._listenables.where((element) => element.name == name);
       if (iterable.isNotEmpty) return iterable.first;
-      _LazyFieldListenable listenable = _LazyFieldListenable(name);
+      _LazyFormeFieldListenable listenable = _LazyFormeFieldListenable(name);
       _listenables.add(listenable);
       return listenable;
     }
-    return currentState.controller.fieldListenable(name);
+    _LazyFormeFieldListenable listenable = _LazyFormeFieldListenable(name);
+    listenable.listenable = currentState.controller.fieldListenable(name);
+    return listenable;
   }
 
   static FormeController of(BuildContext context) {
@@ -321,6 +324,7 @@ mixin AbstractFieldState<T extends StatefulWidget, E extends FormeModel>
 
   final ValueNotifier<bool> _focusNotifier = ValueNotifier(false);
   final ValueNotifier<bool> _readOnlyNotifier = ValueNotifier(false);
+  late final ValueNotifier<E> _modelNotifier = ValueNotifier(_field.model);
   late final FormeFieldController<E> controller;
 
   String get name => _field.name;
@@ -367,6 +371,7 @@ mixin AbstractFieldState<T extends StatefulWidget, E extends FormeModel>
   @override
   void dispose() {
     _focusNotifier.dispose();
+    _modelNotifier.dispose();
     _readOnlyNotifier.dispose();
     _focusNode?.dispose();
     _formScope.unregisterField(this);
@@ -409,6 +414,7 @@ mixin AbstractFieldState<T extends StatefulWidget, E extends FormeModel>
   /// used to do some logic after update model
   ///
   /// **this method will be called after [beforeUpdateModel] or [beforeSetModel]**
+  @protected
   void afterUpdateModel(E old, E current) {}
 
   /// used to do some logic before set model
@@ -439,6 +445,7 @@ mixin AbstractFieldState<T extends StatefulWidget, E extends FormeModel>
         setState(() {
           this._model = copy.copyWith(model) as E;
         });
+        _modelNotifier.value = this.model;
         afterUpdateModel(model, _model);
       }
     }
@@ -451,6 +458,7 @@ mixin AbstractFieldState<T extends StatefulWidget, E extends FormeModel>
         setState(() {
           this._model = copy;
         });
+        _modelNotifier.value = this.model;
         afterUpdateModel(model, _model);
       }
     }
@@ -489,6 +497,8 @@ class ValueFieldState<T extends Object, E extends FormeModel>
   final ValueNotifier<FormeModel?> _decoratorNotifier = ValueNotifier(null);
   late final ValueNotifier<T?> _valueNotifier;
 
+  T? _oldValue;
+
   @override
   FormeValueFieldController<T, E> get controller =>
       super.controller as FormeValueFieldController<T, E>;
@@ -510,7 +520,6 @@ class ValueFieldState<T extends Object, E extends FormeModel>
   T? get value => replaceNullValue(super.value);
 
   /// get initialValue
-  @protected
   T? get initialValue =>
       widget.initialValue ?? _formScope.getInitialValue(widget.name);
 
@@ -556,6 +565,7 @@ class ValueFieldState<T extends Object, E extends FormeModel>
     T? oldValue = super.value;
     if (!compare(oldValue, newValue)) {
       super.didChange(newValue);
+      _oldValue = replaceNullValue(oldValue);
       _valueNotifier.value = newValue;
     }
   }
@@ -567,6 +577,7 @@ class ValueFieldState<T extends Object, E extends FormeModel>
     _hasInteractedByUser = false;
     if (!compare(oldValue, initialValue)) {
       setValue(initialValue);
+      _oldValue = replaceNullValue(oldValue);
       _valueNotifier.value = initialValue;
     }
     _errorNotifier.value = null;
@@ -645,6 +656,7 @@ class ValueFieldState<T extends Object, E extends FormeModel>
     T? oldValue = super.value;
     super._updateModel(_model);
     if (!compare(oldValue, super.value)) {
+      _oldValue = replaceNullValue(oldValue);
       _valueNotifier.value = super.value;
     }
   }
@@ -654,11 +666,12 @@ class ValueFieldState<T extends Object, E extends FormeModel>
     T? oldValue = super.value;
     super._setModel(_model);
     if (!compare(oldValue, super.value)) {
+      _oldValue = replaceNullValue(oldValue);
       _valueNotifier.value = super.value;
     }
   }
 
-  String? _performValidate({bool quietly = false}) {
+  String? _performValidate({bool quietly = false, bool notify = true}) {
     String? errorText;
     if (_formScope.quietlyValidate || quietly) {
       errorText =
@@ -667,8 +680,10 @@ class ValueFieldState<T extends Object, E extends FormeModel>
       super.validate();
       errorText = super.errorText;
     }
-    _errorNotifier.value =
-        widget.validator == null ? null : FormeValidateError(errorText);
+    if (notify) {
+      _errorNotifier.value =
+          widget.validator == null ? null : FormeValidateError(errorText);
+    }
     return errorText;
   }
 }
@@ -712,6 +727,7 @@ class _FormeFieldListenable extends FormeFieldListenable {
       _ValueListenable(ValueNotifier(null));
   final _ValueListenable<bool> readOnlyListenable =
       _ValueListenable(ValueNotifier(false));
+  _ValueListenable<FormeModel>? _modelListenable;
 
   _FormeFieldListenable(this.name, FormeFieldController? controller) {
     if (controller != null) whenAlive(controller);
@@ -719,6 +735,7 @@ class _FormeFieldListenable extends FormeFieldListenable {
 
   void whenAlive(FormeFieldController controller) {
     if (this.controller != null) {
+      this.controller!.modelListenable.removeListener(listenModel);
       this.controller!.focusListenable.removeListener(listenFocus);
       this.controller!.readOnlyListenable.removeListener(listenReadOnly);
       if (this.controller is FormeValueFieldController) {
@@ -735,6 +752,15 @@ class _FormeFieldListenable extends FormeFieldListenable {
 
     readOnlyListenable.delegate.value = controller.readOnlyListenable.value;
     controller.readOnlyListenable.addListener(listenReadOnly);
+
+    if (_modelListenable == null) {
+      _modelListenable =
+          _ValueListenable(ValueNotifier(controller.modelListenable.value));
+    } else {
+      _modelListenable!.delegate.value = controller.modelListenable.value;
+    }
+
+    controller.modelListenable.addListener(listenModel);
 
     if (controller is! FormeValueFieldController) {
       return;
@@ -775,11 +801,20 @@ class _FormeFieldListenable extends FormeFieldListenable {
           (controller as FormeValueFieldController).errorTextListenable.value;
   }
 
+  void listenModel() {
+    if (controller != null)
+      _modelListenable!.delegate.value = controller!.modelListenable.value;
+  }
+
   void dispose() {
+    _modelListenable?.delegate.dispose();
     errorTextListenable.delegate.dispose();
     focusListenable.delegate.dispose();
     valueListenable.delegate.dispose();
   }
+
+  @override
+  ValueListenable<FormeModel> get modelListenable => _modelListenable!;
 }
 
 class _ValueListenable<T> extends ValueListenable<T> {
@@ -834,8 +869,8 @@ class _FormeController extends FormeController {
 
   @override
   Map<FormeValueFieldController<dynamic, FormeModel>, String> validate(
-          {bool quietly = false}) =>
-      readErrors((e) => e.validate(quietly: quietly));
+          {bool quietly = false, bool notify = true}) =>
+      readErrors((e) => e.validate(quietly: quietly, notify: notify));
 
   @override
   void reset() => valueFieldControllers.forEach((element) {
@@ -907,9 +942,11 @@ class _FormeFieldController<E extends FormeModel>
 
   final ValueListenable<bool> focusListenable;
   final ValueListenable<bool> readOnlyListenable;
+  final ValueListenable<E> modelListenable;
   _FormeFieldController(this.state)
       : this.focusListenable = _ValueListenable(state._focusNotifier),
-        this.readOnlyListenable = _ValueListenable(state._readOnlyNotifier);
+        this.readOnlyListenable = _ValueListenable(state._readOnlyNotifier),
+        this.modelListenable = _ValueListenable(state._modelNotifier);
 
   @override
   E get model => state.model;
@@ -982,17 +1019,27 @@ class _FormeValueFieldController<T extends Object, E extends FormeModel>
   void reset() => state.reset();
 
   @override
-  String? validate({bool quietly = false}) =>
-      state._performValidate(quietly: quietly);
+  String? validate({bool quietly = false, bool notify = true}) =>
+      state._performValidate(quietly: quietly, notify: notify);
 
   @override
   set value(T? value) => state.didChange(value);
 
   @override
   void clearValue() => state.didChange(null);
+
+  @override
+  T? get oldValue => state._oldValue;
 }
 
-class _LazyFieldListenable extends FormeFieldListenable {
+abstract class LazyFormeFieldListenable {
+  ValueListenable<FormeValidateError?> get errorTextListenable;
+  ValueListenable<bool> get focusListenable;
+  ValueListenable get valueListenable;
+  ValueListenable<bool> get readOnlyListenable;
+}
+
+class _LazyFormeFieldListenable extends LazyFormeFieldListenable {
   final String name;
   final _LazyValueListenable<FormeValidateError?> errorTextListenable =
       _LazyValueListenable<FormeValidateError?>(null);
@@ -1002,7 +1049,7 @@ class _LazyFieldListenable extends FormeFieldListenable {
   final _LazyValueListenable<bool> readOnlyListenable =
       _LazyValueListenable<bool>(false);
 
-  _LazyFieldListenable(this.name);
+  _LazyFormeFieldListenable(this.name);
 
   set listenable(FormeFieldListenable listenable) {
     errorTextListenable.delegate = listenable.errorTextListenable;

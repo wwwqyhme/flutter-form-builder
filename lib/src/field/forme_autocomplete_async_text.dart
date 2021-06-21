@@ -57,10 +57,18 @@ class FormeAsnycAutocompleteText<T extends Object>
                             decoration:
                                 InputDecoration(errorText: state.errorText)))
                     .copyWith(state.model);
-            return FormeRawAutoComplete<T>(
+            return FormeRawAutocomplete<T>(
               model: model,
-              readOnly: readOnly,
-              controller: state,
+              readOnly: state.readOnly,
+              removeOverlayNotifier: state.removeOverlayNotifier,
+              textEditingController: state.textEditingController,
+              focusNode: state.focusNode,
+              initialValue: state.initialValue,
+              onSelected: (v) {
+                state.didChange(v);
+                state.removeOverlayNotifier.value++;
+              },
+              isSelected: (v) => v == state.value,
             );
           },
         );
@@ -70,8 +78,10 @@ class FormeAsnycAutocompleteText<T extends Object>
 }
 
 class _FormeAutocompleteTextState<T extends Object>
-    extends ValueFieldState<T, FormeAsyncAutocompleteTextModel<T>>
-    with RawAutocompleteController<T> {
+    extends ValueFieldState<T, FormeAsyncAutocompleteTextModel<T>> {
+  final TextEditingController textEditingController = TextEditingController();
+  final ValueNotifier<int> removeOverlayNotifier = ValueNotifier(0);
+
   @override
   FormeValueFieldController<T, FormeAsyncAutocompleteTextModel<T>>
       createFormeFieldController() {
@@ -79,29 +89,8 @@ class _FormeAutocompleteTextState<T extends Object>
   }
 
   void clearValue() {
-    selection = null;
+    textEditingController.text = '';
     didChange(null);
-  }
-
-  @override
-  void onSelected(T value) {
-    selection = value;
-    didChange(value);
-  }
-
-  @override
-  void afterFocusChanged(bool hasFocus) {
-    if (widget.onFocusChanged != null)
-      widget.onFocusChanged!(controller, hasFocus);
-  }
-
-  @override
-  void afterInitiation() {
-    super.afterInitiation();
-    if (initialValue != null)
-      WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
-        selection = initialValue;
-      });
   }
 
   @override
@@ -115,18 +104,10 @@ class _FormeAutocompleteTextState<T extends Object>
   }
 
   @override
-  void afterUpdateModel(FormeAsyncAutocompleteTextModel<T> old,
-      FormeAsyncAutocompleteTextModel<T> current) {
-    rebuild(model);
-    if (current.displayStringForOption != null && value != null) {
-      updateDisplay(value);
-    }
-    if (current.optionsBuilder != null) loadOptions();
-  }
-
-  @override
-  bool isSelected(T option) {
-    return value == option;
+  void dispose() {
+    removeOverlayNotifier.dispose();
+    textEditingController.dispose();
+    super.dispose();
   }
 }
 
@@ -195,10 +176,6 @@ class _FormeValueFieldController<T extends Object>
   final FormeValueFieldController<T, FormeAsyncAutocompleteTextModel<T>>
       delegate;
   _FormeValueFieldController(this.delegate, this.state);
-
-  @override
-  bool get hasFocus => state.hasFocus;
-
   @override
   void clearValue() {
     state.clearValue();

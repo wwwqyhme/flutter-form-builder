@@ -17,19 +17,28 @@ typedef AutocompleteOptionsViewDecoratorBuilder = Widget Function(
     double? width,
     VoidCallback closeOptionsView);
 
-class FormeRawAutoComplete<T extends Object> extends StatefulWidget {
+class FormeRawAutocomplete<T extends Object> extends StatefulWidget {
   final FormeAsyncAutocompleteTextModel<T> model;
-  final RawAutocompleteController<T> controller;
-  final Widget Function(BuildContext context, Widget textField)?
-      fieldViewBuilder;
   final bool readOnly;
+  final TextEditingController textEditingController;
+  final FocusNode focusNode;
+  final bool multi;
+  final T? initialValue;
+  final ValueChanged<T> onSelected;
+  final bool Function(T option) isSelected;
+  final ValueNotifier<int> removeOverlayNotifier;
 
-  FormeRawAutoComplete({
+  FormeRawAutocomplete({
     Key? key,
     required this.model,
-    this.fieldViewBuilder,
-    required this.controller,
     required this.readOnly,
+    required this.textEditingController,
+    required this.focusNode,
+    this.multi = false,
+    this.initialValue,
+    required this.onSelected,
+    required this.isSelected,
+    required this.removeOverlayNotifier,
   }) : super(key: key);
 
   @override
@@ -37,236 +46,226 @@ class FormeRawAutoComplete<T extends Object> extends StatefulWidget {
 }
 
 class _FormeRowAutoCompleteState<T extends Object>
-    extends State<FormeRawAutoComplete<T>> {
-  TextEditingController? _effecitiveTextEditingController;
-  FocusNode? _effecitiveFocusNode;
-
-  FormeAsyncAutocompleteTextModel<T>? _model;
-
-  FormeAsyncAutocompleteTextModel<T> get model => _model ?? widget.model;
-
-  set model(FormeAsyncAutocompleteTextModel<T> model) {
-    _model = model;
-    rebuildOptionsView();
-  }
-
+    extends State<FormeRawAutocomplete<T>> {
+  FormeAsyncAutocompleteTextModel<T> get model =>
+      FormeAsyncAutocompleteTextModel<T>()
+          .copyWith(widget.model)
+          .copyWith(defaultModel);
   AutocompleteOptionToString<T> get displayStringForOption =>
       model.displayStringForOption ?? RawAutocomplete.defaultStringForOption;
-  Timer? timer;
-
   late final FormeMountedValueNotifier<int> optionsNotifier =
       FormeMountedValueNotifier(0, this);
   late final FormeMountedValueNotifier<double?> fieldViewWidgetNotifier =
       FormeMountedValueNotifier(null, this);
-  late final FormeMountedValueNotifier<int> optionsViewRebuildNotifier =
-      FormeMountedValueNotifier(0, this);
-
-  AutocompleteOnSelected<T>? _onSelected;
-
-  set onSelected(AutocompleteOnSelected<T>? onSelected) {
-    if (_onSelected != null) return;
-    _onSelected = onSelected;
-    if (_selection != null)
-      WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
-        _onSelected!(_selection!);
-      });
-    else {
-      loadOptions();
-    }
-  }
-
-  final _key = GlobalKey();
-
+  final ValueNotifier<bool> optionsLoadingNotifier = ValueNotifier(false);
+  final GlobalKey _fieldKey = GlobalKey();
+  final LayerLink _optionsLayerLink = LayerLink();
   _Options<T>? options;
+  Timer? timer;
+  OverlayEntry? _floatingOptions;
+  late String oldText;
+  int gen = 0;
+  T? _selection;
 
   bool get queryWhenEmpty => model.queryWhenEmpty ?? false;
 
-  void rebuildOptionsView() {
-    optionsViewRebuildNotifier.value = optionsViewRebuildNotifier.value + 1;
-  }
-
-  void updateOptions() {
-    optionsNotifier.value = optionsNotifier.value + 1;
-  }
-
-  Widget defaultErrorBuilder(BuildContext context, dynamic error) {
-    return const SizedBox();
-  }
-
-  Widget defaultOptionsViewDecoratorBuilder(BuildContext context, Widget child,
-      double? width, VoidCallback closeOptionsView) {
-    return Align(
-      alignment: Alignment.topLeft,
-      child: Material(
-        elevation: 4.0,
-        child: SizedBox(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(child: child),
-              IconButton(
-                  icon: Icon(Icons.clear),
-                  onPressed: () {
-                    unfocus();
-                  }),
-            ],
-          ),
-          width: width,
-        ),
-      ),
-    );
-  }
-
-  Widget defaultLoadingOptionBuilder(BuildContext context) {
-    return Container(
-      height: model.optionsViewHeight ?? 200,
-      width: double.infinity,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          CircularProgressIndicator(),
-        ],
-      ),
-    );
-  }
-
-  Widget defaultEmptyOptionBuilder(BuildContext context) {
-    return const SizedBox();
-  }
-
-  Widget defaultOptionsViewBuilder(
-    BuildContext context,
-    AutocompleteOnSelected<T> onSelected,
-    Iterable<T> options,
-  ) {
-    return SizedBox(
-      height: model.optionsViewHeight ?? 200,
-      child: ListView.builder(
-        padding: EdgeInsets.zero,
-        itemCount: options.length,
-        itemBuilder: (BuildContext context, int index) {
-          final T option = options.elementAt(index);
-          bool isSelected = widget.controller.isSelected(option);
-          ThemeData themeData = Theme.of(context);
-          return InkWell(
-            onTap: () {
-              onSelected(option);
-            },
-            child: model.optionBuilder == null
-                ? Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Text(
-                      displayStringForOption(option),
-                      style: TextStyle(
-                          color: isSelected ? themeData.disabledColor : null),
-                    ),
-                  )
-                : model.optionBuilder!(context, option, isSelected),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget defaultChipBuilder(
-      BuildContext context, T value, VoidCallback onDeleted) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 5),
-      child: InputChip(
-        label: Text(displayStringForOption(value)),
-        isEnabled: true,
-        onDeleted: onDeleted,
-      ),
-    );
-  }
-
-  set effecitiveTextEditingController(TextEditingController controller) {
-    _effecitiveTextEditingController = controller;
-  }
-
-  set effecitiveFocusNode(FocusNode focusNode) {
-    if (_effecitiveFocusNode != focusNode) {
-      _effecitiveFocusNode = focusNode;
-      _effecitiveFocusNode!.addListener(() {
-        if (hasFocus) {
-          loadOptions();
-        }
-        widget.controller.afterFocusChanged(_effecitiveFocusNode!.hasFocus);
-      });
-    }
-  }
-
-  void requestFocus() {
-    _effecitiveFocusNode?.requestFocus();
-  }
-
-  void unfocus({UnfocusDisposition disposition = UnfocusDisposition.scope}) {
-    _effecitiveFocusNode?.unfocus(disposition: disposition);
-  }
-
-  void loadOptions() {
-    if (!queryWhenEmpty && _effecitiveTextEditingController!.text == '') return;
-    updateOptions();
-    int gen = optionsNotifier.value + 1;
-    model.optionsBuilder!(_effecitiveTextEditingController!.value)
-        .then((value) {
-      options = _Options(hasError: false, gen: gen, datas: value);
+  void loadOptions(int currentGen) {
+    if (currentGen < gen) return;
+    markLoading();
+    model.optionsBuilder!(widget.textEditingController.value).then((value) {
+      if (currentGen == gen) options = _Options(hasError: false, datas: value);
     }).catchError((e) {
-      options = _Options(hasError: true, error: e, gen: gen);
+      if (currentGen == gen) options = _Options(hasError: true, error: e);
     }).whenComplete(() {
-      if (gen == optionsNotifier.value + 1 && mounted) updateOptions();
+      if (currentGen == gen && mounted) optionsLoadingNotifier.value = false;
     });
+  }
+
+  void markLoading() {
+    if (optionsLoadingNotifier.value) {
+      if (_floatingOptions == null) {
+        updateOverlay();
+      }
+    } else {
+      optionsLoadingNotifier.value = true;
+    }
   }
 
   @override
   void initState() {
     super.initState();
-    widget.controller._state = this;
+    oldText = widget.textEditingController.text;
+    if (!widget.readOnly) {
+      widget.focusNode.addListener(onFocusChange);
+      widget.textEditingController.addListener(onTextChange);
+      optionsLoadingNotifier.addListener(onLoadingChange);
+      widget.removeOverlayNotifier.addListener(removeOverlay);
+    }
+
+    if (widget.initialValue != null) selection = widget.initialValue!;
   }
 
-  T? _selection;
+  void onLoadingChange() {
+    updateOverlay();
+  }
 
-  set selection(T? value) {
-    String text = value == null ? '' : displayStringForOption(value);
-    if (_effecitiveTextEditingController?.text != text)
-      _effecitiveTextEditingController?.text = text;
-    _selection = value;
-    if (_onSelected != null && value != null) _onSelected!(value);
-    if (value == null) loadOptions();
+  void onTextChange() {
+    String text = widget.textEditingController.text;
+    if (text == oldText) return;
+    oldText = text;
+    if (text == '' && !queryWhenEmpty) {
+      removeOverlay();
+    } else {
+      markLoading();
+      int gen = ++this.gen;
+      timer?.cancel();
+      timer = Timer(model.loadOptionsTimerDuration!, () => loadOptions(gen));
+    }
+  }
+
+  void onFocusChange() {
+    if (widget.focusNode.hasFocus) {
+      if (!widget.multi) {
+        String text = widget.textEditingController.text;
+        if (text == oldText) return;
+      }
+      if (widget.textEditingController.text == '' && !queryWhenEmpty) {
+        removeOverlay();
+        return;
+      }
+      loadOptions(++gen);
+    } else {
+      removeOverlay();
+    }
+  }
+
+  @override
+  void didUpdateWidget(FormeRawAutocomplete<T> oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    bool handleQueryWhenEmptyChange =
+        oldWidget.model.queryWhenEmpty != widget.model.queryWhenEmpty &&
+            widget.textEditingController.text == '';
+
+    if (oldWidget.model != widget.model) {
+      WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+        if (widget.focusNode.hasFocus) {
+          updateOptionsView();
+          if (oldWidget.model.optionsBuilder != widget.model.optionsBuilder ||
+              (handleQueryWhenEmptyChange && queryWhenEmpty)) {
+            loadOptions(++gen);
+          }
+        }
+
+        if (!widget.multi &&
+            _selection != null &&
+            model.displayStringForOption !=
+                oldWidget.model.displayStringForOption &&
+            widget.textEditingController.text ==
+                (oldWidget.model.displayStringForOption ??
+                    RawAutocomplete.defaultStringForOption)(_selection!)) {
+          oldText = model.displayStringForOption!(_selection!);
+          widget.textEditingController.value = TextEditingValue(
+            selection: TextSelection.collapsed(offset: oldText.length),
+            text: oldText,
+          );
+        }
+      });
+    }
+
+    if (widget.readOnly) {
+      widget.focusNode.removeListener(onFocusChange);
+      widget.textEditingController.removeListener(onTextChange);
+      optionsLoadingNotifier.removeListener(onLoadingChange);
+      widget.removeOverlayNotifier.removeListener(removeOverlay);
+    } else {
+      widget.focusNode.addListener(onFocusChange);
+      widget.textEditingController.addListener(onTextChange);
+      optionsLoadingNotifier.addListener(onLoadingChange);
+      widget.removeOverlayNotifier.addListener(removeOverlay);
+    }
+
+    if (widget.readOnly || (handleQueryWhenEmptyChange && !queryWhenEmpty)) {
+      removeOverlay();
+    }
+  }
+
+  void removeOverlay() {
+    gen++;
+    _floatingOptions?.remove();
+    _floatingOptions = null;
+  }
+
+  void updateOptionsView() {
+    optionsNotifier.value++;
+  }
+
+  set selection(T selection) {
+    if (!widget.multi) {
+      _selection = selection;
+      oldText = model.displayStringForOption!(selection);
+      widget.textEditingController.value = TextEditingValue(
+        selection: TextSelection.collapsed(offset: oldText.length),
+        text: oldText,
+      );
+      removeOverlay();
+    }
+  }
+
+  void updateOverlay() {
+    _floatingOptions?.remove();
+    _floatingOptions = OverlayEntry(
+      builder: (BuildContext context) {
+        return CompositedTransformFollower(
+          link: _optionsLayerLink,
+          showWhenUnlinked: false,
+          targetAnchor: Alignment.bottomLeft,
+          child: ValueListenableBuilder2<double?, int>(
+              fieldViewWidgetNotifier, optionsNotifier,
+              builder: (context, width, gen, _child) {
+            Widget child;
+            if (optionsLoadingNotifier.value) {
+              child = model.loadingOptionBuilder!(context);
+            } else {
+              if (options!.hasError)
+                child = model.errorBuilder!(context, options!.error);
+              else {
+                Iterable<T> datas = options!.datas!;
+                if (datas.isEmpty)
+                  child = model.emptyOptionBuilder!(context);
+                else {
+                  child = model.optionsViewBuilder!(context, (v) {
+                    widget.onSelected(v);
+                    updateOptionsView();
+                    selection = v;
+                  }, datas);
+                }
+              }
+            }
+            return model.optionsViewDecoratorBuilder!(
+                context, child, width, removeOverlay);
+          }),
+        );
+      },
+    );
+    Overlay.of(context, rootOverlay: true)!.insert(_floatingOptions!);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Autocomplete<T>(
-      optionsBuilder: widget.readOnly
-          ? (v) => Iterable<T>.empty()
-          : (v) => _Iterable<T>(this),
-      displayStringForOption: displayStringForOption,
-      fieldViewBuilder: (BuildContext context,
-          TextEditingController textEditingController,
-          FocusNode focusNode,
-          VoidCallback onFieldSubmitted) {
-        effecitiveTextEditingController = textEditingController;
-        effecitiveFocusNode = focusNode;
-        return OrientationBuilder(builder: (context, o) {
+    return Container(
+      key: _fieldKey,
+      child: CompositedTransformTarget(
+        link: _optionsLayerLink,
+        child: OrientationBuilder(builder: (context, o) {
           WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
             fieldViewWidgetNotifier.value =
                 (context.findRenderObject() as RenderBox).size.width;
           });
           FormeTextFieldWidget textFieldWidget = FormeTextFieldWidget(
-              textEditingController: textEditingController,
-              focusNode: focusNode,
+              textEditingController: widget.textEditingController,
+              focusNode: widget.focusNode,
               model: FormeTextFieldModel(
                 onChanged: (v) {
-                  updateOptions();
-                  timer?.cancel();
-                  if (queryWhenEmpty || v != '') {
-                    timer = Timer(
-                        model.loadOptionsTimerDuration ??
-                            const Duration(milliseconds: 500),
-                        () => loadOptions());
-                  }
                   if (model.textFieldModel?.onChanged != null)
                     model.textFieldModel!.onChanged!(v);
                 },
@@ -278,143 +277,107 @@ class _FormeRowAutoCompleteState<T extends Object>
                       },
                 readOnly: widget.readOnly,
               ).copyWith(model.textFieldModel ?? FormeTextFieldModel()));
-
-          if (widget.fieldViewBuilder != null)
-            return widget.fieldViewBuilder!(context, textFieldWidget);
           return textFieldWidget;
-        });
-      },
-      optionsViewBuilder: (
-        BuildContext context,
-        AutocompleteOnSelected<T> onSelected,
-        Iterable<T> _options,
-      ) {
-        return ValueListenableBuilder3<double?, int, int>(
-            fieldViewWidgetNotifier,
-            optionsViewRebuildNotifier,
-            optionsNotifier,
-            key: _key, builder: (context, width, gen, gen2, _child) {
-          if (this._onSelected == null) {
-            this.onSelected = onSelected;
-            return const SizedBox();
-          }
-          if (_effecitiveTextEditingController!.text == '' && !queryWhenEmpty)
-            return const SizedBox();
-
-          Widget child;
-          if (options == null || options!.gen < gen2)
-            child = model.loadingOptionBuilder == null
-                ? defaultLoadingOptionBuilder(context)
-                : model.loadingOptionBuilder!(context);
-          else {
-            if (isLatestOption) {
-              if (options!.hasError)
-                child = (model.errorBuilder ?? defaultErrorBuilder)(
-                    context, options!.error);
-              else {
-                Iterable<T> datas = options!.datas!;
-                if (datas.isEmpty)
-                  child = (model.emptyOptionBuilder ??
-                      defaultEmptyOptionBuilder)(context);
-                else {
-                  child =
-                      (model.optionsViewBuilder ?? defaultOptionsViewBuilder)(
-                          context, widget.controller.onSelected, datas);
-                }
-              }
-            } else
-              throw 'current options\'s gen is bigger than notify\'s,this should not happened!!';
-          }
-
-          return (model.optionsViewDecoratorBuilder ??
-                  defaultOptionsViewDecoratorBuilder)(
-              context, child, width, unfocus);
-        });
-      },
+        }),
+      ),
     );
   }
 
-  bool get isLatestOption =>
-      options != null && options!.gen == optionsNotifier.value;
-
   @override
   void dispose() {
+    widget.removeOverlayNotifier.removeListener(removeOverlay);
     optionsNotifier.dispose();
     fieldViewWidgetNotifier.dispose();
-    optionsViewRebuildNotifier.dispose();
+    optionsLoadingNotifier.dispose();
     super.dispose();
   }
 
-  bool get hasFocus => _effecitiveFocusNode?.hasFocus ?? false;
+  late final FormeAsyncAutocompleteTextModel<T> defaultModel =
+      FormeAsyncAutocompleteTextModel<T>(
+          optionsViewHeight: 200,
+          loadingOptionBuilder: (context) => Container(
+                height: model.optionsViewHeight!,
+                width: double.infinity,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(),
+                  ],
+                ),
+              ),
+          displayStringForOption: RawAutocomplete.defaultStringForOption,
+          loadOptionsTimerDuration: const Duration(milliseconds: 500),
+          errorBuilder: (context, error) => const SizedBox(),
+          emptyOptionBuilder: (context) => const SizedBox(),
+          optionsViewBuilder: (context, onSelected, options) => SizedBox(
+                height: model.optionsViewHeight!,
+                child: ListView.builder(
+                  padding: EdgeInsets.zero,
+                  itemCount: options.length,
+                  itemBuilder: (BuildContext context, int index) {
+                    final T option = options.elementAt(index);
+                    bool isSelected = widget.isSelected(option);
+                    ThemeData themeData = Theme.of(context);
+                    return InkWell(
+                      onTap: () {
+                        onSelected(option);
+                      },
+                      child: model.optionBuilder == null
+                          ? Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Text(
+                                displayStringForOption(option),
+                                style: TextStyle(
+                                    color: isSelected
+                                        ? themeData.disabledColor
+                                        : null),
+                              ),
+                            )
+                          : model.optionBuilder!(context, option, isSelected),
+                    );
+                  },
+                ),
+              ),
+          optionsViewDecoratorBuilder:
+              (context, child, double? width, VoidCallback closeOptionsView) {
+            return Align(
+              alignment: Alignment.topLeft,
+              child: Material(
+                elevation: 4.0,
+                child: SizedBox(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Align(
+                        alignment: Alignment.topRight,
+                        child: InkWell(
+                          onTap: removeOverlay,
+                          child: Padding(
+                            padding: const EdgeInsets.all(5),
+                            child: Icon(Icons.clear),
+                          ),
+                        ),
+                      ),
+                      child
+                    ],
+                  ),
+                  width: width,
+                ),
+              ),
+            );
+          });
 }
 
 class _Options<T> {
   final Iterable<T>? datas;
   final dynamic error;
   final bool hasError;
-  final int gen;
 
   const _Options({
     this.datas,
     this.error,
     required this.hasError,
-    required this.gen,
   });
-}
-
-class _Iterable<T extends Object> extends Iterable<T> {
-  final _FormeRowAutoCompleteState<T> state;
-
-  _Iterable(this.state);
-
-  @override
-  Iterator<T> get iterator => throw UnimplementedError();
-
-  bool get isEmpty => false;
-  bool get isNotEmpty => !isEmpty;
-}
-
-abstract class RawAutocompleteController<T extends Object> {
-  late final _FormeRowAutoCompleteState<T> _state;
-  void afterFocusChanged(bool hasFocus);
-
-  void onSelected(T value);
-
-  void closeOptionsView() {
-    _state.unfocus();
-  }
-
-  void requestFocus() {
-    _state.requestFocus();
-  }
-
-  void unfocus({
-    UnfocusDisposition disposition = UnfocusDisposition.scope,
-  }) {
-    _state._effecitiveFocusNode?.unfocus(disposition: disposition);
-  }
-
-  set selection(T? value) => _state.selection = value;
-
-  rebuildOptionsView() {
-    _state.rebuildOptionsView();
-  }
-
-  updateDisplay(T? value) {
-    _state._effecitiveTextEditingController?.text =
-        value == null ? '' : _state.displayStringForOption(value);
-    _state.rebuildOptionsView();
-  }
-
-  loadOptions() {
-    _state.loadOptions();
-  }
-
-  void rebuild(FormeAsyncAutocompleteTextModel<T> model) {
-    _state.model = model;
-  }
-
-  bool get hasFocus => _state.hasFocus;
-
-  bool isSelected(T option);
 }

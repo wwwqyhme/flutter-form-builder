@@ -227,12 +227,13 @@ Column(
 
 ## listenable
 
-there are four listenables in field 
+there are five listenables in field 
 
 1. focusListenable  
 2. readOnlyListenable
 3. errorTextListenable
 4. valueListenable
+5. modelListenable
 
 ### get listenable from FormeFieldController
 
@@ -273,7 +274,7 @@ out of field but in Forme.
 
 you can get a `LazyFormeFieldListenable`  via `FormeKey.lazyFieldListenable(name)`.
 
-`LazyFormeFieldListenable`'s behavior is same as `FormeFieldListenable`,the unique difference is `LazyFormeFieldListenable` no need to wrap in a `Builder` or other widgets.
+`LazyFormeFieldListenable`'s behavior is same as `FormeFieldListenable`,the  difference is `LazyFormeFieldListenable` no need to wrap in a `Builder` or other widgets and not support `modelListenable`.
 
 eg: 
 ``` Dart

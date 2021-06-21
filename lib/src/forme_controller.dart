@@ -47,7 +47,8 @@ abstract class FormeController {
   ///
   /// key is [FormeValueFieldController]
   /// value is errorMsg
-  Map<FormeValueFieldController, String> validate({bool quietly = false});
+  Map<FormeValueFieldController, String> validate(
+      {bool quietly = false, bool notify});
 
   /// set forme data
   set data(Map<String, dynamic> data);
@@ -160,6 +161,9 @@ abstract class FormeFieldController<E extends FormeModel> {
   /// will trigger when [Forme] or field's readOnly state changed
   ValueListenable<bool> get readOnlyListenable;
 
+  /// model listenable
+  ValueListenable<E> get modelListenable;
+
   static T of<T extends FormeFieldController>(BuildContext context) {
     return InheritedFormeFieldController.of(context) as T;
   }
@@ -175,8 +179,10 @@ abstract class FormeValueFieldController<T, E extends FormeModel>
 
   /// validate field , return errorText
   ///
-  /// if [quietly] is true,will not rebuild field and update and display error Text
-  String? validate({bool quietly = false});
+  /// if [quietly] ,will not rebuild field and update and display error Text
+  ///
+  /// if [notify] , will trigger error listenable
+  String? validate({bool quietly = false, bool notify = true});
 
   /// reset field
   void reset();
@@ -238,6 +244,12 @@ abstract class FormeValueFieldController<T, E extends FormeModel>
   ///
   /// @since 2.0.3
   void clearValue();
+
+  /// get old field value
+  ///
+  /// **after field's value changed , when you need to get old field's value,
+  /// you can use this method**
+  T? get oldValue;
 }
 
 /// used to get field's listenable
@@ -266,6 +278,9 @@ abstract class FormeFieldListenable {
 
   /// get valueListenable
   ValueListenable<bool> get readOnlyListenable;
+
+  /// get model listenable
+  ValueListenable<FormeModel> get modelListenable;
 }
 
 /// used to control decorator's model
@@ -331,6 +346,8 @@ abstract class FormeFieldControllerDelegate<E extends FormeModel>
   void updateModel(E model) => delegate.updateModel(model);
   @override
   ValueListenable<bool> get focusListenable => delegate.focusListenable;
+  @override
+  ValueListenable<E> get modelListenable => delegate.modelListenable;
 }
 
 abstract class FormeValueFieldControllerDelegate<T, E extends FormeModel>
@@ -343,8 +360,8 @@ abstract class FormeValueFieldControllerDelegate<T, E extends FormeModel>
   @override
   set value(T? value) => delegate.value = value;
   @override
-  String? validate({bool quietly = false}) =>
-      delegate.validate(quietly: quietly);
+  String? validate({bool quietly = false, bool notify = true}) =>
+      delegate.validate(quietly: quietly, notify: notify);
   @override
   void reset() => delegate.reset();
   @override
@@ -359,6 +376,8 @@ abstract class FormeValueFieldControllerDelegate<T, E extends FormeModel>
   ValueListenable<T?> get valueListenable => delegate.valueListenable;
   @override
   void clearValue() => delegate.clearValue();
+  @override
+  T? get oldValue => delegate.oldValue;
 }
 
 /// forme validate error
