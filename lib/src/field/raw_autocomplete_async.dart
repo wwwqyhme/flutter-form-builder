@@ -285,6 +285,7 @@ class _FormeRowAutoCompleteState<T extends Object>
 
   @override
   void dispose() {
+    timer?.cancel();
     widget.removeOverlayNotifier.removeListener(removeOverlay);
     optionsNotifier.dispose();
     fieldViewWidgetNotifier.dispose();
