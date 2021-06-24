@@ -101,6 +101,9 @@ abstract class FormeFieldController<E extends FormeModel> {
     UnfocusDisposition disposition = UnfocusDisposition.scope,
   });
 
+  /// focus next
+  void nextFocus();
+
   /// set state model on field
   ///
   /// directly set model will lose old model
@@ -165,7 +168,7 @@ abstract class FormeFieldController<E extends FormeModel> {
   ValueListenable<E> get modelListenable;
 
   static T of<T extends FormeFieldController>(BuildContext context) {
-    return InheritedFormeFieldController.of(context) as T;
+    return FormeKey.getFieldByContext<T>(context);
   }
 }
 
@@ -233,10 +236,6 @@ abstract class FormeValueFieldController<T, E extends FormeModel>
   /// **do not use this notifier out of field,in this case , use [FormeController.fieldListenable] instead**
   ValueListenable<T?> get valueListenable;
 
-  static T of<T extends FormeValueFieldController>(BuildContext context) {
-    return InheritedFormeFieldController.of(context) as T;
-  }
-
   /// clear value
   ///
   /// when field has multi widgets need to clear value (eg: [FormeAsyncAutocompleteText]) , use this method rather than
@@ -250,6 +249,10 @@ abstract class FormeValueFieldController<T, E extends FormeModel>
   /// **after field's value changed , when you need to get old field's value,
   /// you can use this method**
   T? get oldValue;
+
+  static T of<T extends FormeValueFieldController>(BuildContext context) {
+    return FormeKey.getValueFieldByContext<T>(context);
+  }
 }
 
 /// used to get field's listenable
@@ -339,6 +342,8 @@ abstract class FormeFieldControllerDelegate<E extends FormeModel>
   void unfocus({UnfocusDisposition disposition = UnfocusDisposition.scope}) =>
       delegate.unfocus(disposition: disposition);
   @override
+  void nextFocus() => delegate.nextFocus();
+  @override
   bool get hasFocus => delegate.hasFocus;
   @override
   String get name => delegate.name;
@@ -419,26 +424,5 @@ class EmptyStateModel extends FormeModel {
   @override
   FormeModel copyWith(FormeModel old) {
     return EmptyStateModel();
-  }
-}
-
-/// share FormFieldController in sub tree
-class InheritedFormeFieldController extends InheritedWidget {
-  final FormeFieldController controller;
-  const InheritedFormeFieldController(this.controller, Widget child)
-      : super(child: child);
-  @override
-  bool updateShouldNotify(covariant InheritedWidget oldWidget) => false;
-
-  static FormeFieldController of(BuildContext context) {
-    return context
-        .dependOnInheritedWidgetOfExactType<InheritedFormeFieldController>()!
-        .controller;
-  }
-
-  static FormeFieldController? maybeOf(BuildContext context) {
-    return context
-        .dependOnInheritedWidgetOfExactType<InheritedFormeFieldController>()
-        ?.controller;
   }
 }

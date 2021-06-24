@@ -109,15 +109,14 @@ class FormeChoiceChip<T extends Object>
 class _FormeChoiceChipState<T extends Object>
     extends ValueFieldState<T, FormeChoiceChipModel<T>> {
   @override
-  FormeChoiceChipModel<T> beforeUpdateModel(
+  void afterUpdateModel(
       FormeChoiceChipModel<T> old, FormeChoiceChipModel<T> current) {
-    if (value == null) return current;
+    if (value == null) return;
     if (current.items != null) {
       if (!current.items!.any((element) => element.data == value)) {
         setValue(null);
       }
     }
-    return current;
   }
 
   @override

@@ -29,9 +29,6 @@ class MyApp extends StatelessWidget {
         '/checkboxtile': (context) => CheckboxTileFieldPage(),
         '/switchtile': (context) => SwitchTileFieldPage(),
         '/demo': (context) => DemoPage(),
-        '/cupertinopicker': (context) => CupertinoPickerFieldPage(),
-        '/cupertinodate': (context) => CupertinoDateFieldPage(),
-        '/cupertinotimer': (context) => CupertinoTimerFieldPage(),
         '/signup': (context) => SignupFormPage(),
       },
     );
@@ -134,38 +131,6 @@ class HomePage extends StatelessWidget {
                 Navigator.of(context).pushNamed('/switchtile');
               },
               child: Text('FormeSwitchTile')),
-          TextButton(
-              onPressed: () {
-                Navigator.of(context).pushNamed('/cupertinopicker');
-              },
-              child: Text('FormeCupertinoPicker')),
-          TextButton(
-              onPressed: () {
-                Navigator.of(context).pushNamed('/cupertinotimer');
-              },
-              child: Text('FormeCupertinoTimerField')),
-          TextButton(
-              onPressed: () {
-                Navigator.of(context).pushNamed('/cupertinodate');
-              },
-              child: Text('FormeCupertinoDateField')),
-          TextButton(
-              onPressed: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => CupertinoSegmentedControlPage()));
-              },
-              child: Text('FormeCupertinoSegmentedControl')),
-          TextButton(
-              onPressed: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) =>
-                            CupertinoSlidingSegmentedControlPage()));
-              },
-              child: Text('FormeCupertinoSlidingSegmentedControl')),
           TextButton(
               onPressed: () {
                 Navigator.push(

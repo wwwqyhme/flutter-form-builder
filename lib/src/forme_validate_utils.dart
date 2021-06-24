@@ -121,8 +121,9 @@ class FormeValidates {
       {String errorText = ''}) {
     return (v) {
       for (FormFieldValidator<T> validator in validators) {
-        if (validator(v) != null) {
-          return errorText;
+        String? _errorText = validator(v);
+        if (_errorText != null) {
+          return _errorText == '' ? errorText : _errorText;
         }
       }
       return null;

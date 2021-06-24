@@ -30,6 +30,7 @@ class TextFieldPage extends BasePage<String, FormeTextFieldModel> {
             print(
                 'value changed , current value is $m , old value is ${c.oldValue}');
           },
+          model: FormeTextFieldModel(autofocus: true),
           name: name,
           decoration: InputDecoration(
             labelText: 'TextField',
@@ -55,6 +56,19 @@ class TextFieldPage extends BasePage<String, FormeTextFieldModel> {
         ),
         Wrap(
           children: [
+            createButton('set value', () {
+              String text = 'admin@example.com';
+              (controller as FormeTextFieldController).textEditingValue =
+                  TextEditingValue(
+                      text: text,
+                      selection:
+                          FormeUtils.selection(text.length, text.length));
+            }),
+            createButton('set selection', () {
+              String text = controller.value!;
+              (controller as FormeTextFieldController).selection =
+                  FormeUtils.selection(0, text.length);
+            }),
             createButton('update labelText', () {
               controller.updateModel(FormeTextFieldModel(
                 decoration: InputDecoration(labelText: 'New Label Text'),
@@ -81,18 +95,7 @@ class TextFieldPage extends BasePage<String, FormeTextFieldModel> {
               controller.updateModel(FormeTextFieldModel(
                   decoration: InputDecoration(
                       prefixIcon: IconButton(
-                          onPressed: () {
-                            controller.value = 'prefix icon';
-                            WidgetsBinding.instance!
-                                .addPostFrameCallback((timeStamp) {
-                              controller.updateModel(FormeTextFieldModel(
-                                selection: FormeUtils.selection(
-                                    controller.value!.length,
-                                    controller.value!.length),
-                              ));
-                            });
-                          },
-                          icon: Icon(Icons.set_meal)))));
+                          onPressed: () {}, icon: Icon(Icons.set_meal)))));
             }),
             createButton('set suffix icon', () {
               controller.updateModel(FormeTextFieldModel(

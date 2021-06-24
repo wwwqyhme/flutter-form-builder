@@ -45,11 +45,12 @@ class FormeTextField extends ValueField<String, FormeTextFieldModel> {
           autovalidateMode: autovalidateMode,
           builder: (baseState) {
             bool readOnly = baseState.readOnly;
-            _TextFormeFieldState state = baseState as _TextFormeFieldState;
+            _FormeTextFieldState state = baseState as _FormeTextFieldState;
             FocusNode focusNode = baseState.focusNode;
 
             onChanged(String v) {
               state.didChange(v);
+              state.model.onChanged?.call(v);
             }
 
             return FormeTextFieldWidget(
@@ -66,10 +67,10 @@ class FormeTextField extends ValueField<String, FormeTextFieldModel> {
         );
 
   @override
-  _TextFormeFieldState createState() => _TextFormeFieldState();
+  _FormeTextFieldState createState() => _FormeTextFieldState();
 }
 
-class _TextFormeFieldState
+class _FormeTextFieldState
     extends ValueFieldState<String, FormeTextFieldModel> {
   late final TextEditingController textEditingController;
 
@@ -105,18 +106,43 @@ class _TextFormeFieldState
   }
 
   @override
-  FormeTextFieldModel beforeUpdateModel(
-      FormeTextFieldModel old, FormeTextFieldModel current) {
-    if (current.selection != null) {
-      textEditingController.selection = current.selection!;
-    }
-    return current;
+  FormeValueFieldController<String, FormeTextFieldModel>
+      createFormeFieldController() {
+    return FormeTextFieldController(super.createFormeFieldController(), this);
+  }
+}
+
+class FormeTextFieldController
+    extends FormeValueFieldControllerDelegate<String, FormeTextFieldModel> {
+  final FormeValueFieldController<String, FormeTextFieldModel> delegate;
+  final _FormeTextFieldState _state;
+  FormeTextFieldController(this.delegate, this._state);
+
+  set textEditingValue(TextEditingValue value) {
+    _state.textEditingController.value = value;
+    _state.didChange(value.text);
+  }
+
+  set selection(TextSelection selection) {
+    _state.textEditingController.selection = selection;
+  }
+
+  TextSpan buildTextSpan({TextStyle? style, required bool withComposing}) {
+    return _state.textEditingController.buildTextSpan(
+        context: _state.context, withComposing: withComposing, style: style);
+  }
+
+  void clearComposing() {
+    _state.textEditingController.clearComposing();
+  }
+
+  bool isSelectionWithinTextBounds(TextSelection selection) {
+    return _state.textEditingController.isSelectionWithinTextBounds(selection);
   }
 }
 
 class FormeTextFieldModel extends FormeModel {
   final bool? selectAllOnFocus;
-  final TextSelection? selection;
   final InputDecoration? decoration;
   final TextInputType? keyboardType;
   final bool? autofocus;
@@ -162,6 +188,8 @@ class FormeTextFieldModel extends FormeModel {
   final ValueChanged<String>? onChanged;
   final ValueChanged<String>? onSubmitted;
   final bool? readOnly;
+  final ScrollController? scrollController;
+  final TextSelectionControls? textSelectionControls;
 
   FormeTextFieldModel({
     this.keyboardType,
@@ -200,7 +228,6 @@ class FormeTextFieldModel extends FormeModel {
     this.autofocus,
     this.toolbarOptions,
     this.selectAllOnFocus,
-    this.selection,
     this.enableInteractiveSelection,
     this.enabled,
     this.onEditingComplete,
@@ -211,6 +238,8 @@ class FormeTextFieldModel extends FormeModel {
     this.onChanged,
     this.onSubmitted,
     this.readOnly,
+    this.scrollController,
+    this.textSelectionControls,
   });
 
   static FormeTextFieldModel? copy(
@@ -225,7 +254,6 @@ class FormeTextFieldModel extends FormeModel {
     FormeTextFieldModel old = oldModel as FormeTextFieldModel;
     return FormeTextFieldModel(
       selectAllOnFocus: selectAllOnFocus ?? old.selectAllOnFocus,
-      selection: selection,
       decoration:
           FormeRenderUtils.copyInputDecoration(old.decoration, decoration),
       keyboardType: keyboardType ?? old.keyboardType,
@@ -274,6 +302,8 @@ class FormeTextFieldModel extends FormeModel {
       onChanged: onChanged ?? old.onChanged,
       onSubmitted: onSubmitted ?? old.onSubmitted,
       readOnly: readOnly ?? old.readOnly,
+      scrollController: scrollController ?? old.scrollController,
+      textSelectionControls: textSelectionControls ?? old.textSelectionControls,
     );
   }
 }

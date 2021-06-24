@@ -37,7 +37,6 @@ enum FormeListTileType { Checkbox, Switch }
 
 class FormeListTile<T extends Object>
     extends ValueField<List<T>, FormeListTileModel<T>> {
-  final FormeListTileType type;
   FormeListTile({
     FormeValueChanged<List<T>, FormeListTileModel<T>>? onValueChanged,
     FormFieldValidator<List<T>>? validator,
@@ -46,7 +45,7 @@ class FormeListTile<T extends Object>
     FormFieldSetter<List<T>>? onSaved,
     required String name,
     bool readOnly = false,
-    this.type = FormeListTileType.Checkbox,
+    FormeListTileType type = FormeListTileType.Checkbox,
     required List<FormeListTileItem<T>>? items,
     FormeListTileModel<T>? model,
     FormeErrorChanged<
@@ -72,7 +71,7 @@ class FormeListTile<T extends Object>
             onErrorChanged: onErrorChanged,
             key: key,
             model: (model ?? FormeListTileModel<T>())
-                .copyWith(FormeListTileModel(items: items)),
+                .copyWith(FormeListTileModel(items: items, type: type)),
             readOnly: readOnly,
             name: name,
             onValueChanged: onValueChanged,
@@ -84,6 +83,7 @@ class FormeListTile<T extends Object>
               bool readOnly = state.readOnly;
               int split = state.model.split ?? 2;
               List<FormeListTileItem<T>> items = state.model.items ?? [];
+              FormeListTileType type = state.model.type!;
 
               FormeListTileRenderData? listTileRenderData =
                   state.model.listTileRenderData;
@@ -260,7 +260,7 @@ class _FormeListTileState<T extends Object>
   bool allowSelectAll = false;
 
   @override
-  FormeListTileModel<T> beforeUpdateModel(
+  void afterUpdateModel(
       FormeListTileModel<T> old, FormeListTileModel<T> current) {
     if (current.items != null) {
       List<T> items = List.of(value!);
@@ -275,7 +275,6 @@ class _FormeListTileState<T extends Object>
       });
       if (removed) setValue(items);
     }
-    return current;
   }
 
   @override
@@ -284,7 +283,10 @@ class _FormeListTileState<T extends Object>
     if (current.items == null) {
       current = current.copyWith(FormeListTileModel<T>(items: old.items));
     }
-    return beforeUpdateModel(old, current);
+    if (current.type == null) {
+      current = current.copyWith(FormeListTileModel<T>(type: old.type));
+    }
+    return current;
   }
 }
 
@@ -296,6 +298,7 @@ class FormeListTileModel<T extends Object> extends FormeModel {
   final FormeRadioRenderData? radioRenderData;
   final FormeSwitchRenderData? switchRenderData;
   final FormeWrapRenderData? wrapRenderData;
+  final FormeListTileType? type;
 
   FormeListTileModel({
     this.split,
@@ -305,6 +308,7 @@ class FormeListTileModel<T extends Object> extends FormeModel {
     this.radioRenderData,
     this.switchRenderData,
     this.wrapRenderData,
+    this.type,
   });
   FormeListTileModel<T> copyWith(FormeModel oldModel) {
     FormeListTileModel<T> old = oldModel as FormeListTileModel<T>;
@@ -321,6 +325,7 @@ class FormeListTileModel<T extends Object> extends FormeModel {
           FormeSwitchRenderData.copy(old.switchRenderData, switchRenderData),
       wrapRenderData:
           FormeWrapRenderData.copy(old.wrapRenderData, wrapRenderData),
+      type: type ?? old.type,
     );
   }
 }

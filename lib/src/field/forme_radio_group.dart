@@ -178,14 +178,13 @@ class FormeRadioGroup<T extends Object>
 class _FormeRadioGroupState<T extends Object>
     extends ValueFieldState<T, FormeRadioGroupModel<T>> {
   @override
-  FormeRadioGroupModel<T> beforeUpdateModel(
+  void afterUpdateModel(
       FormeRadioGroupModel<T> old, FormeRadioGroupModel<T> current) {
-    if (value == null) return current;
+    if (value == null) return;
     if (current.items != null &&
         !current.items!.any((element) => element.data == value)) {
       setValue(null);
     }
-    return current;
   }
 
   @override
@@ -194,7 +193,7 @@ class _FormeRadioGroupState<T extends Object>
     if (current.items == null) {
       current = current.copyWith(FormeRadioGroupModel<T>(items: old.items));
     }
-    return beforeUpdateModel(old, current);
+    return current;
   }
 }
 

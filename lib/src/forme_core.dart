@@ -43,6 +43,16 @@ class FormeKey extends LabeledGlobalKey<State> implements FormeController {
     return currentState.controller;
   }
 
+  static T getFieldByContext<T extends FormeFieldController>(
+      BuildContext context) {
+    return _InheritedFormeFieldController.of(context) as T;
+  }
+
+  static T getValueFieldByContext<T extends FormeValueFieldController>(
+      BuildContext context) {
+    return _InheritedFormeFieldController.of(context) as T;
+  }
+
   @override
   Map<String, dynamic> get data => _currentController.data;
 
@@ -182,9 +192,9 @@ class _FormeState extends State<Forme> {
       setState(() {
         gen++;
         _readOnly = readOnly;
-        states.forEach((element) {
-          element._readOnlyNotifier.value = readOnly;
-        });
+      });
+      states.forEach((element) {
+        element._readOnlyNotifier.value = readOnly;
       });
     }
   }
@@ -402,29 +412,37 @@ mixin AbstractFieldState<T extends StatefulWidget, E extends FormeModel>
     _readOnlyNotifier.value = readOnly;
   }
 
-  /// used to do some logic before update model
-  ///
-  /// **if returned value is [old],this method will not rebuild field**
-  ///
-  /// **if you want to change field's value in this method , you should call
-  /// [FormField.setValue] rather than [FormFdidChange]**
-  @protected
-  E beforeUpdateModel(E old, E current) => current;
-
   /// used to do some logic after update model
   ///
-  /// **this method will be called after [beforeUpdateModel] or [beforeSetModel]**
+  /// **this method will be called in [State.setState]**
+  ///
+  /// **this method will be called in [FormeFieldController.updateModel] and [FormeFieldController.model]**
+  ///
+  /// **this method will be also called in [updateModelInDidUpdateWidget] after 2.0.5**
   @protected
   void afterUpdateModel(E old, E current) {}
 
-  /// used to do some logic before set model
+  /// used to set some required attribute before set model
   ///
-  /// **if returned value is [old],this method will not rebuild field**
   ///
-  /// **if you want to change field's value in this method , you should call
-  /// [FormField.setValue] rather than [FormFdidChange]**
+  /// **this method will be executed before [State.setState]**
+  ///
+  /// **you should not update any [State] value in this method , do that in [afterUpdateModel]**
+  ///
   @protected
   E beforeSetModel(E old, E current) => current;
+
+  ///
+  /// if model has been set via [FormeFieldController.model] or [FormeFieldController.updateModel]
+  /// [old] is **current widget's model** , [current] is the model set by user
+  /// otherwise [old] is oldWidget's model ,[current] is current widgets'model
+  ///
+  ///
+  /// **default implementing is [afterUpdateModel] , override this method if can't fit your needs**
+  @protected
+  void updateModelInDidUpdateWidget(E old, E current) {
+    afterUpdateModel(old, current);
+  }
 
   /// override this method if you want to listen focus changed
   @protected
@@ -440,27 +458,24 @@ mixin AbstractFieldState<T extends StatefulWidget, E extends FormeModel>
 
   _updateModel(E _model) {
     if (_model != model) {
-      E copy = beforeUpdateModel(model, _model);
-      if (copy != model) {
-        setState(() {
-          this._model = copy.copyWith(model) as E;
-        });
-        _modelNotifier.value = this.model;
-        afterUpdateModel(model, _model);
-      }
+      setState(() {
+        E old = model;
+        this._model = _model.copyWith(model) as E;
+        afterUpdateModel(old, _model);
+      });
+      _modelNotifier.value = this.model;
     }
   }
 
   _setModel(E _model) {
     if (_model != model) {
-      E copy = beforeSetModel(model, _model);
-      if (copy != model) {
-        setState(() {
-          this._model = copy;
-        });
-        _modelNotifier.value = this.model;
-        afterUpdateModel(model, _model);
-      }
+      E old = model;
+      E handle = beforeSetModel(old, _model);
+      setState(() {
+        this._model = handle;
+        afterUpdateModel(old, _model);
+      });
+      _modelNotifier.value = this.model;
     }
   }
 
@@ -484,10 +499,31 @@ mixin AbstractFieldState<T extends StatefulWidget, E extends FormeModel>
     _focusNode?.unfocus(disposition: disposition);
   }
 
+  @override
+  void didUpdateWidget(T oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    StatefulField<AbstractFieldState<T, E>, E> old =
+        oldWidget as StatefulField<AbstractFieldState<T, E>, E>;
+    if (_model == null) {
+      updateModelInDidUpdateWidget(old.model, _field.model);
+    } else {
+      updateModelInDidUpdateWidget(_field.model, _model!);
+    }
+  }
+
   E get model => _model ?? _field.model;
 
   StatefulField<AbstractFieldState<T, E>, E> get _field =>
       widget as StatefulField<AbstractFieldState<T, E>, E>;
+}
+
+/// this State is used for [CommonField]
+class CommonFieldState<E extends FormeModel> extends State<CommonField<E>>
+    with AbstractFieldState<CommonField<E>, E> {
+  @override
+  Widget build(BuildContext context) {
+    return _InheritedFormeFieldController(controller, widget.builder(this));
+  }
 }
 
 /// this State is only used for [ValueField]
@@ -571,6 +607,16 @@ class ValueFieldState<T extends Object, E extends FormeModel>
   }
 
   @override
+  void didUpdateWidget(ValueField<T, E> oldWidget) {
+    T? oldValue = super.value;
+    super.didUpdateWidget(oldWidget);
+    if (!compare(oldValue, super.value)) {
+      _oldValue = replaceNullValue(oldValue);
+      _valueNotifier.value = super.value;
+    }
+  }
+
+  @override
   void reset() {
     T? oldValue = super.value;
     super.reset();
@@ -641,7 +687,7 @@ class ValueFieldState<T extends Object, E extends FormeModel>
       );
     }
 
-    return InheritedFormeFieldController(this.controller, child);
+    return _InheritedFormeFieldController(this.controller, child);
   }
 
   @protected
@@ -985,6 +1031,9 @@ class _FormeFieldController<E extends FormeModel>
       state.unfocus(disposition: disposition);
 
   @override
+  void nextFocus() => state._focusNode?.nextFocus();
+
+  @override
   void updateModel(E model) => state._updateModel(model);
 
   @override
@@ -1095,4 +1144,19 @@ class _LazyValueListenable<T> extends ValueListenable<T> {
 
   @override
   T get value => _delegate == null ? _value : _delegate!.value;
+}
+
+/// share FormFieldController in sub tree
+class _InheritedFormeFieldController extends InheritedWidget {
+  final FormeFieldController controller;
+  const _InheritedFormeFieldController(this.controller, Widget child)
+      : super(child: child);
+  @override
+  bool updateShouldNotify(covariant InheritedWidget oldWidget) => false;
+
+  static FormeFieldController of(BuildContext context) {
+    return context
+        .dependOnInheritedWidgetOfExactType<_InheritedFormeFieldController>()!
+        .controller;
+  }
 }

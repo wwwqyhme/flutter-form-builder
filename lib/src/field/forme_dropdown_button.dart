@@ -93,14 +93,13 @@ class FormeDropdownButton<T extends Object>
 class _FormDropdownButtonState<T extends Object>
     extends ValueFieldState<T, FormeDropdownButtonModel<T>> {
   @override
-  FormeDropdownButtonModel<T> beforeUpdateModel(
+  void afterUpdateModel(
       FormeDropdownButtonModel<T> old, FormeDropdownButtonModel<T> current) {
-    if (value == null) return current;
+    if (value == null) return;
     if (current.items != null &&
         !current.items!.any((element) => element.value == value)) {
       setValue(null);
     }
-    return current;
   }
 
   @override
@@ -109,7 +108,7 @@ class _FormDropdownButtonState<T extends Object>
     if (current.items == null) {
       current = current.copyWith(FormeDropdownButtonModel<T>(items: old.items));
     }
-    return beforeUpdateModel(old, current);
+    return current;
   }
 }
 

@@ -123,19 +123,11 @@ class _FormeTimeFieldState
   }
 
   @override
-  FormeTimeFieldModel beforeUpdateModel(
-      FormeTimeFieldModel old, FormeTimeFieldModel current) {
+  void afterUpdateModel(FormeTimeFieldModel old, FormeTimeFieldModel current) {
     if (current.formatter != null && value != null) {
       textEditingController.text =
           value == null ? '' : current.formatter!(value!);
     }
-    return current;
-  }
-
-  @override
-  FormeTimeFieldModel beforeSetModel(
-      FormeTimeFieldModel old, FormeTimeFieldModel current) {
-    return beforeUpdateModel(old, current);
   }
 }
 

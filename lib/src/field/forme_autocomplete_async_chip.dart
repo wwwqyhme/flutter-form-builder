@@ -124,14 +124,12 @@ class _FormeAutocompleteTextState<T extends Object>
   }
 
   @override
-  FormeAsyncAutocompleteChipModel<T> beforeUpdateModel(
-      FormeAsyncAutocompleteChipModel<T> old,
+  void afterUpdateModel(FormeAsyncAutocompleteChipModel<T> old,
       FormeAsyncAutocompleteChipModel<T> current) {
     if (current.max != null && current.max! < value!.length) {
       List<T> items = List.of(value!);
       setValue(items.sublist(0, current.max!));
     }
-    return current;
   }
 
   @override

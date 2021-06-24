@@ -4,8 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'package:forme/forme.dart';
 
-import 'async_autocomplete_text.dart';
-import 'cupertino_segmented_control.dart';
+import 'page.dart';
 
 class DemoPage extends StatefulWidget {
   @override
@@ -14,6 +13,7 @@ class DemoPage extends StatefulWidget {
 
 class _DemoPageState extends State<DemoPage> {
   final FormeKey formKey = FormeKey();
+
   static const List<User> _userOptions = <User>[
     User(name: 'Alice', email: 'alice@example.com'),
     User(name: 'Bob', email: 'bob@example.com'),
@@ -245,7 +245,7 @@ class _DemoPageState extends State<DemoPage> {
           name: 'number',
           decoration: InputDecoration(labelText: 'Number'),
           model: FormeNumberFieldModel(
-            max: 99,
+            max: 100,
             decimal: 2,
           ),
         ),
@@ -282,47 +282,6 @@ class _DemoPageState extends State<DemoPage> {
               suffixIcon: IconButton(
                 icon: Icon(Icons.clear),
                 onPressed: () => formKey.valueField('datetime').value = null,
-              ),
-            ),
-          ),
-        ),
-        FormeTextFieldOnTapProxyWidget(
-          child: FormeCupertinoDateField(
-            name: 'cupertinoDatetime',
-            decoration: InputDecoration(
-              labelText: 'Cupertino DateTime',
-              prefixIcon: FormeValueFieldBuilder(
-                builder: (context, controller) {
-                  return IconButton(
-                      icon: Icon(Icons.tab),
-                      onPressed: () {
-                        controller.updateModel(FormeCupertinoDateFieldModel(
-                          type: FormeDateTimeFieldType.Date,
-                        ));
-                        toast(context, 'field type has been changed to Date');
-                      });
-                },
-              ),
-              suffixIcon: IconButton(
-                icon: Icon(Icons.clear),
-                onPressed: () =>
-                    formKey.valueField('cupertinoDatetime').value = null,
-              ),
-            ),
-            model: FormeCupertinoDateFieldModel(
-              type: FormeDateTimeFieldType.DateTime,
-            ),
-          ),
-        ),
-        FormeTextFieldOnTapProxyWidget(
-          child: FormeCupertinoTimerField(
-            name: 'cupertinoTimer',
-            decoration: InputDecoration(
-              labelText: 'Cupertino Timer',
-              suffixIcon: IconButton(
-                icon: Icon(Icons.clear),
-                onPressed: () =>
-                    formKey.valueField('cupertinoTimer').value = null,
               ),
             ),
           ),
@@ -456,110 +415,6 @@ class _DemoPageState extends State<DemoPage> {
           min: 1,
           max: 100,
         ),
-        FormeCupertinoSegmentedControl<String>(
-          model: FormeCupertinoSegmentedControlModel<String>(
-            padding: const EdgeInsets.symmetric(vertical: 10),
-          ),
-          decoration: InputDecoration(labelText: 'CupertinoSegmentedControl'),
-          name: 'segmentedControl',
-          chidren: {
-            'A': ReadOnlyWidget(
-              text: 'A',
-              formeKey: formKey,
-              name: 'segmentedControl',
-            ),
-            'B': ReadOnlyWidget(
-              text: 'B',
-              formeKey: formKey,
-              name: 'segmentedControl',
-            ),
-            'C': ValueListenableBuilder2<bool, FormeValidateError?>(
-              formKey
-                  .lazyFieldListenable('segmentedControl')
-                  .readOnlyListenable,
-              formKey
-                  .lazyFieldListenable('segmentedControl')
-                  .errorTextListenable,
-              child: Text('C'),
-              builder: (context, r, v, child) {
-                if (r)
-                  return Text(
-                    'C',
-                    style: TextStyle(color: Theme.of(context).disabledColor),
-                  );
-                if (v == null || !v.hasError) return child!;
-                return ShakeWidget(
-                  child: child!,
-                  key: UniqueKey(),
-                );
-              },
-            ),
-          },
-          validator: (v) => v == 'C' ? null : 'pls select C',
-          autovalidateMode: AutovalidateMode.onUserInteraction,
-        ),
-        FormeCupertinoSlidingSegmentedControl<String>(
-          decoration:
-              InputDecoration(labelText: 'CupertinoSlidingSegmentedControl'),
-          name: 'segmentedSlidingControl',
-          chidren: {
-            'A': ReadOnlyWidget(
-              text: 'A',
-              formeKey: formKey,
-              name: 'segmentedSlidingControl',
-            ),
-            'B': ReadOnlyWidget(
-              text: 'B',
-              formeKey: formKey,
-              name: 'segmentedSlidingControl',
-            ),
-            'C': ValueListenableBuilder2<bool, FormeValidateError?>(
-              formKey
-                  .lazyFieldListenable('segmentedSlidingControl')
-                  .readOnlyListenable,
-              formKey
-                  .lazyFieldListenable('segmentedSlidingControl')
-                  .errorTextListenable,
-              child: Text('C'),
-              builder: (context, r, v, child) {
-                if (r)
-                  return Text(
-                    'C',
-                    style: TextStyle(color: Theme.of(context).disabledColor),
-                  );
-                if (v == null || !v.hasError) return child!;
-                return ShakeWidget(
-                  child: child!,
-                  key: UniqueKey(),
-                );
-              },
-            ),
-          },
-          validator: (v) => v == 'C' ? null : 'pls select C',
-          autovalidateMode: AutovalidateMode.onUserInteraction,
-        ),
-        FormeCupertinoPicker(
-            decoration: InputDecoration(labelText: 'Cupertino Picker'),
-            validator: (value) => value! < 100
-                ? 'value must bigger than 100,current is $value'
-                : null,
-            name: 'cupertinoPicker',
-            autovalidateMode: AutovalidateMode.onUserInteraction,
-            itemExtent: 50,
-            children: List<Widget>.generate(1000, (index) {
-              return ValueListenableBuilder<bool>(
-                  valueListenable: formKey
-                      .lazyFieldListenable('cupertinoPicker')
-                      .readOnlyListenable,
-                  builder: (context, v, child) {
-                    if (v)
-                      return Text(
-                        index.toString(),
-                        style: TextStyle(color: Colors.grey),
-                      );
-                    return Text(index.toString());
-                  });
-            })),
         FormeRadioGroup<String>(
           decoration: InputDecoration(labelText: 'Radio Group'),
           items: FormeUtils.toFormeListTileItems(['1', '2', '3', '4'],

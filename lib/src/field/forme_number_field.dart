@@ -160,33 +160,24 @@ class _NumberFieldState extends ValueFieldState<num, FormeNumberFieldModel> {
   }
 
   void clearValue() {
-    super.setValue(null);
+    textEditingController.text = '';
+    setValue(null);
   }
 
   @override
-  FormeNumberFieldModel beforeSetModel(
+  void afterUpdateModel(
       FormeNumberFieldModel old, FormeNumberFieldModel current) {
-    return beforeUpdateModel(old, current);
-  }
-
-  @override
-  FormeNumberFieldModel beforeUpdateModel(
-      FormeNumberFieldModel old, FormeNumberFieldModel current) {
-    if (value == null) return current;
+    if (value == null) return;
     if (current.max != null && current.max! < value!) clearValue();
     if (current.allowNegative != null && !current.allowNegative! && value! < 0)
       clearValue();
     int? decimal = current.decimal;
     if (decimal != null) {
       int indexOfPoint = value.toString().indexOf(".");
-      if (indexOfPoint == -1) return current;
+      if (indexOfPoint == -1) return;
       int decimalNum = value.toString().length - (indexOfPoint + 1);
       if (decimalNum > decimal) clearValue();
     }
-    if (current.textFieldModel?.selection != null) {
-      textEditingController.selection = current.textFieldModel!.selection!;
-    }
-    return current;
   }
 }
 

@@ -174,10 +174,10 @@ class FormeFilterChip<T extends Object>
 class _FormeFilterChipState<T extends Object>
     extends ValueFieldState<List<T>, FormeFilterChipModel<T>> {
   @override
-  FormeFilterChipModel<T> beforeUpdateModel(
+  void afterUpdateModel(
       FormeFilterChipModel<T> old, FormeFilterChipModel<T> current) {
     List<T> value = super.value!;
-    if (value.isEmpty) return current;
+    if (value.isEmpty) return;
     if (current.items != null) {
       List<T> items = List.of(value);
       Iterable<T> datas = current.items!.map((e) => e.data);
@@ -195,7 +195,6 @@ class _FormeFilterChipState<T extends Object>
       List<T> items = List.of(value);
       setValue(items.sublist(0, current.count!));
     }
-    return current;
   }
 
   @override
@@ -204,7 +203,7 @@ class _FormeFilterChipState<T extends Object>
     if (current.items == null) {
       current = current.copyWith(FormeFilterChipModel<T>(items: old.items));
     }
-    return beforeUpdateModel(old, current);
+    return current;
   }
 }
 

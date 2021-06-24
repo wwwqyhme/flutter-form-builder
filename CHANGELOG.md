@@ -1,3 +1,13 @@
+## 2.1.0
+
+1. remove `Cupertino` fields ,they will be moved to another package
+2. `FormeSlider` and `FormeRangeSlider` will perform validate in onChangeEnd ,not in onChange
+3. `FormeTextField`'s controller can be cast to `FormeTextController`, set `TextEditingValue` and `Selection` is easily via this controller
+4. `FormeValueFieldController` support `nextFocus` , used to focus next focusable widget
+5. remove `beforeUpdateModel` from `AbstractFieldState` , you can do some logic in `afterUpdateModel`
+6. `AbstractFieldState`'s didUpdateWidget will call `afterUpdateModel` by default
+7. bug fix 
+
 ## 2.0.4+1
 
 1. bug fix: timer in `FormeRawAutocomplete` will be cancelled in dispose !

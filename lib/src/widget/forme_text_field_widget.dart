@@ -155,6 +155,8 @@ class _FormeTextFieldWidgetState extends State<FormeTextFieldWidget> {
       inputFormatters: model?.inputFormatters,
       keyboardType: model?.keyboardType,
       maxLength: model?.maxLength,
+      scrollController: model?.scrollController,
+      selectionControls: model?.textSelectionControls,
     );
 
     if (useProxy) {

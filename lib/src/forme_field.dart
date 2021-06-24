@@ -13,6 +13,7 @@ abstract class FormeDecoratorBuilder<T> {
 
 typedef FieldContentBuilder<T extends AbstractFieldState> = Widget Function(
     T state);
+
 mixin StatefulField<T extends AbstractFieldState<StatefulWidget, E>,
     E extends FormeModel> on StatefulWidget {
   /// field's name
@@ -32,7 +33,7 @@ mixin StatefulField<T extends AbstractFieldState<StatefulWidget, E>,
   FormeFieldInitialed<FormeFieldController<E>>? get onInitialed;
 }
 
-/// if you want to create a stateful form field, but don't want to return a value,you can override this field
+/// if you want to create a stateful form field, but don't want to return a value,you can use this field
 class CommonField<E extends FormeModel> extends StatefulWidget
     with StatefulField<CommonFieldState<E>, E> {
   final String name;
@@ -53,14 +54,6 @@ class CommonField<E extends FormeModel> extends StatefulWidget
 
   @override
   CommonFieldState<E> createState() => CommonFieldState();
-}
-
-class CommonFieldState<E extends FormeModel> extends State<CommonField<E>>
-    with AbstractFieldState<CommonField<E>, E> {
-  @override
-  Widget build(BuildContext context) {
-    return InheritedFormeFieldController(this.controller, widget.builder(this));
-  }
 }
 
 /// base field used to return a value

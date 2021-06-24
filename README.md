@@ -98,11 +98,6 @@ Forme is a form widget, but forme is not wrapped in a `Form`  , because I don't 
 | FormeDropdownButton | T | true | 
 | FormeListTile|  List&lt; T&gt; | false |
 | FormeRadioGroup|  T | true |
-| FormeCupertinoPicker|  int | false |
-| FormeCupertinoTimerField|  Duration | true |
-| FormeCupertinoDateField| DateTime | true |
-| FormeCupertinoSegmentedControl | T | true |
-| FormeCupertinoSlidingSegmentedControl | T | true |
 | FormeAsnycAutocompleteChip | List&lt;T&gt; | false |
 | FormeAsnycAutocompleteText | T | true |
 | FormeAutocompleteText | T | true |
@@ -433,6 +428,12 @@ bool hasFocus = field.hasFocus;
 ``` Dart
 field.requestFocus();
 field.unfocus();
+```
+
+### focus next
+
+``` Dart
+field.nextFocus();
 ```
 
 ### set field model

@@ -188,13 +188,13 @@ class _FormeDateTimeFieldState
     if (current.type == null)
       current = current
           .copyWith(FormeDateTimeFieldModel(type: FormeDateTimeFieldType.Date));
-    return beforeUpdateModel(old, current);
+    return current;
   }
 
   @override
-  FormeDateTimeFieldModel beforeUpdateModel(
+  void afterUpdateModel(
       FormeDateTimeFieldModel old, FormeDateTimeFieldModel current) {
-    if (value == null) return current;
+    if (value == null) return;
     if (current.firstDate != null && current.firstDate!.isAfter(value!))
       clearValue();
     if (value != null &&
@@ -215,7 +215,6 @@ class _FormeDateTimeFieldState
           (current.formatter ?? FormeDateTimeField.defaultDateTimeFormatter)(
               FormeDateTimeFieldType.Date, value!);
     }
-    return current;
   }
 
   @override

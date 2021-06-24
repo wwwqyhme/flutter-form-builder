@@ -46,7 +46,8 @@ class FormeSlider extends ValueField<double, FormeSliderModel> {
           validator: validator,
           initialValue: initialValue,
           autovalidateMode: autovalidateMode,
-          builder: (state) {
+          builder: (baseState) {
+            _FormeSliderState state = baseState as _FormeSliderState;
             bool readOnly = state.readOnly;
             double max = state.model.max!;
             double min = state.model.min!;
@@ -59,12 +60,11 @@ class FormeSlider extends ValueField<double, FormeSliderModel> {
             String? sliderLabel = state.model.labelRender == null
                 ? null
                 : state.model.labelRender!(value);
-
             SliderThemeData sliderThemeData =
                 state.model.sliderThemeData ?? SliderTheme.of(state.context);
             if (sliderThemeData.thumbShape == null)
               sliderThemeData = sliderThemeData.copyWith(
-                  thumbShape: CustomSliderThumbCircle(value: state.value!));
+                  thumbShape: CustomSliderThumbCircle(value: value));
             Widget slider = SliderTheme(
               data: sliderThemeData,
               child: Slider(
@@ -76,16 +76,22 @@ class FormeSlider extends ValueField<double, FormeSliderModel> {
                 divisions: divisions,
                 activeColor: activeColor,
                 inactiveColor: inactiveColor,
-                onChangeStart: state.model.onChangeStart,
-                onChangeEnd: state.model.onChangeEnd,
+                onChangeStart: (v) {
+                  state.requestFocus();
+                  state.model.onChangeStart?.call(v);
+                },
+                onChangeEnd: (v) {
+                  state.didChange(v);
+                  state.model.onChangeEnd?.call(v);
+                },
                 semanticFormatterCallback:
                     state.model.semanticFormatterCallback,
                 mouseCursor: state.model.mouseCursor,
                 onChanged: readOnly
                     ? null
                     : (double value) {
-                        state.didChange(value);
-                        state.requestFocus();
+                        state.updateValue(value);
+                        state.model.onChanged?.call(value);
                       },
               ),
             );
@@ -99,12 +105,21 @@ class FormeSlider extends ValueField<double, FormeSliderModel> {
 }
 
 class _FormeSliderState extends ValueFieldState<double, FormeSliderModel> {
+  double? _value;
+
+  updateValue(double value) {
+    setState(() {
+      _value = value;
+    });
+  }
+
   @override
-  FormeSliderModel beforeUpdateModel(
-      FormeSliderModel old, FormeSliderModel current) {
+  double? get value => _value ?? super.value!;
+
+  @override
+  void afterUpdateModel(FormeSliderModel old, FormeSliderModel current) {
     if (current.min != null && value! < current.min!) setValue(current.min!);
     if (current.max != null && value! > current.max!) setValue(current.max!);
-    return current;
   }
 
   @override
@@ -116,7 +131,12 @@ class _FormeSliderState extends ValueFieldState<double, FormeSliderModel> {
     if (current.max == null) {
       current = current.copyWith(FormeSliderModel(max: old.max));
     }
-    return beforeUpdateModel(old, current);
+    return current;
+  }
+
+  @override
+  void onValueChanged(double? value) {
+    _value = null;
   }
 }
 
@@ -124,6 +144,7 @@ class FormeSliderModel extends FormeModel {
   final SemanticFormatterCallback? semanticFormatterCallback;
   final ValueChanged<double>? onChangeStart;
   final ValueChanged<double>? onChangeEnd;
+  final ValueChanged<double>? onChanged;
   final double? max;
   final double? min;
   final int? divisions;
@@ -145,6 +166,7 @@ class FormeSliderModel extends FormeModel {
     this.onChangeStart,
     this.semanticFormatterCallback,
     this.labelRender,
+    this.onChanged,
   });
 
   @override
@@ -164,6 +186,7 @@ class FormeSliderModel extends FormeModel {
           old.sliderThemeData, sliderThemeData),
       mouseCursor: mouseCursor ?? old.mouseCursor,
       labelRender: labelRender ?? old.labelRender,
+      onChanged: onChanged ?? old.onChanged,
     );
   }
 }

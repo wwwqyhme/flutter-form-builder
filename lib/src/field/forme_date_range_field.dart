@@ -147,15 +147,9 @@ class _FormeDateRangeFieldState
   }
 
   @override
-  FormeDateRangeFieldModel beforeSetModel(
+  void afterUpdateModel(
       FormeDateRangeFieldModel old, FormeDateRangeFieldModel current) {
-    return beforeUpdateModel(old, current);
-  }
-
-  @override
-  FormeDateRangeFieldModel beforeUpdateModel(
-      FormeDateRangeFieldModel old, FormeDateRangeFieldModel current) {
-    if (value == null) return current;
+    if (value == null) return;
     if (current.firstDate != null && current.firstDate!.isAfter(value!.start))
       clearValue();
     if (value != null &&
@@ -163,7 +157,6 @@ class _FormeDateRangeFieldState
         current.lastDate!.isBefore(value!.end)) clearValue();
     if (current.formatter != null && value != null)
       textEditingController.text = current.formatter!(value!);
-    return current;
   }
 
   DateTime simple(DateTime dateTime) {

@@ -21,6 +21,9 @@ class SliderFieldPage extends BasePage<double, FormeSliderModel> {
         ),
         Wrap(
           children: [
+            createButton('reset', () async {
+              controller.reset();
+            }),
             createButton('set min to 20', () async {
               controller.updateModel(FormeSliderModel(
                 min: 20,

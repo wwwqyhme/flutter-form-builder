@@ -54,7 +54,9 @@ class FormeRangeSlider extends ValueField<RangeValues, FormeRangeSliderModel> {
             validator: validator,
             initialValue: initialValue,
             autovalidateMode: autovalidateMode,
-            builder: (state) {
+            builder: (baseState) {
+              _FormeRangeSliderState state =
+                  baseState as _FormeRangeSliderState;
               bool readOnly = state.readOnly;
               double max = state.model.max!;
               double min = state.model.min!;
@@ -89,15 +91,21 @@ class FormeRangeSlider extends ValueField<RangeValues, FormeRangeSliderModel> {
                   labels: sliderLabels,
                   activeColor: activeColor,
                   inactiveColor: inactiveColor,
-                  onChangeStart: state.model.onChangeStart,
-                  onChangeEnd: state.model.onChangeEnd,
+                  onChangeStart: (v) {
+                    state.requestFocus();
+                    state.model.onChangeStart?.call(v);
+                  },
+                  onChangeEnd: (v) {
+                    state.didChange(v);
+                    state.model.onChangeEnd?.call(v);
+                  },
                   semanticFormatterCallback:
                       state.model.semanticFormatterCallback,
                   onChanged: readOnly
                       ? null
                       : (RangeValues values) {
-                          state.didChange(values);
-                          state.requestFocus();
+                          state.updateValue(values);
+                          state.model.onChanged?.call(values);
                         },
                 ),
               );
@@ -114,15 +122,38 @@ class FormeRangeSlider extends ValueField<RangeValues, FormeRangeSliderModel> {
 
 class _FormeRangeSliderState
     extends ValueFieldState<RangeValues, FormeRangeSliderModel> {
+  RangeValues? _value;
+
+  updateValue(RangeValues value) {
+    setState(() {
+      _value = value;
+    });
+  }
+
   @override
-  FormeRangeSliderModel beforeUpdateModel(
+  RangeValues? get value => _value ?? super.value!;
+
+  @override
+  void onValueChanged(RangeValues? value) {
+    _value = null;
+  }
+
+  @override
+  void afterUpdateModel(
       FormeRangeSliderModel old, FormeRangeSliderModel current) {
     RangeValues value = super.value!;
-    if (current.min != null && value.start < current.min!)
-      setValue(RangeValues(current.min!, value.end));
-    if (current.max != null && value.end > current.max!)
-      setValue(RangeValues(value.start, current.max!));
-    return current;
+    if (current.min != null) {
+      if (value.start < current.min!)
+        setValue(RangeValues(current.min!, value.end));
+      else if (value.end < current.min!)
+        setValue(RangeValues(value.start, current.min!));
+    }
+    if (current.max != null) {
+      if (value.end > current.max!)
+        setValue(RangeValues(value.start, current.max!));
+      else if (value.start > current.max!)
+        setValue(RangeValues(current.max!, value.end));
+    }
   }
 
   @override
@@ -134,7 +165,7 @@ class _FormeRangeSliderState
     if (current.max == null) {
       current = current.copyWith(FormeRangeSliderModel(max: old.max));
     }
-    return beforeUpdateModel(old, current);
+    return current;
   }
 }
 
@@ -142,6 +173,7 @@ class FormeRangeSliderModel extends FormeModel {
   final SemanticFormatterCallback? semanticFormatterCallback;
   final ValueChanged<RangeValues>? onChangeStart;
   final ValueChanged<RangeValues>? onChangeEnd;
+  final ValueChanged<RangeValues>? onChanged;
   final double? max;
   final double? min;
   final int? divisions;
@@ -162,6 +194,7 @@ class FormeRangeSliderModel extends FormeModel {
     this.onChangeStart,
     this.semanticFormatterCallback,
     this.rangeLabelRender,
+    this.onChanged,
   });
 
   FormeRangeSliderModel copyWith(FormeModel oldModel) {
@@ -180,6 +213,7 @@ class FormeRangeSliderModel extends FormeModel {
           old.sliderThemeData, sliderThemeData),
       mouseCursor: mouseCursor ?? old.mouseCursor,
       rangeLabelRender: rangeLabelRender ?? old.rangeLabelRender,
+      onChanged: onChanged ?? old.onChanged,
     );
   }
 }
