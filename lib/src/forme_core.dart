@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:forme/forme.dart';
 
 typedef FormeFieldInitialed<T> = void Function(T field);
@@ -534,6 +534,7 @@ class ValueFieldState<T extends Object, E extends FormeModel>
   late final ValueNotifier<T?> _valueNotifier;
 
   T? _oldValue;
+  FormeValidateError? _error;
 
   @override
   FormeValueFieldController<T, E> get controller =>
@@ -626,7 +627,7 @@ class ValueFieldState<T extends Object, E extends FormeModel>
       _oldValue = replaceNullValue(oldValue);
       _valueNotifier.value = initialValue;
     }
-    _errorNotifier.value = null;
+    _notifyError(null);
   }
 
   @override
@@ -675,9 +676,7 @@ class ValueFieldState<T extends Object, E extends FormeModel>
     if (needValidate &&
         ((error = FormeValidateError(super.errorText)) !=
             _errorNotifier.value)) {
-      WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
-        _errorNotifier.value = error;
-      });
+      _notifyError(error, endOfFrame: true);
     }
 
     if (widget.decoratorBuilder != null) {
@@ -717,6 +716,19 @@ class ValueFieldState<T extends Object, E extends FormeModel>
     }
   }
 
+  _notifyError(
+    FormeValidateError? error, {
+    bool endOfFrame = false,
+  }) {
+    _error = error;
+    if (endOfFrame)
+      WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+        _errorNotifier.value = error;
+      });
+    else
+      _errorNotifier.value = error;
+  }
+
   String? _performValidate({bool quietly = false, bool notify = true}) {
     String? errorText;
     if (_formScope.quietlyValidate || quietly) {
@@ -727,8 +739,8 @@ class ValueFieldState<T extends Object, E extends FormeModel>
       errorText = super.errorText;
     }
     if (notify) {
-      _errorNotifier.value =
-          widget.validator == null ? null : FormeValidateError(errorText);
+      _notifyError(
+          widget.validator == null ? null : FormeValidateError(errorText));
     }
     return errorText;
   }
@@ -1062,7 +1074,7 @@ class _FormeValueFieldController<T extends Object, E extends FormeModel>
   T? get value => state.value;
 
   @override
-  FormeValidateError? get error => errorTextListenable.value;
+  FormeValidateError? get error => state._error;
 
   @override
   void reset() => state.reset();

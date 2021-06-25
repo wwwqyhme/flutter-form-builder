@@ -159,7 +159,7 @@ abstract class FormeFieldController<E extends FormeModel> {
   /// readOnly listenable
   ///
   /// useful update children items when readOnly state changes,
-  ///  eg [FormeCupertinoSegmentedControl]
+  ///  eg [CupertinoSegmentedControl]
   ///
   /// will trigger when [Forme] or field's readOnly state changed
   ValueListenable<bool> get readOnlyListenable;

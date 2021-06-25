@@ -71,7 +71,7 @@ class FormeSingleSwitch extends ValueField<bool, FormeSingleSwitchModel> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 state.model.title ?? SizedBox(),
-                FormeRenderUtils.adaptiveSwitch(
+                FormeRenderUtils.formeSwitch(
                   value,
                   readOnly
                       ? null

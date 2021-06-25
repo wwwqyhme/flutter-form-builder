@@ -29,6 +29,9 @@ class TextFieldPage extends BasePage<String, FormeTextFieldModel> {
           onValueChanged: (c, m) {
             print(
                 'value changed , current value is $m , old value is ${c.oldValue}');
+            WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+              print(c.error?.text);
+            });
           },
           model: FormeTextFieldModel(autofocus: true),
           name: name,

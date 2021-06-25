@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
@@ -197,10 +196,10 @@ class FormeRenderUtils {
     );
   }
 
-  static Switch adaptiveSwitch(bool value, ValueChanged<bool>? onChanged,
+  static Switch formeSwitch(bool value, ValueChanged<bool>? onChanged,
       FormeSwitchRenderData? switchRenderData,
       {FocusNode? focusNode}) {
-    return Switch.adaptive(
+    return Switch(
       value: value,
       onChanged: onChanged,
       activeColor: switchRenderData?.activeColor,

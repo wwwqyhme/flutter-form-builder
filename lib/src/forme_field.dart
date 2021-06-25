@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'forme_controller.dart';
 
 import 'forme_core.dart';
@@ -62,6 +62,8 @@ class CommonField<E extends FormeModel> extends StatefulWidget
 class ValueField<T extends Object, E extends FormeModel> extends FormField<T>
     with StatefulField<ValueFieldState<T, E>, E> {
   final String name;
+
+  /// **if you want to get current field error in value changed, you should call [WidgetsBinding.instance.addPostFrameCallback]**
   final FormeValueChanged<T, E>? onValueChanged;
   final E model;
   final bool readOnly;

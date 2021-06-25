@@ -578,10 +578,8 @@ class _DemoPageState extends State<DemoPage> {
         'testSlider': 0.0,
         'segmentedControl': 'A',
         'segmentedSlidingControl': 'B',
-        'cupertinoPicker': 70,
         'radioGroup': '1',
         'checkboxTile': ['Checkbox 2'],
-        'cupertinoDatetime': DateTime.now(),
         'asyncAutocomplete': _userOptions[0],
       },
     );

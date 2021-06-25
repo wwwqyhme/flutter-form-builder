@@ -158,7 +158,7 @@ class FormeListTile<T extends Object>
                             : (v) => changeValue(item.data),
                         checkboxRenderData);
                   case FormeListTileType.Switch:
-                    return FormeRenderUtils.adaptiveSwitch(
+                    return FormeRenderUtils.formeSwitch(
                         selected,
                         readOnly || item.readOnly
                             ? null

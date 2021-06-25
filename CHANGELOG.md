@@ -1,3 +1,9 @@
+## 2.1.1
+
+1. bug fix: can't get current field error in onValueChanged
+2. `FormeSingleSwitch` & `FormeListTile` always use material switch
+3. `FormeValidates` add `range` and `equals` vaidator
+
 ## 2.1.0
 
 1. remove `Cupertino` fields ,they will be moved to another package
