@@ -85,10 +85,10 @@ Forme is a form widget, but forme is not wrapped in a `Form`  , because I don't 
 | Name | Return Value | Nullable|
 | ---| ---| --- |
 | FormeTextField|  string | false |
-| FormeDateTimeTextField|  DateTime | true |
-| FormeNumberTextField|  num | true |
-| FormeTimeTextField | TimeOfDay | true | 
-| FormeDateRangeTextField | DateTimeRange | true | 
+| FormeDateTimeField|  DateTime | true |
+| FormeNumberField|  num | true |
+| FormeTimeField | TimeOfDay | true | 
+| FormeDateRangeField | DateTimeRange | true | 
 | FormeSlider|  double | false |
 | FormeRangeSlider|  RangeValues | false|
 | FormeFilterChip|  List&lt; T&gt; | false |
@@ -101,6 +101,10 @@ Forme is a form widget, but forme is not wrapped in a `Form`  , because I don't 
 | FormeAsnycAutocompleteChip | List&lt;T&gt; | false |
 | FormeAsnycAutocompleteText | T | true |
 | FormeAutocompleteText | T | true |
+
+## fields from other package
+
+1. [forme_cupertino_fields](https://pub.dev/packages/forme_cupertino_fields) cupertino style fields
 
 ## Forme Model
 
@@ -289,7 +293,7 @@ Forme(
 
 ## validate
 
-**validate is supported by FormeValidateUtils**	
+**validate is supported by FormeValidates**	
 
 | Validator Name |  Support Type  | When Valid |  When Invalid  |
 | --- | --- | --- | --- |
@@ -306,6 +310,8 @@ Forme(
 | `pattern`  | `String` | 1. value null 2. value matches pattern  |  value does not matches pattern |
 | `email`  | `String` | 1. value null 2. value is a valid email  |  value is not a valid email |
 | `url`  | `String` | 1. value is null 2. value is empty or value is a valid url  |  value is not a valid url |
+| `range`  | `num` | 1. value null 2. value is in range  |  value is out of range |
+| `equals`  | `dynamic` | 1. value null 2. value is equals target value  |  value is not equals target value |
 | `any`  | `T` | any validators is valid  |  every validators is invalid |
 | `all`  | `T` | all validators is valid  |  any validators is invalid |
 
