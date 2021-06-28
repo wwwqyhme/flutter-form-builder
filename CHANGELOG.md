@@ -1,3 +1,7 @@
+## 2.1.2
+
+1. remove `buildTextSpan` from `FormeTextFieldController` , it cannot be compiled success before flutter 2.2.2
+
 ## 2.1.1
 
 1. bug fix: can't get current field error in onValueChanged
