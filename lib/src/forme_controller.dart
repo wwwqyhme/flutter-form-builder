@@ -36,9 +36,7 @@ abstract class FormeController {
   /// get form data
   Map<String, dynamic> get data;
 
-  /// get error msg after validated
-  ///
-  /// this method can get error even though  [Forme.quietlyValidate] is true
+  /// get error msg after [validate]
   Map<FormeValueFieldController, String> get errors;
 
   /// perform a validate
@@ -47,12 +45,10 @@ abstract class FormeController {
   ///
   /// **if [quietly] is true , this method will not update and display error though [Forme.quietlyValidate] is false**
   ///
-  /// **if [notify] is false, error will not be notified**
-  ///
   /// key is [FormeValueFieldController]
   /// value is errorMsg
   Map<FormeValueFieldController, String> validate(
-      {bool quietly = false, bool notify = true});
+      {bool quietly = false, bool notify});
 
   /// set forme data
   set data(Map<String, dynamic> data);
@@ -201,19 +197,9 @@ abstract class FormeValueFieldController<T, E extends FormeModel>
   /// if error is not null and [FormeValidateError.text] is null ,means field is valid
   ///
   /// if error is not null and [FormeValidateError.text] is not null ,means is invalid
-  ///
-  /// **you still can get error text even though [Forme.quietlyValidate] is true**
-  ///
-  /// **value notifier is always be trigger before errorNotifier , so  when you want to get error in onValueChanged , you should call this method in [WidgetsBinding.instance.addPostFrameCallback]**
   FormeValidateError? get error;
 
   /// get forme decorator controller
-  ///
-  /// decoratorController is used to update|set model for [FormeDecorator],
-  /// the model type is determined by [ValueField]'s decoratorBuilder.
-  ///
-  /// eg: when your decoratorBuilder is [FormeInputDecoratorBuilder] , the model
-  /// type is [FormeInputDecoratorModel]
   FormeDecoratorController get decoratorController;
 
   /// get error listenable
@@ -260,7 +246,8 @@ abstract class FormeValueFieldController<T, E extends FormeModel>
 
   /// get old field value
   ///
-  /// **after field's value changed , you can use this method to get old value**
+  /// **after field's value changed , when you need to get old field's value,
+  /// you can use this method**
   T? get oldValue;
 
   static T of<T extends FormeValueFieldController>(BuildContext context) {

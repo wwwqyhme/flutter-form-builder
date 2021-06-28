@@ -127,11 +127,6 @@ class FormeTextFieldController
     _state.textEditingController.selection = selection;
   }
 
-  TextSpan buildTextSpan({TextStyle? style, required bool withComposing}) {
-    return _state.textEditingController.buildTextSpan(
-        context: _state.context, withComposing: withComposing, style: style);
-  }
-
   void clearComposing() {
     _state.textEditingController.clearComposing();
   }
