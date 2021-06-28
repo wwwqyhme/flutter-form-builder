@@ -16,6 +16,8 @@ class DateTimeFieldPage extends BasePage<DateTime, FormeDateTimeFieldModel> {
               readOnly: false,
               decoration: InputDecoration(labelText: 'DateTime'),
             )),
+            asyncValidator: (value) =>
+                Future.delayed(Duration(seconds: 1), () => 'invalid date'),
             validator: (value) => value == null ? 'select a datetime!' : null,
           ),
         ),

@@ -28,7 +28,10 @@ class AutocompleteText
           model: FormeAutocompleteTextModel<User>(
               textFieldModel: FormeTextFieldModel(maxLines: 1)),
           name: name,
+          asyncValidator: (v) => Future.delayed(Duration(milliseconds: 800),
+              () => 'this errorText is from async validator'),
           validator: (v) => v == null ? 'pls select one !' : null,
+          autovalidateMode: AutovalidateMode.onUserInteraction,
         ),
         Padding(
             padding: EdgeInsets.only(top: 250),

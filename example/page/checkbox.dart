@@ -33,10 +33,7 @@ class CheckboxPage extends BasePage<bool, FormeSingleCheckboxModel> {
                     selectedTileColor: Colors.green,
                   )));
             }),
-            builderButton('validate', (context) {
-              String? error = controller.validate();
-              if (error != null) showError(context, error);
-            })
+            builderButton('validate', (context) {})
           ],
         )
       ],

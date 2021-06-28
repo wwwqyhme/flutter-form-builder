@@ -27,7 +27,11 @@ class FormeDateRangeField
     FormeDecoratorBuilder<DateTimeRange>? decoratorBuilder,
     InputDecoration? decoration,
     int? maxLines = 1,
+    Duration? asyncValidatorDebounce,
+    FormeFieldValidator<DateTimeRange>? asyncValidator,
   }) : super(
+          asyncValidator: asyncValidator,
+          asyncValidatorDebounce: asyncValidatorDebounce,
           onInitialed: onInitialed,
           decoratorBuilder: decoratorBuilder,
           onFocusChanged: onFocusChanged,

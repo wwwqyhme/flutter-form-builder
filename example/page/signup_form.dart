@@ -149,8 +149,9 @@ class _SignUpScreenState extends State<SignupFormPage> {
       hint: "First Name",
       name: 'firstName',
       formeKey: formeKey,
-      validator: (v) =>
-          v!.length < 6 ? 'First Name\'s must bigger than 6' : null,
+      asyncValidator: (v) => Future.delayed(
+          Duration(seconds: 2), () => v == 'admin' ? null : 'username exists'),
+      validator: FormeValidates.size(min: 5, errorText: 'at least 5 length'),
     );
   }
 
@@ -223,9 +224,8 @@ class _SignUpScreenState extends State<SignupFormPage> {
               children: [
                 Builder(builder: (context) {
                   return ValueListenableBuilder<FormeValidateError?>(
-                      valueListenable: formeKey
-                          .fieldListenable('accept')
-                          .errorTextListenable,
+                      valueListenable:
+                          formeKey.valueField('accept').errorTextListenable,
                       builder: (context, a, b) {
                         if (a != null && a.hasError)
                           return Text(
@@ -291,9 +291,11 @@ class _SignUpScreenState extends State<SignupFormPage> {
           ),
           onPressed: () {
             int i = 0;
-            formeKey.validate().forEach((key, value) {
-              if (i == 0) key.requestFocus();
-              i++;
+            formeKey.validate().then((value) {
+              value.forEach((key, value) {
+                if (i == 0) key.requestFocus();
+                i++;
+              });
             });
           },
           child: Container(
@@ -454,6 +456,7 @@ class CustomTextField extends StatelessWidget {
   final FormeKey formeKey;
 
   final FormFieldValidator<String>? validator;
+  final FormeFieldValidator<String>? asyncValidator;
 
   CustomTextField({
     this.hint,
@@ -461,6 +464,7 @@ class CustomTextField extends StatelessWidget {
     this.icon,
     this.obscureText = false,
     this.validator,
+    this.asyncValidator,
     required this.name,
     required this.formeKey,
   });
@@ -476,27 +480,10 @@ class CustomTextField extends StatelessWidget {
         elevation: large ? 12 : (medium ? 10 : 8),
         child: Stack(
           children: [
-            if (validator != null)
-              Positioned(
-                  bottom: 5,
-                  left: 48,
-                  child: Builder(builder: (context) {
-                    return ValueListenableBuilder<FormeValidateError?>(
-                        valueListenable:
-                            formeKey.fieldListenable(name).errorTextListenable,
-                        builder: (context, a, b) {
-                          return a == null || !a.hasError
-                              ? SizedBox()
-                              : Text(a.text!,
-                                  style: TextStyle(
-                                    color: Colors.red,
-                                    fontSize: large ? 12 : 10,
-                                  ));
-                        });
-                  })),
             FormeTextField(
               name: name,
               validator: validator,
+              asyncValidator: asyncValidator,
               autovalidateMode: AutovalidateMode.onUserInteraction,
               onErrorChanged: (m, a) {
                 InputBorder border;
@@ -572,9 +559,21 @@ class CustomTextField extends StatelessWidget {
                           return ValueListenableBuilder<FormeValidateError?>(
                               valueListenable: controller.errorTextListenable,
                               builder: (context, errorText, child) {
-                                if (errorText == null)
-                                  return SizedBox();
-                                else
+                                if (errorText == null) return SizedBox();
+                                if (errorText.validating) {
+                                  return Padding(
+                                    padding: EdgeInsets.all(16),
+                                    child: SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        valueColor:
+                                            new AlwaysStoppedAnimation<Color>(
+                                                Colors.orange[200]!),
+                                      ),
+                                    ),
+                                  );
+                                } else
                                   return errorText.hasError
                                       ? const IconButton(
                                           onPressed: null,
@@ -599,6 +598,24 @@ class CustomTextField extends StatelessWidget {
                 ),
               ),
             ),
+            if (validator != null)
+              Positioned(
+                  bottom: 5,
+                  left: 48,
+                  child: Builder(builder: (context) {
+                    return ValueListenableBuilder<FormeValidateError?>(
+                        valueListenable:
+                            formeKey.valueField(name).errorTextListenable,
+                        builder: (context, a, b) {
+                          return a == null || !a.hasError
+                              ? SizedBox()
+                              : Text(a.text!,
+                                  style: TextStyle(
+                                    color: Colors.red,
+                                    fontSize: large ? 12 : 10,
+                                  ));
+                        });
+                  })),
           ],
         ));
   }

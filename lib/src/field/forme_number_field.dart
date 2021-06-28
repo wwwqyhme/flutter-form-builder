@@ -24,7 +24,11 @@ class FormeNumberField extends ValueField<num, FormeNumberFieldModel> {
     FormeDecoratorBuilder<num>? decoratorBuilder,
     InputDecoration? decoration,
     int? maxLines = 1,
+    Duration? asyncValidatorDebounce,
+    FormeFieldValidator<num>? asyncValidator,
   }) : super(
+          asyncValidator: asyncValidator,
+          asyncValidatorDebounce: asyncValidatorDebounce,
           onInitialed: onInitialed,
           decoratorBuilder: decoratorBuilder,
           onFocusChanged: onFocusChanged,

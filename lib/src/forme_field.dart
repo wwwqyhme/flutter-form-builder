@@ -11,6 +11,8 @@ abstract class FormeDecoratorBuilder<T> {
   );
 }
 
+typedef FormeFieldValidator<T> = Future<String?> Function(T? value);
+
 typedef FieldContentBuilder<T extends AbstractFieldState> = Widget Function(
     T state);
 
@@ -108,12 +110,22 @@ class ValueField<T extends Object, E extends FormeModel> extends FormField<T>
   /// **try to get another field's controller in this method will cause an error**
   final FormeFieldInitialed<FormeFieldController<E>>? onInitialed;
 
+  /// used to perform an async validate
+  ///
+  /// if you specific both asyncValidator and validator , asyncValidator will only worked after validator validate success
+  ///
+  /// you can use [FormeValueFieldController.asyncErrorLoadingListenable] listen async validating state
+  final FormeFieldValidator<T>? asyncValidator;
+  final Duration? asyncValidatorDebounce;
+
   ValueField({
     Key? key,
     this.onValueChanged,
+    this.asyncValidator,
+    this.asyncValidatorDebounce,
+    FormFieldValidator<T>? validator,
     required this.name,
     required FieldContentBuilder<ValueFieldState<T, E>> builder,
-    FormFieldValidator<T>? validator,
     AutovalidateMode? autovalidateMode,
     T? initialValue,
     bool enabled = true,
@@ -135,14 +147,7 @@ class ValueField<T extends Object, E extends FormeModel> extends FormField<T>
               ValueFieldState<T, E> state = field as ValueFieldState<T, E>;
               return builder(state);
             },
-            validator: validator == null
-                ? null
-                : (v) {
-                    if (v == null && nullValueReplacement != null) {
-                      return validator(nullValueReplacement);
-                    }
-                    return validator(v);
-                  },
+            validator: validator,
             autovalidateMode: autovalidateMode,
             initialValue: initialValue);
   @override

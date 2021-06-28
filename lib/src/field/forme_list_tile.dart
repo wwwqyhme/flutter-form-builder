@@ -60,7 +60,11 @@ class FormeListTile<T extends Object>
     Key? key,
     FormeDecoratorBuilder<List<T>>? decoratorBuilder,
     InputDecoration? decoration,
+    Duration? asyncValidatorDebounce,
+    FormeFieldValidator<List<T>>? asyncValidator,
   }) : super(
+            asyncValidator: asyncValidator,
+            asyncValidatorDebounce: asyncValidatorDebounce,
             onInitialed: onInitialed,
             nullValueReplacement: [],
             decoratorBuilder: decoratorBuilder ??

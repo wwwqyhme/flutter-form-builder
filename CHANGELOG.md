@@ -1,3 +1,9 @@
+## 2.2.0
+
+1. support `asyncValidator` on `ValueField`
+2. remove `fieldListenable` from `FormeFieldController`
+3. remove `lazyFieldListenable` from `FormeKey`
+
 ## 2.1.2
 
 1. remove `buildTextSpan` from `FormeTextFieldController` , it cannot be compiled success before flutter 2.2.2

@@ -21,7 +21,11 @@ class FormeSingleCheckbox extends ValueField<bool, FormeSingleCheckboxModel> {
             FormeValueFieldController<bool, FormeSingleCheckboxModel>>?
         onInitialed,
     Key? key,
+    Duration? asyncValidatorDebounce,
+    FormeFieldValidator<bool>? asyncValidator,
   }) : super(
+          asyncValidator: asyncValidator,
+          asyncValidatorDebounce: asyncValidatorDebounce,
           onInitialed: onInitialed,
           nullValueReplacement: false,
           onFocusChanged: onFocusChanged,

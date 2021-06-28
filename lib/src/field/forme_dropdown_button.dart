@@ -25,7 +25,11 @@ class FormeDropdownButton<T extends Object>
     Key? key,
     FormeDecoratorBuilder<T>? decoratorBuilder,
     InputDecoration? decoration,
+    Duration? asyncValidatorDebounce,
+    FormeFieldValidator<T>? asyncValidator,
   }) : super(
+          asyncValidator: asyncValidator,
+          asyncValidatorDebounce: asyncValidatorDebounce,
           onInitialed: onInitialed,
           key: key,
           decoratorBuilder: decoratorBuilder ??

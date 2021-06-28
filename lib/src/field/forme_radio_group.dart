@@ -22,7 +22,11 @@ class FormeRadioGroup<T extends Object>
     Key? key,
     FormeDecoratorBuilder<T>? decoratorBuilder,
     InputDecoration? decoration,
+    Duration? asyncValidatorDebounce,
+    FormeFieldValidator<T>? asyncValidator,
   }) : super(
+            asyncValidator: asyncValidator,
+            asyncValidatorDebounce: asyncValidatorDebounce,
             onInitialed: onInitialed,
             decoratorBuilder: decoratorBuilder ??
                 (decoration == null

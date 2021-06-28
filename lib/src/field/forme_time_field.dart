@@ -27,7 +27,11 @@ class FormeTimeField extends ValueField<TimeOfDay, FormeTimeFieldModel> {
     FormeDecoratorBuilder<TimeOfDay>? decoratorBuilder,
     InputDecoration? decoration,
     int? maxLines = 1,
+    Duration? asyncValidatorDebounce,
+    FormeFieldValidator<TimeOfDay>? asyncValidator,
   }) : super(
+          asyncValidator: asyncValidator,
+          asyncValidatorDebounce: asyncValidatorDebounce,
           onInitialed: onInitialed,
           key: key,
           decoratorBuilder: decoratorBuilder,

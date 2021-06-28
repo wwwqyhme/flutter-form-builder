@@ -20,7 +20,11 @@ class FormeSingleSwitch extends ValueField<bool, FormeSingleSwitchModel> {
             FormeValueFieldController<bool, FormeSingleSwitchModel>>?
         onInitialed,
     Key? key,
+    Duration? asyncValidatorDebounce,
+    FormeFieldValidator<bool>? asyncValidator,
   }) : super(
+          asyncValidator: asyncValidator,
+          asyncValidatorDebounce: asyncValidatorDebounce,
           onInitialed: onInitialed,
           nullValueReplacement: false,
           key: key,

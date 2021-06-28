@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:forme/forme.dart';
+import 'package:forme/src/widget/forme_mounted_value_notifier.dart';
 
 typedef FormeFieldInitialed<T> = void Function(T field);
 
@@ -21,8 +24,6 @@ typedef FormeErrorChanged<T extends FormeValueFieldController> = void Function(
 /// form key is a global key
 class FormeKey extends LabeledGlobalKey<State> implements FormeController {
   FormeKey({String? debugLabel}) : super(debugLabel);
-
-  final List<_LazyFormeFieldListenable> _listenables = [];
 
   /// whether formKey is initialized
   bool get initialized {
@@ -71,9 +72,9 @@ class FormeKey extends LabeledGlobalKey<State> implements FormeController {
   bool hasField(String name) => _currentController.hasField(name);
 
   @override
-  Map<FormeValueFieldController, String> validate(
-          {bool quietly = false, bool notify = true}) =>
-      _currentController.validate(quietly: quietly, notify: notify);
+  Future<Map<FormeValueFieldController, String>> validate(
+          {bool quietly = false}) =>
+      _currentController.validate(quietly: quietly);
 
   @override
   void reset() => _currentController.reset();
@@ -90,28 +91,6 @@ class FormeKey extends LabeledGlobalKey<State> implements FormeController {
 
   @override
   set readOnly(bool readOnly) => _currentController.readOnly = readOnly;
-
-  @override
-  FormeFieldListenable fieldListenable(String name) =>
-      _currentController.fieldListenable(name);
-
-  /// create LazyFieldListenable
-  ///
-  /// no need to wrap in builder!
-  LazyFormeFieldListenable lazyFieldListenable(String name) {
-    State? currentState = super.currentState;
-    if (currentState == null || currentState is! _FormeState) {
-      Iterable<_LazyFormeFieldListenable> iterable =
-          this._listenables.where((element) => element.name == name);
-      if (iterable.isNotEmpty) return iterable.first;
-      _LazyFormeFieldListenable listenable = _LazyFormeFieldListenable(name);
-      _listenables.add(listenable);
-      return listenable;
-    }
-    _LazyFormeFieldListenable listenable = _LazyFormeFieldListenable(name);
-    listenable.listenable = currentState.controller.fieldListenable(name);
-    return listenable;
-  }
 
   static FormeController of(BuildContext context) {
     return _FormScope.of(context).formeController;
@@ -176,7 +155,6 @@ class Forme extends StatefulWidget {
 
 class _FormeState extends State<Forme> {
   final List<AbstractFieldState> states = [];
-  final List<_FormeFieldListenable> listenables = [];
   late final _FormeController controller;
 
   bool? _readOnly;
@@ -213,23 +191,11 @@ class _FormeState extends State<Forme> {
   @override
   void initState() {
     super.initState();
-    if (widget.key != null) {
-      FormeKey key = widget.key as FormeKey;
-      key._listenables.forEach((element) {
-        _FormeFieldListenable listenable =
-            _FormeFieldListenable(element.name, null);
-        element.listenable = listenable;
-        listenables.add(listenable);
-      });
-    }
     controller = _FormeController(this);
   }
 
   @override
   void dispose() {
-    listenables.forEach((element) {
-      element.dispose();
-    });
     super.dispose();
   }
 
@@ -247,11 +213,6 @@ class _FormeState extends State<Forme> {
 
   void registerField(AbstractFieldState state) {
     states.add(state);
-    listenables
-        .where((element) => element.name == state.name)
-        .forEach((element) {
-      element.whenAlive(state.controller);
-    });
     state._focusNotifier.addListener(() {
       if (widget.onFocusChanged != null)
         widget.onFocusChanged!(state.controller, state._focusNotifier.value);
@@ -270,11 +231,6 @@ class _FormeState extends State<Forme> {
 
   void unregisterField(AbstractFieldState state) {
     states.remove(state);
-    listenables
-        .where((element) => element.name == state.name)
-        .forEach((element) {
-      element.whenDead(state.controller);
-    });
   }
 }
 
@@ -332,9 +288,12 @@ mixin AbstractFieldState<T extends StatefulWidget, E extends FormeModel>
   E? _model;
   bool? _readOnly;
 
-  final ValueNotifier<bool> _focusNotifier = ValueNotifier(false);
-  final ValueNotifier<bool> _readOnlyNotifier = ValueNotifier(false);
-  late final ValueNotifier<E> _modelNotifier = ValueNotifier(_field.model);
+  late final FormeMountedValueNotifier<bool> _focusNotifier =
+      FormeMountedValueNotifier(false, this);
+  late final FormeMountedValueNotifier<bool> _readOnlyNotifier =
+      FormeMountedValueNotifier(false, this);
+  late final FormeMountedValueNotifier<E> _modelNotifier =
+      FormeMountedValueNotifier(_field.model, this);
   late final FormeFieldController<E> controller;
 
   String get name => _field.name;
@@ -529,12 +488,19 @@ class CommonFieldState<E extends FormeModel> extends State<CommonField<E>>
 /// this State is only used for [ValueField]
 class ValueFieldState<T extends Object, E extends FormeModel>
     extends FormFieldState<T> with AbstractFieldState<FormField<T>, E> {
-  final ValueNotifier<FormeValidateError?> _errorNotifier = ValueNotifier(null);
-  final ValueNotifier<FormeModel?> _decoratorNotifier = ValueNotifier(null);
-  late final ValueNotifier<T?> _valueNotifier;
+  late final FormeMountedValueNotifier<FormeValidateError?> _errorNotifier =
+      FormeMountedValueNotifier(null, this);
+  late final FormeMountedValueNotifier<FormeModel?> _decoratorNotifier =
+      FormeMountedValueNotifier(null, this);
+  late final FormeMountedValueNotifier<T?> _valueNotifier;
 
   T? _oldValue;
   FormeValidateError? _error;
+  Timer? _asyncValidatorDebounce;
+  bool _ignoreNextValidate = false;
+
+  bool get _hasValidator =>
+      widget.validator != null || widget.asyncValidator != null;
 
   @override
   FormeValueFieldController<T, E> get controller =>
@@ -548,10 +514,12 @@ class ValueFieldState<T extends Object, E extends FormeModel>
       _FormeValueFieldController(this, super.createFormeFieldController());
 
   @override
-  String? get errorText => _formScope.quietlyValidate ? null : super.errorText;
+  String? get errorText => _formScope.quietlyValidate ? null : _error?.text;
 
   /// copy super._hasInteractedByUser here to detect whether performed validate in builder
   bool _hasInteractedByUser = false;
+
+  int _validateGen = 0;
 
   @override
   T? get value => replaceNullValue(super.value);
@@ -571,7 +539,7 @@ class ValueFieldState<T extends Object, E extends FormeModel>
   void beforeInitiation() {
     super.beforeInitiation();
     setValue(initialValue);
-    _valueNotifier = ValueNotifier(initialValue);
+    _valueNotifier = FormeMountedValueNotifier(initialValue, this);
   }
 
   @override
@@ -620,18 +588,20 @@ class ValueFieldState<T extends Object, E extends FormeModel>
   @override
   void reset() {
     T? oldValue = super.value;
-    super.reset();
+    _error = null;
     _hasInteractedByUser = false;
+    super.reset();
     if (!compare(oldValue, initialValue)) {
       setValue(initialValue);
       _oldValue = replaceNullValue(oldValue);
       _valueNotifier.value = initialValue;
     }
-    _notifyError(null);
+    _errorNotifier.value = null;
   }
 
   @override
   void dispose() {
+    _asyncValidatorDebounce?.cancel();
     _decoratorNotifier.dispose();
     _errorNotifier.dispose();
     _valueNotifier.dispose();
@@ -659,25 +629,19 @@ class ValueFieldState<T extends Object, E extends FormeModel>
   void onErrorChanged(FormeValidateError? error) {}
 
   @override
-  bool validate() => _performValidate(quietly: false) == null;
-
-  @override
   @mustCallSuper
   Widget build(BuildContext context) {
-    bool needValidate = widget.validator != null &&
+    bool needValidate = _hasValidator &&
         widget.enabled &&
         ((widget.autovalidateMode == AutovalidateMode.always) ||
             (widget.autovalidateMode == AutovalidateMode.onUserInteraction &&
                 _hasInteractedByUser));
 
-    Widget child = super.build(context);
-
-    FormeValidateError error;
-    if (needValidate &&
-        ((error = FormeValidateError(super.errorText)) !=
-            _errorNotifier.value)) {
-      _notifyError(error, endOfFrame: true);
+    if (needValidate) {
+      _validate();
     }
+
+    Widget child = super.build(context);
 
     if (widget.decoratorBuilder != null) {
       child = widget.decoratorBuilder!.build(
@@ -687,6 +651,58 @@ class ValueFieldState<T extends Object, E extends FormeModel>
     }
 
     return _InheritedFormeFieldController(this.controller, child);
+  }
+
+  void _validate() {
+    if (_ignoreNextValidate) {
+      _ignoreNextValidate = false;
+      return;
+    }
+
+    int gen = ++_validateGen;
+
+    void notifyError(String? errorText, FormeValidateState state,
+        {bool cancel = true}) {
+      _error = FormeValidateError(errorText, state);
+      Future.delayed(Duration.zero, () {
+        if (mounted && gen == _validateGen) {
+          _errorNotifier.value = _error;
+        }
+      });
+    }
+
+    if (widget.validator != null) {
+      String? errorText = widget.validator!(value);
+      if (errorText != null || widget.asyncValidator == null) {
+        notifyError(errorText, FormeValidateState.invalid);
+        return;
+      }
+    }
+    if (widget.asyncValidator != null) {
+      notifyError(null, FormeValidateState.validating);
+      _asyncValidatorDebounce?.cancel();
+      _asyncValidatorDebounce =
+          Timer(widget.asyncValidatorDebounce ?? Duration.zero, () {
+        FormeValidateState? state;
+        String? errorText;
+        widget.asyncValidator!(value).then((text) {
+          state = text == null
+              ? FormeValidateState.valid
+              : FormeValidateState.invalid;
+          errorText = text;
+          return errorText;
+        }).whenComplete(() {
+          if (mounted && gen == _validateGen) {
+            setState(() {
+              _ignoreNextValidate = true;
+              _error = FormeValidateError(
+                  errorText, state == null ? FormeValidateState.fail : state!);
+            });
+            _errorNotifier.value = _error;
+          }
+        });
+      });
+    }
   }
 
   @protected
@@ -716,33 +732,58 @@ class ValueFieldState<T extends Object, E extends FormeModel>
     }
   }
 
-  _notifyError(
-    FormeValidateError? error, {
-    bool endOfFrame = false,
-  }) {
-    _error = error;
-    if (endOfFrame)
-      WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
-        _errorNotifier.value = error;
-      });
-    else
-      _errorNotifier.value = error;
-  }
+  Future<String?> _performValidate({bool quietly = false}) {
+    int gen = quietly ? _validateGen : ++_validateGen;
 
-  String? _performValidate({bool quietly = false, bool notify = true}) {
-    String? errorText;
-    if (_formScope.quietlyValidate || quietly) {
-      errorText =
-          widget.validator == null ? null : widget.validator!(super.value);
-    } else {
-      super.validate();
-      errorText = super.errorText;
+    bool needNotify() {
+      return !quietly && gen == _validateGen && mounted;
     }
-    if (notify) {
-      _notifyError(
-          widget.validator == null ? null : FormeValidateError(errorText));
+
+    void notify(String? errorText, FormeValidateState state) {
+      if (needNotify()) {
+        setState(() {
+          _error = FormeValidateError(errorText, state);
+        });
+        _errorNotifier.value = _error;
+      }
     }
-    return errorText;
+
+    if (!_hasValidator) {
+      notify(null, FormeValidateState.valid);
+      return Future.delayed(Duration.zero, () => null);
+    }
+
+    if (widget.validator != null) {
+      String? errorText = widget.validator!(value);
+      if (errorText != null || widget.asyncValidator == null) {
+        notify(errorText, FormeValidateState.invalid);
+        return Future.delayed(Duration.zero, () => errorText);
+      }
+    }
+
+    if (widget.asyncValidator != null) {
+      if (!quietly) {
+        notify(null, FormeValidateState.validating);
+      }
+      FormeValidateState? state;
+      String? errorText;
+      return widget.asyncValidator!(value).then((text) {
+        state = text == null
+            ? FormeValidateState.valid
+            : FormeValidateState.invalid;
+        errorText = text;
+        return errorText;
+      }).whenComplete(() {
+        if (needNotify()) {
+          _ignoreNextValidate = true;
+          notify(errorText, state == null ? FormeValidateState.fail : state!);
+        }
+      });
+    }
+
+    return Future.delayed(Duration.zero, () {
+      return null;
+    });
   }
 }
 
@@ -771,108 +812,6 @@ class _FormeDecoratorController extends FormeDecoratorController {
 
   @override
   set model(FormeModel model) => notifier.value = model;
-}
-
-class _FormeFieldListenable extends FormeFieldListenable {
-  final String name;
-  FormeFieldController? controller;
-
-  final _ValueListenable<bool> focusListenable =
-      _ValueListenable(ValueNotifier(false));
-  final _ValueListenable<FormeValidateError?> errorTextListenable =
-      _ValueListenable(ValueNotifier(null));
-  final _ValueListenable valueListenable =
-      _ValueListenable(ValueNotifier(null));
-  final _ValueListenable<bool> readOnlyListenable =
-      _ValueListenable(ValueNotifier(false));
-  _ValueListenable<FormeModel>? _modelListenable;
-
-  _FormeFieldListenable(this.name, FormeFieldController? controller) {
-    if (controller != null) whenAlive(controller);
-  }
-
-  void whenAlive(FormeFieldController controller) {
-    if (this.controller != null) {
-      this.controller!.modelListenable.removeListener(listenModel);
-      this.controller!.focusListenable.removeListener(listenFocus);
-      this.controller!.readOnlyListenable.removeListener(listenReadOnly);
-      if (this.controller is FormeValueFieldController) {
-        (controller as FormeValueFieldController)
-            .valueListenable
-            .removeListener(listenValue);
-        controller.errorTextListenable.removeListener(listenFormeValidateError);
-      }
-    }
-
-    this.controller = controller;
-    focusListenable.delegate.value = controller.focusListenable.value;
-    controller.focusListenable.addListener(listenFocus);
-
-    readOnlyListenable.delegate.value = controller.readOnlyListenable.value;
-    controller.readOnlyListenable.addListener(listenReadOnly);
-
-    if (_modelListenable == null) {
-      _modelListenable =
-          _ValueListenable(ValueNotifier(controller.modelListenable.value));
-    } else {
-      _modelListenable!.delegate.value = controller.modelListenable.value;
-    }
-
-    controller.modelListenable.addListener(listenModel);
-
-    if (controller is! FormeValueFieldController) {
-      return;
-    }
-
-    errorTextListenable.delegate.value = controller.errorTextListenable.value;
-    controller.errorTextListenable.addListener(listenFormeValidateError);
-
-    valueListenable.delegate.value = controller.valueListenable.value;
-    controller.valueListenable.addListener(listenValue);
-  }
-
-  void whenDead(FormeFieldController controller) {
-    if (this.controller == controller) {
-      this.controller = null;
-    }
-  }
-
-  void listenFocus() {
-    if (controller != null)
-      focusListenable.delegate.value = controller!.focusListenable.value;
-  }
-
-  void listenReadOnly() {
-    if (controller != null)
-      readOnlyListenable.delegate.value = controller!.readOnlyListenable.value;
-  }
-
-  void listenValue() {
-    if (controller != null && controller is FormeValueFieldController)
-      valueListenable.delegate.value =
-          (controller as FormeValueFieldController).valueListenable.value;
-  }
-
-  void listenFormeValidateError() {
-    if (controller != null && controller is FormeValueFieldController)
-      errorTextListenable.delegate.value =
-          (controller as FormeValueFieldController).errorTextListenable.value;
-  }
-
-  void listenModel() {
-    if (controller != null)
-      _modelListenable!.delegate.value = controller!.modelListenable.value;
-  }
-
-  void dispose() {
-    _modelListenable?.delegate.dispose();
-    errorTextListenable.delegate.dispose();
-    focusListenable.delegate.dispose();
-    valueListenable.delegate.dispose();
-  }
-
-  @override
-  ValueListenable<FormeModel> get modelListenable => _modelListenable!;
 }
 
 class _ValueListenable<T> extends ValueListenable<T> {
@@ -911,8 +850,15 @@ class _FormeController extends FormeController {
   bool get readOnly => state.readOnly;
 
   @override
-  Map<FormeValueFieldController, String> get errors =>
-      readErrors((e) => e.error?.text);
+  Map<FormeValueFieldController, String> get errors {
+    Map<FormeValueFieldController, String> errorMap = {};
+    for (FormeValueFieldController controller in valueFieldControllers) {
+      String? errorText = controller.error?.text;
+      if (errorText == null) continue;
+      errorMap[controller] = errorText;
+    }
+    return errorMap;
+  }
 
   @override
   T field<T extends FormeFieldController>(String name) {
@@ -926,9 +872,20 @@ class _FormeController extends FormeController {
       state.states.any((element) => element.name == name);
 
   @override
-  Map<FormeValueFieldController<dynamic, FormeModel>, String> validate(
-          {bool quietly = false, bool notify = true}) =>
-      readErrors((e) => e.validate(quietly: quietly, notify: notify));
+  Future<Map<FormeValueFieldController, String>> validate(
+      {bool quietly = false}) {
+    return Future.wait(
+            valueFieldControllers.map((e) => e.validate(quietly: quietly).then(
+                (value) => _FormeValueFieldControllerWithError(e, value))),
+            eagerError: true)
+        .then((value) {
+      Map<FormeValueFieldController, String> errorMap = {};
+      value.where((element) => element.errorText != null).forEach((element) {
+        errorMap[element.controller] = element.errorText!;
+      });
+      return errorMap;
+    });
+  }
 
   @override
   void reset() => valueFieldControllers.forEach((element) {
@@ -956,17 +913,6 @@ class _FormeController extends FormeController {
   @override
   set readOnly(bool readOnly) => state.readOnly = readOnly;
 
-  @override
-  FormeFieldListenable fieldListenable(String name) {
-    for (_FormeFieldListenable listenable in state.listenables) {
-      if (listenable.name == name) return listenable;
-    }
-    _FormeFieldListenable newListenable =
-        _FormeFieldListenable(name, findFormeFieldController(name));
-    state.listenables.add(newListenable);
-    return newListenable;
-  }
-
   T? findFormeFieldController<T extends FormeFieldController>(String name) {
     for (AbstractFieldState state in state.states) {
       if (state.name == name) return state.controller as T;
@@ -980,17 +926,6 @@ class _FormeController extends FormeController {
     return state.states
         .where((element) => element is ValueFieldState)
         .map((e) => e as ValueFieldState);
-  }
-
-  Map<FormeValueFieldController, String> readErrors(
-      String? f(FormeValueFieldController e)) {
-    Map<FormeValueFieldController, String> errorMap = {};
-    for (FormeValueFieldController controller in valueFieldControllers) {
-      String? errorText = f(controller);
-      if (errorText == null) continue;
-      errorMap[controller] = errorText;
-    }
-    return errorMap;
   }
 }
 
@@ -1080,8 +1015,8 @@ class _FormeValueFieldController<T extends Object, E extends FormeModel>
   void reset() => state.reset();
 
   @override
-  String? validate({bool quietly = false, bool notify = true}) =>
-      state._performValidate(quietly: quietly, notify: notify);
+  Future<String?> validate({bool quietly = false}) =>
+      state._performValidate(quietly: quietly);
 
   @override
   set value(T? value) => state.didChange(value);
@@ -1100,64 +1035,6 @@ abstract class LazyFormeFieldListenable {
   ValueListenable<bool> get readOnlyListenable;
 }
 
-class _LazyFormeFieldListenable extends LazyFormeFieldListenable {
-  final String name;
-  final _LazyValueListenable<FormeValidateError?> errorTextListenable =
-      _LazyValueListenable<FormeValidateError?>(null);
-  final _LazyValueListenable<bool> focusListenable =
-      _LazyValueListenable<bool>(false);
-  final _LazyValueListenable valueListenable = _LazyValueListenable(null);
-  final _LazyValueListenable<bool> readOnlyListenable =
-      _LazyValueListenable<bool>(false);
-
-  _LazyFormeFieldListenable(this.name);
-
-  set listenable(FormeFieldListenable listenable) {
-    errorTextListenable.delegate = listenable.errorTextListenable;
-    focusListenable.delegate = listenable.focusListenable;
-    valueListenable.delegate = listenable.valueListenable;
-    readOnlyListenable.delegate = listenable.readOnlyListenable;
-  }
-}
-
-class _LazyValueListenable<T> extends ValueListenable<T> {
-  final T _value;
-  ValueListenable<T>? _delegate;
-
-  set delegate(ValueListenable<T> delegate) {
-    _delegate = delegate;
-    listeners.removeWhere((element) {
-      _delegate!.addListener(element);
-      return true;
-    });
-  }
-
-  _LazyValueListenable(this._value);
-
-  List<VoidCallback> listeners = [];
-
-  @override
-  void addListener(listener) {
-    if (_delegate != null) {
-      _delegate!.addListener(listener);
-      return;
-    }
-    listeners.add(listener);
-  }
-
-  @override
-  void removeListener(listener) {
-    if (_delegate != null) {
-      _delegate!.removeListener(listener);
-      return;
-    }
-    listeners.remove(listener);
-  }
-
-  @override
-  T get value => _delegate == null ? _value : _delegate!.value;
-}
-
 /// share FormFieldController in sub tree
 class _InheritedFormeFieldController extends InheritedWidget {
   final FormeFieldController controller;
@@ -1171,4 +1048,10 @@ class _InheritedFormeFieldController extends InheritedWidget {
         .dependOnInheritedWidgetOfExactType<_InheritedFormeFieldController>()!
         .controller;
   }
+}
+
+class _FormeValueFieldControllerWithError {
+  final FormeValueFieldController controller;
+  final String? errorText;
+  _FormeValueFieldControllerWithError(this.controller, this.errorText);
 }

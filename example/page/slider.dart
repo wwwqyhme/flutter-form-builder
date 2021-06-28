@@ -18,6 +18,8 @@ class SliderFieldPage extends BasePage<double, FormeSliderModel> {
           validator: (value) => value! < 50
               ? 'value must bigger than 50 ,current is $value'
               : null,
+          asyncValidator: (value) => Future.delayed(Duration(milliseconds: 800),
+              () => 'this is an errorText from async validator'),
         ),
         Wrap(
           children: [

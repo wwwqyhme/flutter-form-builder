@@ -27,7 +27,11 @@ class FormeAsnycAutocompleteText<T extends Object>
     FormeDecoratorBuilder<T>? decoratorBuilder,
     InputDecoration? decoration,
     int? maxLines = 1,
+    Duration? asyncValidatorDebounce,
+    FormeFieldValidator<T>? asyncValidator,
   }) : super(
+          asyncValidator: asyncValidator,
+          asyncValidatorDebounce: asyncValidatorDebounce,
           onInitialed: onInitialed,
           decoratorBuilder: decoratorBuilder,
           onFocusChanged: onFocusChanged,

@@ -32,7 +32,11 @@ class FormeRangeSlider extends ValueField<RangeValues, FormeRangeSliderModel> {
     Key? key,
     FormeDecoratorBuilder<RangeValues>? decoratorBuilder,
     InputDecoration? decoration,
+    Duration? asyncValidatorDebounce,
+    FormeFieldValidator<RangeValues>? asyncValidator,
   }) : super(
+            asyncValidator: asyncValidator,
+            asyncValidatorDebounce: asyncValidatorDebounce,
             nullValueReplacement: RangeValues(min, max),
             onInitialed: onInitialed,
             decoratorBuilder: decoratorBuilder ??

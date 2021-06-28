@@ -25,7 +25,11 @@ class FormeSlider extends ValueField<double, FormeSliderModel> {
     Key? key,
     FormeDecoratorBuilder<double>? decoratorBuilder,
     InputDecoration? decoration,
+    Duration? asyncValidatorDebounce,
+    FormeFieldValidator<double>? asyncValidator,
   }) : super(
+          asyncValidator: asyncValidator,
+          asyncValidatorDebounce: asyncValidatorDebounce,
           onInitialed: onInitialed,
           nullValueReplacement: min,
           decoratorBuilder: decoratorBuilder ??

@@ -9,56 +9,73 @@ class TextFieldPage extends BasePage<String, FormeTextFieldModel> {
       children: [
         FormeTextField(
           initialValue: '123',
+          asyncValidatorDebounce: Duration(milliseconds: 300),
           autovalidateMode: AutovalidateMode.onUserInteraction,
           onInitialed: (c) {
             print(c.value);
           },
+          asyncValidator: (v) =>
+              Future.delayed(Duration(milliseconds: 800), () {
+            if (v!.length > 10) return null;
+            return 'username is exists';
+          }),
           onFocusChanged: (c, m) => print('focused changed , current is $m'),
           onErrorChanged: (field, errorText) {
             print("validate result: ${errorText?.text}");
-            controller.updateModel(FormeTextFieldModel(
-                decoration: InputDecoration(
-              labelStyle: TextStyle(
-                fontSize: 30,
-                color: errorText == null || !errorText.hasError
-                    ? Colors.green
-                    : Colors.red,
-              ),
-            )));
           },
           onValueChanged: (c, m) {
             print(
                 'value changed , current value is $m , old value is ${c.oldValue}');
-            WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
-              print(c.error?.text);
-            });
           },
           model: FormeTextFieldModel(autofocus: true),
           name: name,
           decoration: InputDecoration(
             labelText: 'TextField',
             suffixIcon: Builder(builder: (context) {
-              return ValueListenableBuilder<FormeTextFieldModel>(
-                  valueListenable: controller.modelListenable,
-                  builder: (context, model, child) {
-                    bool sec = model.obscureText ?? false;
-                    return IconButton(
-                        onPressed: () {
-                          controller.updateModel(
-                              FormeTextFieldModel(obscureText: !sec));
-                        },
-                        icon: Icon(
-                            sec ? Icons.visibility : Icons.visibility_off));
-                  });
+              return Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ValueListenableBuilder<FormeTextFieldModel>(
+                      valueListenable: controller.modelListenable,
+                      builder: (context, model, child) {
+                        bool sec = model.obscureText ?? false;
+                        return IconButton(
+                            onPressed: () {
+                              controller.updateModel(
+                                  FormeTextFieldModel(obscureText: !sec));
+                            },
+                            icon: Icon(
+                                sec ? Icons.visibility : Icons.visibility_off));
+                      })
+                ],
+              );
             }),
           ),
           validator: FormeValidates.any([
-            FormeValidates.size(min: 20),
+            FormeValidates.size(min: 5),
             FormeValidates.email(),
-          ], errorText: 'must be an email or length > 20'),
+          ], errorText: 'must be an email or length > 5'),
         ),
+        Builder(builder: (context) {
+          return ValueListenableBuilder<FormeValidateError?>(
+              valueListenable: controller.errorTextListenable,
+              builder: (context, error, _child) {
+                if (error != null) {
+                  if (error.validating) return Text('async validating...');
+                  if (error.fail)
+                    return Text(
+                      'an error occured',
+                      style: TextStyle(color: Colors.red),
+                    );
+                }
+                return const SizedBox();
+              });
+        }),
         Wrap(
           children: [
+            createButton('reset', () {
+              controller.reset();
+            }),
             createButton('set value', () {
               String text = 'admin@example.com';
               (controller as FormeTextFieldController).textEditingValue =
@@ -120,10 +137,9 @@ class TextFieldPage extends BasePage<String, FormeTextFieldModel> {
               ));
             }),
             builderButton('validate', (context) {
-              String? errorText = controller.validate(quietly: true);
-              if (errorText != null) {
-                showError(context, errorText);
-              }
+              controller.validate(quietly: false).then((value) {
+                if (value != null) showError(context, value);
+              });
             }),
           ],
         )

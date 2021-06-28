@@ -27,7 +27,11 @@ class FormeTextField extends ValueField<String, FormeTextFieldModel> {
     FormeDecoratorBuilder<String>? decoratorBuilder,
     InputDecoration? decoration,
     int? maxLines = 1,
+    Duration? asyncValidatorDebounce,
+    FormeFieldValidator<String>? asyncValidator,
   }) : super(
+          asyncValidator: asyncValidator,
+          asyncValidatorDebounce: asyncValidatorDebounce,
           onInitialed: onInitialed,
           nullValueReplacement: '',
           decoratorBuilder: decoratorBuilder,

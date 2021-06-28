@@ -21,22 +21,12 @@ abstract class FormeController {
   /// find [FormeValueFieldController] by name
   T valueField<T extends FormeValueFieldController>(String name);
 
-  /// notifiers of form field's focus|errorText|value
-  ///
-  ///
-  /// **unlike [FormeFieldController]'s notifier , this controller's notifier will auto find last alived [FormeFieldController] by name,
-  /// in another words , this controller's lifestyle is same as form,but [FormeFieldController]'s lifecycle is same as field,
-  /// so it's safe to use this controller out of form field**
-  ///
-  /// **do not use this notifier out of forme**
-  ///
-  /// see [FormeInputDecorator]
-  FormeFieldListenable fieldListenable(String name);
-
   /// get form data
   Map<String, dynamic> get data;
 
-  /// get error msg after [validate]
+  /// get error msg after validated
+  ///
+  /// this method can get error even though  [Forme.quietlyValidate] is true
   Map<FormeValueFieldController, String> get errors;
 
   /// perform a validate
@@ -45,10 +35,13 @@ abstract class FormeController {
   ///
   /// **if [quietly] is true , this method will not update and display error though [Forme.quietlyValidate] is false**
   ///
+  /// **if [notify] is false, error will not be notified
+  ///  **
+  ///
   /// key is [FormeValueFieldController]
   /// value is errorMsg
-  Map<FormeValueFieldController, String> validate(
-      {bool quietly = false, bool notify});
+  Future<Map<FormeValueFieldController, String>> validate(
+      {bool quietly = false});
 
   /// set forme data
   set data(Map<String, dynamic> data);
@@ -152,8 +145,6 @@ abstract class FormeFieldController<E extends FormeModel> {
   /// focus listenable
   ///
   /// it's lifecycle is same as field
-  ///
-  /// **do not use this notifier out of field,in this case , use [FormeController.fieldListenable] instead**
   ValueListenable<bool> get focusListenable;
 
   /// readOnly listenable
@@ -185,7 +176,7 @@ abstract class FormeValueFieldController<T, E extends FormeModel>
   /// if [quietly] ,will not rebuild field and update and display error Text
   ///
   /// if [notify] , will trigger error listenable
-  String? validate({bool quietly = false, bool notify = true});
+  Future<String?> validate({bool quietly = false});
 
   /// reset field
   void reset();
@@ -197,9 +188,19 @@ abstract class FormeValueFieldController<T, E extends FormeModel>
   /// if error is not null and [FormeValidateError.text] is null ,means field is valid
   ///
   /// if error is not null and [FormeValidateError.text] is not null ,means is invalid
+  ///
+  /// **you still can get error text even though [Forme.quietlyValidate] is true**
+  ///
+  /// **value notifier is always be trigger before errorNotifier , so  when you want to get error in onValueChanged , you should call this method in [WidgetsBinding.instance.addPostFrameCallback]**
   FormeValidateError? get error;
 
   /// get forme decorator controller
+  ///
+  /// decoratorController is used to update|set model for [FormeDecorator],
+  /// the model type is determined by [ValueField]'s decoratorBuilder.
+  ///
+  /// eg: when your decoratorBuilder is [FormeInputDecoratorBuilder] , the model
+  /// type is [FormeInputDecoratorModel]
   FormeDecoratorController get decoratorController;
 
   /// get error listenable
@@ -207,8 +208,6 @@ abstract class FormeValueFieldController<T, E extends FormeModel>
   /// it's useful when you want to display error by your custom way!
   ///
   /// this notifier is used for [ValueListenableBuilder]
-  ///
-  /// **do not use this notifier out of field,in this case , use [FormeController.fieldListenable] instead**
   ValueListenable<FormeValidateError?> get errorTextListenable;
 
   /// get value listenable
@@ -232,8 +231,6 @@ abstract class FormeValueFieldController<T, E extends FormeModel>
   /// ```
   ///
   /// this notifier is used for [ValueListenableBuilder]
-  ///
-  /// **do not use this notifier out of field,in this case , use [FormeController.fieldListenable] instead**
   ValueListenable<T?> get valueListenable;
 
   /// clear value
@@ -246,44 +243,12 @@ abstract class FormeValueFieldController<T, E extends FormeModel>
 
   /// get old field value
   ///
-  /// **after field's value changed , when you need to get old field's value,
-  /// you can use this method**
+  /// **after field's value changed , you can use this method to get old value**
   T? get oldValue;
 
   static T of<T extends FormeValueFieldController>(BuildContext context) {
     return FormeKey.getValueFieldByContext<T>(context);
   }
-}
-
-/// used to get field's listenable
-///
-/// unlike [FormeFieldController]'s listenable , this listenable's lifecycle is same as [Forme] and no need to care about widget order.
-///
-/// when field's type changed,(eg: from [FormeSingleCheckbox] to [FormeSingleSwitch]) , this listenable still works,
-/// but [valueListenable] doesn't support generic type due to field's type may be changed at runtime
-///
-/// typically used with [ValueListenableBuilder]
-///
-/// **should not be used out of [Forme]**
-abstract class FormeFieldListenable {
-  /// get focuslistenable
-  ValueListenable<bool> get focusListenable;
-
-  /// get errorTextListenable
-  ///
-  /// if current field is not a [ValueField] ,this listenable will not be triggered always unless its type changed to  [ValueField]
-  ValueListenable<FormeValidateError?> get errorTextListenable;
-
-  /// get valueListenable
-  ///
-  /// if current field is not a [ValueField] ,this listenable will not be triggered always unless its type changed to  [ValueField]
-  ValueListenable get valueListenable;
-
-  /// get valueListenable
-  ValueListenable<bool> get readOnlyListenable;
-
-  /// get model listenable
-  ValueListenable<FormeModel> get modelListenable;
 }
 
 /// used to control decorator's model
@@ -365,8 +330,8 @@ abstract class FormeValueFieldControllerDelegate<T, E extends FormeModel>
   @override
   set value(T? value) => delegate.value = value;
   @override
-  String? validate({bool quietly = false, bool notify = true}) =>
-      delegate.validate(quietly: quietly, notify: notify);
+  Future<String?> validate({bool quietly = false}) =>
+      delegate.validate(quietly: quietly);
   @override
   void reset() => delegate.reset();
   @override
@@ -394,13 +359,20 @@ abstract class FormeValueFieldControllerDelegate<T, E extends FormeModel>
 /// if error is not null and text is not null , means field is not valid
 class FormeValidateError {
   final String? text;
+  final FormeValidateState state;
   bool get hasError => text != null;
-  const FormeValidateError(this.text);
+  const FormeValidateError(this.text, this.state);
+
+  bool get valid => state == FormeValidateState.valid;
+  bool get invalid => state == FormeValidateState.invalid;
+  bool get validating => state == FormeValidateState.validating;
+  bool get fail => state == FormeValidateState.fail;
 
   @override
-  int get hashCode => text.hashCode;
+  int get hashCode => hashValues(text, state);
   @override
-  bool operator ==(Object o) => o is FormeValidateError && o.text == text;
+  bool operator ==(Object o) =>
+      o is FormeValidateError && o.text == text && o.state == state;
 }
 
 /// used to update a field
@@ -425,4 +397,18 @@ class EmptyStateModel extends FormeModel {
   FormeModel copyWith(FormeModel old) {
     return EmptyStateModel();
   }
+}
+
+enum FormeValidateState {
+  /// validator return null errorText
+  valid,
+
+  ///validator return nonnull result
+  invalid,
+
+  /// validator executing
+  validating,
+
+  /// may be an error occured when perform an async validate
+  fail,
 }

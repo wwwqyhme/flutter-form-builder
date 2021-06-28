@@ -30,7 +30,11 @@ class FormeDateTimeField extends ValueField<DateTime, FormeDateTimeFieldModel> {
     FormeDecoratorBuilder<DateTime>? decoratorBuilder,
     InputDecoration? decoration,
     int? maxLines = 1,
+    Duration? asyncValidatorDebounce,
+    FormeFieldValidator<DateTime>? asyncValidator,
   }) : super(
+          asyncValidator: asyncValidator,
+          asyncValidatorDebounce: asyncValidatorDebounce,
           onInitialed: onInitialed,
           decoratorBuilder: decoratorBuilder,
           key: key,

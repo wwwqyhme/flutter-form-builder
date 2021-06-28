@@ -102,9 +102,9 @@ class _DemoPageState extends State<DemoPage> {
             },
             child: Text('rebuild page')),
         TextButton(
-            onPressed: () {
+            onPressed: () async {
               Map<FormeValueFieldController, String> errorMap =
-                  formKey.validate(quietly: true);
+                  await formKey.validate(quietly: false);
               if (errorMap.isNotEmpty) {
                 MapEntry<FormeValueFieldController, String> entry =
                     errorMap.entries.first;
@@ -216,22 +216,30 @@ class _DemoPageState extends State<DemoPage> {
                     decoration: InputDecoration(labelText: 'Focus:$hasFocus')));
               },
               autovalidateMode: AutovalidateMode.onUserInteraction,
-              validator: (value) {
-                return value!.length <= 10
-                    ? 'length must bigger than 10,current is ${value.length} '
-                    : null;
+              asyncValidator: (value) {
+                return Future.delayed(Duration(seconds: 2), () {
+                  return value!.length <= 10
+                      ? 'length must bigger than 10,current is ${value.length} '
+                      : null;
+                });
               },
               decoration: InputDecoration(
                 labelText: 'Text',
                 suffixIcon: FormeValueFieldBuilder(
                   builder: (context, controller) {
-                    return ValueListenableBuilder<FormeValidateError?>(
-                      valueListenable: controller.errorTextListenable,
-                      builder: (context, focus, child) {
-                        return focus == null || !focus.hasError
-                            ? Icon(Icons.check)
-                            : Icon(Icons.error);
-                      },
+                    return Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        ValueListenableBuilder<FormeValidateError?>(
+                          valueListenable: controller.errorTextListenable,
+                          builder: (context, error, child) {
+                            if (error == null) return SizedBox.shrink();
+                            return !error.hasError
+                                ? Icon(Icons.check)
+                                : Icon(Icons.error);
+                          },
+                        ),
+                      ],
                     );
                   },
                 ),
