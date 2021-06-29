@@ -10,28 +10,24 @@ class FormeSlider extends ValueField<double, FormeSliderModel> {
     FormFieldValidator<double>? validator,
     AutovalidateMode? autovalidateMode,
     double? initialValue,
-    FormFieldSetter<double>? onSaved,
+    FormeFieldSetter<double>? onSaved,
     required String name,
     bool readOnly = false,
     required double min,
     required double max,
     FormeSliderModel? model,
-    FormeErrorChanged<FormeValueFieldController<double, FormeSliderModel>>?
-        onErrorChanged,
-    FormeFocusChanged<FormeValueFieldController<double, FormeSliderModel>>?
-        onFocusChanged,
-    FormeFieldInitialed<FormeValueFieldController<double, FormeSliderModel>>?
-        onInitialed,
+    FormeErrorChanged<double, FormeSliderModel>? onErrorChanged,
+    FormeValueFieldFocusChanged<double, FormeSliderModel>? onFocusChanged,
+    FormeValueFieldInitialed<double, FormeSliderModel>? onInitialed,
     Key? key,
     FormeDecoratorBuilder<double>? decoratorBuilder,
     InputDecoration? decoration,
-    Duration? asyncValidatorDebounce,
-    FormeFieldValidator<double>? asyncValidator,
+    FormeAsyncValidateConfiguration? asyncValidateConfiguration,
+    FormeAsyncValidator<double>? asyncValidator,
   }) : super(
           asyncValidator: asyncValidator,
-          asyncValidatorDebounce: asyncValidatorDebounce,
+          asyncValidateConfiguration: asyncValidateConfiguration,
           onInitialed: onInitialed,
-          nullValueReplacement: min,
           decoratorBuilder: decoratorBuilder ??
               (decoration == null
                   ? null
@@ -48,7 +44,7 @@ class FormeSlider extends ValueField<double, FormeSliderModel> {
           onValueChanged: onValueChanged,
           onSaved: onSaved,
           validator: validator,
-          initialValue: initialValue,
+          initialValue: initialValue ?? min,
           autovalidateMode: autovalidateMode,
           builder: (baseState) {
             _FormeSliderState state = baseState as _FormeSliderState;
@@ -59,7 +55,7 @@ class FormeSlider extends ValueField<double, FormeSliderModel> {
             Color? activeColor = state.model.activeColor;
             Color? inactiveColor = state.model.inactiveColor;
 
-            double value = state.value!;
+            double value = state.value;
 
             String? sliderLabel = state.model.labelRender == null
                 ? null
@@ -118,12 +114,15 @@ class _FormeSliderState extends ValueFieldState<double, FormeSliderModel> {
   }
 
   @override
-  double? get value => _value ?? super.value!;
+  double get initialValue => model.min!;
+
+  @override
+  double get value => _value ?? super.value;
 
   @override
   void afterUpdateModel(FormeSliderModel old, FormeSliderModel current) {
-    if (current.min != null && value! < current.min!) setValue(current.min!);
-    if (current.max != null && value! > current.max!) setValue(current.max!);
+    if (current.min != null && value < current.min!) setValue(current.min!);
+    if (current.max != null && value > current.max!) setValue(current.max!);
   }
 
   @override

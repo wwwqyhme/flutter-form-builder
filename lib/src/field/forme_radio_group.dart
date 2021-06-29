@@ -2,31 +2,28 @@ import 'package:flutter/material.dart';
 import 'package:forme/forme.dart';
 
 class FormeRadioGroup<T extends Object>
-    extends ValueField<T, FormeRadioGroupModel<T>> {
+    extends ValueField<T?, FormeRadioGroupModel<T>> {
   FormeRadioGroup({
-    FormeValueChanged<T, FormeRadioGroupModel<T>>? onValueChanged,
-    FormFieldValidator<T>? validator,
+    FormeValueChanged<T?, FormeRadioGroupModel<T>>? onValueChanged,
+    FormFieldValidator<T?>? validator,
     AutovalidateMode? autovalidateMode,
     T? initialValue,
-    FormFieldSetter<T>? onSaved,
+    FormeFieldSetter<T?>? onSaved,
     required String name,
     bool readOnly = false,
     required List<FormeListTileItem<T>>? items,
     FormeRadioGroupModel<T>? model,
-    FormeErrorChanged<FormeValueFieldController<T, FormeRadioGroupModel<T>>>?
-        onErrorChanged,
-    FormeFocusChanged<FormeValueFieldController<T, FormeRadioGroupModel<T>>>?
-        onFocusChanged,
-    FormeFieldInitialed<FormeValueFieldController<T, FormeRadioGroupModel<T>>>?
-        onInitialed,
+    FormeErrorChanged<T?, FormeRadioGroupModel<T>>? onErrorChanged,
+    FormeValueFieldFocusChanged<T?, FormeRadioGroupModel<T>>? onFocusChanged,
+    FormeValueFieldInitialed<T?, FormeRadioGroupModel<T>>? onInitialed,
     Key? key,
-    FormeDecoratorBuilder<T>? decoratorBuilder,
+    FormeDecoratorBuilder<T?>? decoratorBuilder,
     InputDecoration? decoration,
-    Duration? asyncValidatorDebounce,
-    FormeFieldValidator<T>? asyncValidator,
+    FormeAsyncValidateConfiguration? asyncValidateConfiguration,
+    FormeAsyncValidator<T?>? asyncValidator,
   }) : super(
             asyncValidator: asyncValidator,
-            asyncValidatorDebounce: asyncValidatorDebounce,
+            asyncValidateConfiguration: asyncValidateConfiguration,
             onInitialed: onInitialed,
             decoratorBuilder: decoratorBuilder ??
                 (decoration == null
@@ -180,7 +177,7 @@ class FormeRadioGroup<T extends Object>
 }
 
 class _FormeRadioGroupState<T extends Object>
-    extends ValueFieldState<T, FormeRadioGroupModel<T>> {
+    extends ValueFieldState<T?, FormeRadioGroupModel<T>> {
   @override
   void afterUpdateModel(
       FormeRadioGroupModel<T> old, FormeRadioGroupModel<T> current) {

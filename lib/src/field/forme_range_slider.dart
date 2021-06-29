@@ -14,30 +14,24 @@ class FormeRangeSlider extends ValueField<RangeValues, FormeRangeSliderModel> {
     FormFieldValidator<RangeValues>? validator,
     AutovalidateMode? autovalidateMode,
     RangeValues? initialValue,
-    FormFieldSetter<RangeValues>? onSaved,
+    FormeFieldSetter<RangeValues>? onSaved,
     required String name,
     bool readOnly = false,
     FormeRangeSliderModel? model,
     required double min,
     required double max,
-    FormeErrorChanged<
-            FormeValueFieldController<RangeValues, FormeRangeSliderModel>>?
-        onErrorChanged,
-    FormeFocusChanged<
-            FormeValueFieldController<RangeValues, FormeRangeSliderModel>>?
+    FormeErrorChanged<RangeValues, FormeRangeSliderModel>? onErrorChanged,
+    FormeValueFieldFocusChanged<RangeValues, FormeRangeSliderModel>?
         onFocusChanged,
-    FormeFieldInitialed<
-            FormeValueFieldController<RangeValues, FormeRangeSliderModel>>?
-        onInitialed,
+    FormeValueFieldInitialed<RangeValues, FormeRangeSliderModel>? onInitialed,
     Key? key,
     FormeDecoratorBuilder<RangeValues>? decoratorBuilder,
     InputDecoration? decoration,
-    Duration? asyncValidatorDebounce,
-    FormeFieldValidator<RangeValues>? asyncValidator,
+    FormeAsyncValidateConfiguration? asyncValidateConfiguration,
+    FormeAsyncValidator<RangeValues>? asyncValidator,
   }) : super(
             asyncValidator: asyncValidator,
-            asyncValidatorDebounce: asyncValidatorDebounce,
-            nullValueReplacement: RangeValues(min, max),
+            asyncValidateConfiguration: asyncValidateConfiguration,
             onInitialed: onInitialed,
             decoratorBuilder: decoratorBuilder ??
                 (decoration == null
@@ -56,7 +50,7 @@ class FormeRangeSlider extends ValueField<RangeValues, FormeRangeSliderModel> {
             onValueChanged: onValueChanged,
             onSaved: onSaved,
             validator: validator,
-            initialValue: initialValue,
+            initialValue: initialValue ?? RangeValues(min, max),
             autovalidateMode: autovalidateMode,
             builder: (baseState) {
               _FormeRangeSliderState state =
@@ -68,7 +62,7 @@ class FormeRangeSlider extends ValueField<RangeValues, FormeRangeSliderModel> {
               Color? activeColor = state.model.activeColor;
               Color? inactiveColor = state.model.inactiveColor;
 
-              RangeValues rangeValues = state.value!;
+              RangeValues rangeValues = state.value;
               RangeLabels? sliderLabels;
 
               if (state.model.rangeLabelRender != null) {
@@ -128,6 +122,9 @@ class _FormeRangeSliderState
     extends ValueFieldState<RangeValues, FormeRangeSliderModel> {
   RangeValues? _value;
 
+  @override
+  RangeValues get initialValue => RangeValues(model.min!, model.max!);
+
   updateValue(RangeValues value) {
     setState(() {
       _value = value;
@@ -135,7 +132,7 @@ class _FormeRangeSliderState
   }
 
   @override
-  RangeValues? get value => _value ?? super.value!;
+  RangeValues get value => _value ?? super.value;
 
   @override
   void onValueChanged(RangeValues? value) {
@@ -145,7 +142,7 @@ class _FormeRangeSliderState
   @override
   void afterUpdateModel(
       FormeRangeSliderModel old, FormeRangeSliderModel current) {
-    RangeValues value = super.value!;
+    RangeValues value = super.value;
     if (current.min != null) {
       if (value.start < current.min!)
         setValue(RangeValues(current.min!, value.end));

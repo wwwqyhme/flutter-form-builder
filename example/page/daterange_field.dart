@@ -3,7 +3,7 @@ import 'package:forme/forme.dart';
 import 'base_page.dart';
 
 class DateRangeFieldPage
-    extends BasePage<DateTimeRange, FormeDateRangeFieldModel> {
+    extends BasePage<DateTimeRange?, FormeDateRangeFieldModel> {
   @override
   Widget get body {
     return Column(
@@ -94,7 +94,7 @@ class DateRangeFieldPage
                   suffixIcon: IconButton(
                     icon: Icon(Icons.clear),
                     onPressed: () {
-                      controller.value = null;
+                      controller.clearValue();
                     },
                   ),
                 ),

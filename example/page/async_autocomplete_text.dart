@@ -38,9 +38,7 @@ class AsyncAutocompleteText
                 decoration: InputDecoration(
                     labelText: 'Async Autocomplete Text',
                     suffixIcon: IconButton(
-                      onPressed: () {
-                        controller.clearValue();
-                      },
+                      onPressed: () {},
                       icon: Icon(Icons.clear),
                     )),
               )),

@@ -60,30 +60,24 @@ class FormeFilterChip<T extends Object>
     AutovalidateMode? autovalidateMode,
     FormFieldValidator<List<T>>? validator,
     FormeValueChanged<List<T>, FormeFilterChipModel<T>>? onValueChanged,
-    FormFieldSetter<List<T>>? onSaved,
+    FormeFieldSetter<List<T>>? onSaved,
     required String name,
     bool readOnly = false,
     required List<FormeChipItem<T>>? items,
     FormeFilterChipModel<T>? model,
-    FormeErrorChanged<
-            FormeValueFieldController<List<T>, FormeFilterChipModel<T>>>?
-        onErrorChanged,
-    FormeFocusChanged<
-            FormeValueFieldController<List<T>, FormeFilterChipModel<T>>>?
+    FormeErrorChanged<List<T>, FormeFilterChipModel<T>>? onErrorChanged,
+    FormeValueFieldFocusChanged<List<T>, FormeFilterChipModel<T>>?
         onFocusChanged,
-    FormeFieldInitialed<
-            FormeValueFieldController<List<T>, FormeFilterChipModel<T>>>?
-        onInitialed,
+    FormeValueFieldInitialed<List<T>, FormeFilterChipModel<T>>? onInitialed,
     Key? key,
     FormeDecoratorBuilder<List<T>>? decoratorBuilder,
     InputDecoration? decoration,
-    Duration? asyncValidatorDebounce,
-    FormeFieldValidator<List<T>>? asyncValidator,
+    FormeAsyncValidateConfiguration? asyncValidateConfiguration,
+    FormeAsyncValidator<List<T>>? asyncValidator,
   }) : super(
           asyncValidator: asyncValidator,
-          asyncValidatorDebounce: asyncValidatorDebounce,
+          asyncValidateConfiguration: asyncValidateConfiguration,
           onInitialed: onInitialed,
-          nullValueReplacement: [],
           decoratorBuilder: decoratorBuilder ??
               (decoration == null
                   ? null
@@ -98,7 +92,7 @@ class FormeFilterChip<T extends Object>
           onValueChanged: onValueChanged,
           onSaved: onSaved,
           autovalidateMode: autovalidateMode,
-          initialValue: initialValue,
+          initialValue: initialValue ?? [],
           onErrorChanged: onErrorChanged,
           builder: (state) {
             bool readOnly = state.readOnly;
@@ -112,7 +106,7 @@ class FormeFilterChip<T extends Object>
             for (FormeChipItem<T> item in items) {
               bool isReadOnly = readOnly || item.readOnly;
               FilterChip chip = FilterChip(
-                selected: state.value!.contains(item.data),
+                selected: state.value.contains(item.data),
                 label: item.label,
                 avatar: item.avatar,
                 padding: item.padding,
@@ -136,7 +130,7 @@ class FormeFilterChip<T extends Object>
                 onSelected: isReadOnly
                     ? null
                     : (bool selected) {
-                        List<T> value = List.of(state.value!);
+                        List<T> value = List.of(state.value);
                         if (selected) {
                           if (count != null && value.length >= count) {
                             if (state.model.exceedCallback != null) {
@@ -178,9 +172,14 @@ class FormeFilterChip<T extends Object>
 class _FormeFilterChipState<T extends Object>
     extends ValueFieldState<List<T>, FormeFilterChipModel<T>> {
   @override
+  void clearValue() {
+    didChange([]);
+  }
+
+  @override
   void afterUpdateModel(
       FormeFilterChipModel<T> old, FormeFilterChipModel<T> current) {
-    List<T> value = super.value!;
+    List<T> value = super.value;
     if (value.isEmpty) return;
     if (current.items != null) {
       List<T> items = List.of(value);

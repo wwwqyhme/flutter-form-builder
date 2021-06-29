@@ -215,26 +215,41 @@ class _DemoPageState extends State<DemoPage> {
                 field.updateModel(FormeTextFieldModel(
                     decoration: InputDecoration(labelText: 'Focus:$hasFocus')));
               },
+              validator:
+                  FormeValidates.size(min: 5, errorText: 'at least 5 length'),
+              asyncValidateConfiguration: FormeAsyncValidateConfiguration(
+                debounce: Duration(seconds: 1),
+                mode: FormeAsyncValidateMode.onFormeValueChanged,
+                names: {'number'},
+              ),
               autovalidateMode: AutovalidateMode.onUserInteraction,
               asyncValidator: (value) {
                 return Future.delayed(Duration(seconds: 2), () {
-                  return value!.length <= 10
+                  return value.length <= 10
                       ? 'length must bigger than 10,current is ${value.length} '
                       : null;
                 });
               },
               decoration: InputDecoration(
                 labelText: 'Text',
+                suffixIconConstraints: BoxConstraints.tightFor(),
                 suffixIcon: FormeValueFieldBuilder(
                   builder: (context, controller) {
                     return Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        IconButton(
+                            onPressed: () {
+                              controller.clearValue();
+                            },
+                            icon: Icon(Icons.clear)),
                         ValueListenableBuilder<FormeValidateError?>(
                           valueListenable: controller.errorTextListenable,
                           builder: (context, error, child) {
                             if (error == null) return SizedBox.shrink();
-                            return !error.hasError
+                            if (error.validating)
+                              return CircularProgressIndicator.adaptive();
+                            return !error.valid
                                 ? Icon(Icons.check)
                                 : Icon(Icons.error);
                           },
@@ -302,7 +317,7 @@ class _DemoPageState extends State<DemoPage> {
               suffixIcon: IconButton(
                   icon: Icon(Icons.clear),
                   onPressed: () {
-                    formKey.valueField('time').value = null;
+                    formKey.valueField('time').clearValue();
                   }),
             ),
           ),
@@ -336,7 +351,7 @@ class _DemoPageState extends State<DemoPage> {
                           InkWell(
                             child: Icon(Icons.clear),
                             onTap: () {
-                              formKey.valueField('dropdown').value = null;
+                              formKey.valueField('dropdown').clearValue();
                             },
                           ),
                           SizedBox(
@@ -517,9 +532,7 @@ class _DemoPageState extends State<DemoPage> {
           decoration: InputDecoration(
               labelText: 'Async Autocomplete Text',
               suffixIcon: IconButton(
-                onPressed: () {
-                  formKey.valueField('asyncAutocomplete').clearValue();
-                },
+                onPressed: () {},
                 icon: Icon(Icons.clear),
               )),
           model: FormeAsyncAutocompleteTextModel<User>(

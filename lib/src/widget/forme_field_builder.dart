@@ -12,8 +12,7 @@ class FormeFieldBuilder<E extends FormeModel> extends StatelessWidget {
   }
 }
 
-class FormeValueFieldBuilder<T extends Object, E extends FormeModel>
-    extends StatelessWidget {
+class FormeValueFieldBuilder<T, E extends FormeModel> extends StatelessWidget {
   final Widget Function(
       BuildContext context, FormeValueFieldController<T, E> controller) builder;
   const FormeValueFieldBuilder({Key? key, required this.builder})

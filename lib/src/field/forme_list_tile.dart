@@ -42,31 +42,24 @@ class FormeListTile<T extends Object>
     FormFieldValidator<List<T>>? validator,
     AutovalidateMode? autovalidateMode,
     List<T>? initialValue,
-    FormFieldSetter<List<T>>? onSaved,
+    FormeFieldSetter<List<T>>? onSaved,
     required String name,
     bool readOnly = false,
     FormeListTileType type = FormeListTileType.Checkbox,
     required List<FormeListTileItem<T>>? items,
     FormeListTileModel<T>? model,
-    FormeErrorChanged<
-            FormeValueFieldController<List<T>, FormeListTileModel<T>>>?
-        onErrorChanged,
-    FormeFocusChanged<
-            FormeValueFieldController<List<T>, FormeListTileModel<T>>>?
-        onFocusChanged,
-    FormeFieldInitialed<
-            FormeValueFieldController<List<T>, FormeListTileModel<T>>>?
-        onInitialed,
+    FormeErrorChanged<List<T>, FormeListTileModel<T>>? onErrorChanged,
+    FormeValueFieldFocusChanged<List<T>, FormeListTileModel<T>>? onFocusChanged,
+    FormeValueFieldInitialed<List<T>, FormeListTileModel<T>>? onInitialed,
     Key? key,
     FormeDecoratorBuilder<List<T>>? decoratorBuilder,
     InputDecoration? decoration,
-    Duration? asyncValidatorDebounce,
-    FormeFieldValidator<List<T>>? asyncValidator,
+    FormeAsyncValidateConfiguration? asyncValidateConfiguration,
+    FormeAsyncValidator<List<T>>? asyncValidator,
   }) : super(
             asyncValidator: asyncValidator,
-            asyncValidatorDebounce: asyncValidatorDebounce,
+            asyncValidateConfiguration: asyncValidateConfiguration,
             onInitialed: onInitialed,
-            nullValueReplacement: [],
             decoratorBuilder: decoratorBuilder ??
                 (decoration == null
                     ? null
@@ -81,7 +74,7 @@ class FormeListTile<T extends Object>
             onValueChanged: onValueChanged,
             onSaved: onSaved,
             autovalidateMode: autovalidateMode,
-            initialValue: initialValue,
+            initialValue: initialValue ?? [],
             validator: validator,
             builder: (state) {
               bool readOnly = state.readOnly;
@@ -100,7 +93,7 @@ class FormeListTile<T extends Object>
 
               void changeValue(T value) {
                 state.requestFocus();
-                List<T> values = List.of(state.value!);
+                List<T> values = List.of(state.value);
                 if (!values.remove(value)) {
                   values.add(value);
                 }
@@ -174,7 +167,7 @@ class FormeListTile<T extends Object>
               for (int i = 0; i < items.length; i++) {
                 FormeListTileItem<T> item = items[i];
                 bool isReadOnly = readOnly || item.readOnly;
-                bool selected = state.value!.contains(item.data);
+                bool selected = state.value.contains(item.data);
                 if (split > 0) {
                   double factor = 1 / split;
                   if (factor == 1) {
@@ -262,12 +255,16 @@ class FormeListTile<T extends Object>
 class _FormeListTileState<T extends Object>
     extends ValueFieldState<List<T>, FormeListTileModel<T>> {
   bool allowSelectAll = false;
+  @override
+  void clearValue() {
+    didChange([]);
+  }
 
   @override
   void afterUpdateModel(
       FormeListTileModel<T> old, FormeListTileModel<T> current) {
     if (current.items != null) {
-      List<T> items = List.of(value!);
+      List<T> items = List.of(value);
       Iterable<T> datas = current.items!.map((e) => e.data);
       bool removed = false;
       items.removeWhere((element) {

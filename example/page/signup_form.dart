@@ -124,20 +124,18 @@ class _SignUpScreenState extends State<SignupFormPage> {
     return Container(
       margin: EdgeInsets.only(
           left: _width / 12.0, right: _width / 12.0, top: _height / 20.0),
-      child: Form(
-        child: Column(
-          children: <Widget>[
-            firstNameTextFormField(),
-            SizedBox(height: _height / 60.0),
-            lastNameTextFormField(),
-            SizedBox(height: _height / 60.0),
-            emailTextFormField(),
-            SizedBox(height: _height / 60.0),
-            phoneTextFormField(),
-            SizedBox(height: _height / 60.0),
-            passwordTextFormField(),
-          ],
-        ),
+      child: Column(
+        children: <Widget>[
+          firstNameTextFormField(),
+          SizedBox(height: _height / 60.0),
+          lastNameTextFormField(),
+          SizedBox(height: _height / 60.0),
+          emailTextFormField(),
+          SizedBox(height: _height / 60.0),
+          phoneTextFormField(),
+          SizedBox(height: _height / 60.0),
+          passwordTextFormField(),
+        ],
       ),
     );
   }
@@ -456,7 +454,7 @@ class CustomTextField extends StatelessWidget {
   final FormeKey formeKey;
 
   final FormFieldValidator<String>? validator;
-  final FormeFieldValidator<String>? asyncValidator;
+  final FormeAsyncValidator<String>? asyncValidator;
 
   CustomTextField({
     this.hint,
@@ -471,6 +469,7 @@ class CustomTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    print(name);
     _width = MediaQuery.of(context).size.width;
     _pixelRatio = MediaQuery.of(context).devicePixelRatio;
     large = ResponsiveWidget.isScreenLarge(_width, _pixelRatio);
@@ -545,7 +544,7 @@ class CustomTextField extends StatelessWidget {
                                   icon: Icon(Icons.clear,
                                       color: Colors.orange[200], size: 24),
                                   onPressed: () {
-                                    controller.value = '';
+                                    controller.clearValue();
                                   });
                             }
                             return SizedBox();
@@ -598,24 +597,23 @@ class CustomTextField extends StatelessWidget {
                 ),
               ),
             ),
-            if (validator != null)
-              Positioned(
-                  bottom: 5,
-                  left: 48,
-                  child: Builder(builder: (context) {
-                    return ValueListenableBuilder<FormeValidateError?>(
-                        valueListenable:
-                            formeKey.valueField(name).errorTextListenable,
-                        builder: (context, a, b) {
-                          return a == null || !a.hasError
-                              ? SizedBox()
-                              : Text(a.text!,
-                                  style: TextStyle(
-                                    color: Colors.red,
-                                    fontSize: large ? 12 : 10,
-                                  ));
-                        });
-                  })),
+            Positioned(
+                bottom: 5,
+                left: 48,
+                child: Builder(builder: (context) {
+                  return ValueListenableBuilder<FormeValidateError?>(
+                      valueListenable:
+                          formeKey.valueField(name).errorTextListenable,
+                      builder: (context, a, b) {
+                        return a == null || !a.hasError
+                            ? SizedBox()
+                            : Text(a.text!,
+                                style: TextStyle(
+                                  color: Colors.red,
+                                  fontSize: large ? 12 : 10,
+                                ));
+                      });
+                })),
           ],
         ));
   }

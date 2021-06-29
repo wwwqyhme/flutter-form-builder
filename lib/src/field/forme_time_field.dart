@@ -4,34 +4,29 @@ import 'package:forme/forme.dart';
 typedef FormeTimeFieldFormatter = String Function(TimeOfDay timeOfDay);
 
 /// used to pick time only
-class FormeTimeField extends ValueField<TimeOfDay, FormeTimeFieldModel> {
+class FormeTimeField extends ValueField<TimeOfDay?, FormeTimeFieldModel> {
   FormeTimeField({
-    FormeValueChanged<TimeOfDay, FormeTimeFieldModel>? onValueChanged,
-    FormFieldValidator<TimeOfDay>? validator,
+    FormeValueChanged<TimeOfDay?, FormeTimeFieldModel>? onValueChanged,
+    FormFieldValidator<TimeOfDay?>? validator,
     AutovalidateMode? autovalidateMode,
     TimeOfDay? initialValue,
-    FormFieldSetter<TimeOfDay>? onSaved,
+    FormeFieldSetter<TimeOfDay?>? onSaved,
     required String name,
     bool readOnly = false,
     FormeTimeFieldModel? model,
-    FormeErrorChanged<
-            FormeValueFieldController<TimeOfDay, FormeTimeFieldModel>>?
-        onErrorChanged,
-    FormeFocusChanged<
-            FormeValueFieldController<TimeOfDay, FormeTimeFieldModel>>?
+    FormeErrorChanged<TimeOfDay?, FormeTimeFieldModel>? onErrorChanged,
+    FormeValueFieldFocusChanged<TimeOfDay?, FormeTimeFieldModel>?
         onFocusChanged,
-    FormeFieldInitialed<
-            FormeValueFieldController<TimeOfDay, FormeTimeFieldModel>>?
-        onInitialed,
+    FormeValueFieldInitialed<TimeOfDay?, FormeTimeFieldModel>? onInitialed,
     Key? key,
     FormeDecoratorBuilder<TimeOfDay>? decoratorBuilder,
     InputDecoration? decoration,
     int? maxLines = 1,
-    Duration? asyncValidatorDebounce,
-    FormeFieldValidator<TimeOfDay>? asyncValidator,
+    FormeAsyncValidateConfiguration? asyncValidateConfiguration,
+    FormeAsyncValidator<TimeOfDay?>? asyncValidator,
   }) : super(
           asyncValidator: asyncValidator,
-          asyncValidatorDebounce: asyncValidatorDebounce,
+          asyncValidateConfiguration: asyncValidateConfiguration,
           onInitialed: onInitialed,
           key: key,
           decoratorBuilder: decoratorBuilder,
@@ -94,7 +89,7 @@ class FormeTimeField extends ValueField<TimeOfDay, FormeTimeFieldModel> {
 }
 
 class _FormeTimeFieldState
-    extends ValueFieldState<TimeOfDay, FormeTimeFieldModel> {
+    extends ValueFieldState<TimeOfDay?, FormeTimeFieldModel> {
   FormeTimeFieldFormatter get _formatter =>
       model.formatter ?? FormeTimeField.defaultFormeTimeFieldFormatter;
 
@@ -121,8 +116,9 @@ class _FormeTimeFieldState
     super.dispose();
   }
 
+  @override
   void clearValue() {
-    setValue(null);
+    didChange(null);
     textEditingController.text = '';
   }
 

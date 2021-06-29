@@ -3,35 +3,30 @@ import 'package:forme/forme.dart';
 import 'package:forme/src/widget/forme_mounted_value_notifier.dart';
 
 class FormeAutocompleteText<T extends Object>
-    extends ValueField<T, FormeAutocompleteTextModel<T>> {
+    extends ValueField<T?, FormeAutocompleteTextModel<T>> {
   FormeAutocompleteText({
     required String name,
     required AutocompleteOptionsBuilder<T> optionsBuilder,
     InputDecoration? decoration,
     FormeAutocompleteTextModel<T>? model,
-    FormeValueChanged<T, FormeAutocompleteTextModel<T>>? onValueChanged,
-    FormFieldValidator<T>? validator,
+    FormeValueChanged<T?, FormeAutocompleteTextModel<T>>? onValueChanged,
+    FormFieldValidator<T?>? validator,
     AutovalidateMode? autovalidateMode,
     T? initialValue,
-    FormFieldSetter<T>? onSaved,
+    FormeFieldSetter<T?>? onSaved,
     bool readOnly = false,
-    FormeErrorChanged<
-            FormeValueFieldController<T, FormeAutocompleteTextModel<T>>>?
-        onErrorChanged,
-    FormeFocusChanged<
-            FormeValueFieldController<T, FormeAutocompleteTextModel<T>>>?
+    FormeErrorChanged<T?, FormeAutocompleteTextModel<T>>? onErrorChanged,
+    FormeValueFieldFocusChanged<T?, FormeAutocompleteTextModel<T>>?
         onFocusChanged,
-    FormeFieldInitialed<
-            FormeValueFieldController<T, FormeAutocompleteTextModel<T>>>?
-        onInitialed,
+    FormeValueFieldInitialed<T?, FormeAutocompleteTextModel<T>>? onInitialed,
     Key? key,
-    FormeDecoratorBuilder<T>? decoratorBuilder,
+    FormeDecoratorBuilder<T?>? decoratorBuilder,
     int? maxLines = 1,
-    Duration? asyncValidatorDebounce,
-    FormeFieldValidator<T>? asyncValidator,
+    FormeAsyncValidateConfiguration? asyncValidateConfiguration,
+    FormeAsyncValidator<T?>? asyncValidator,
   }) : super(
           asyncValidator: asyncValidator,
-          asyncValidatorDebounce: asyncValidatorDebounce,
+          asyncValidateConfiguration: asyncValidateConfiguration,
           onInitialed: onInitialed,
           decoratorBuilder: decoratorBuilder,
           onFocusChanged: onFocusChanged,
@@ -116,7 +111,7 @@ class FormeAutocompleteText<T extends Object>
 }
 
 class _FormeAutocompleteTextState<T extends Object>
-    extends ValueFieldState<T, FormeAutocompleteTextModel<T>> {
+    extends ValueFieldState<T?, FormeAutocompleteTextModel<T>> {
   TextEditingController? textEditingController;
   FocusNode? _effecitiveFocusNode;
 
@@ -217,6 +212,12 @@ class _FormeAutocompleteTextState<T extends Object>
     if (textEditingController?.text != text) {
       textEditingController?.text = text;
     }
+  }
+
+  @override
+  void clearValue() {
+    textEditingController?.text = '';
+    didChange(null);
   }
 
   @override

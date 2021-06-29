@@ -1,34 +1,30 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:forme/forme.dart';
 
-class FormeNumberField extends ValueField<num, FormeNumberFieldModel> {
+class FormeNumberField extends ValueField<num?, FormeNumberFieldModel> {
   FormeNumberField({
-    FormeValueChanged<num, FormeNumberFieldModel>? onValueChanged,
-    FormFieldValidator<num>? validator,
+    FormeValueChanged<num?, FormeNumberFieldModel>? onValueChanged,
+    FormFieldValidator<num?>? validator,
     AutovalidateMode? autovalidateMode,
     num? initialValue,
     ValueChanged<num?>? onSubmitted,
-    FormFieldSetter<num>? onSaved,
+    FormeFieldSetter<num?>? onSaved,
     required String name,
     bool readOnly = false,
     FormeNumberFieldModel? model,
-    FormeErrorChanged<FormeValueFieldController<num, FormeNumberFieldModel>>?
-        onErrorChanged,
-    FormeFocusChanged<FormeValueFieldController<num, FormeNumberFieldModel>>?
-        onFocusChanged,
-    FormeFieldInitialed<FormeValueFieldController<num, FormeNumberFieldModel>>?
-        onInitialed,
+    FormeErrorChanged<num?, FormeNumberFieldModel>? onErrorChanged,
+    FormeValueFieldFocusChanged<num?, FormeNumberFieldModel>? onFocusChanged,
+    FormeValueFieldInitialed<num?, FormeNumberFieldModel>? onInitialed,
     Key? key,
-    FormeDecoratorBuilder<num>? decoratorBuilder,
+    FormeDecoratorBuilder<num?>? decoratorBuilder,
     InputDecoration? decoration,
     int? maxLines = 1,
-    Duration? asyncValidatorDebounce,
-    FormeFieldValidator<num>? asyncValidator,
+    FormeAsyncValidateConfiguration? asyncValidateConfiguration,
+    FormeAsyncValidator<num?>? asyncValidator,
   }) : super(
           asyncValidator: asyncValidator,
-          asyncValidatorDebounce: asyncValidatorDebounce,
+          asyncValidateConfiguration: asyncValidateConfiguration,
           onInitialed: onInitialed,
           decoratorBuilder: decoratorBuilder,
           onFocusChanged: onFocusChanged,
@@ -90,7 +86,7 @@ class FormeNumberField extends ValueField<num, FormeNumberFieldModel> {
             }
 
             void onChanged(String value) {
-              num? parsed = num.tryParse(value);
+              num? parsed = num?.tryParse(value);
               if (parsed != null && parsed != state.value) {
                 state.updateController = false;
                 state.didChange(parsed);
@@ -123,7 +119,7 @@ class FormeNumberField extends ValueField<num, FormeNumberFieldModel> {
   _NumberFieldState createState() => _NumberFieldState();
 }
 
-class _NumberFieldState extends ValueFieldState<num, FormeNumberFieldModel> {
+class _NumberFieldState extends ValueFieldState<num?, FormeNumberFieldModel> {
   late final TextEditingController textEditingController;
   @override
   FormeNumberField get widget => super.widget as FormeNumberField;
@@ -162,7 +158,13 @@ class _NumberFieldState extends ValueFieldState<num, FormeNumberFieldModel> {
     super.dispose();
   }
 
+  @override
   void clearValue() {
+    textEditingController.text = '';
+    didChange(null);
+  }
+
+  void _clearValue() {
     textEditingController.text = '';
     setValue(null);
   }
@@ -171,15 +173,15 @@ class _NumberFieldState extends ValueFieldState<num, FormeNumberFieldModel> {
   void afterUpdateModel(
       FormeNumberFieldModel old, FormeNumberFieldModel current) {
     if (value == null) return;
-    if (current.max != null && current.max! < value!) clearValue();
+    if (current.max != null && current.max! < value!) _clearValue();
     if (current.allowNegative != null && !current.allowNegative! && value! < 0)
-      clearValue();
+      _clearValue();
     int? decimal = current.decimal;
     if (decimal != null) {
       int indexOfPoint = value.toString().indexOf(".");
       if (indexOfPoint == -1) return;
       int decimalNum = value.toString().length - (indexOfPoint + 1);
-      if (decimalNum > decimal) clearValue();
+      if (decimalNum > decimal) _clearValue();
     }
   }
 }

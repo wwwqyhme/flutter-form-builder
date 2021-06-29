@@ -2,31 +2,29 @@ import 'package:flutter/material.dart';
 import 'package:forme/forme.dart';
 
 class FormeChoiceChip<T extends Object>
-    extends ValueField<T, FormeChoiceChipModel<T>> {
+    extends ValueField<T?, FormeChoiceChipModel<T>> {
   FormeChoiceChip({
     T? initialValue,
     AutovalidateMode? autovalidateMode,
-    FormFieldValidator<T>? validator,
-    FormeValueChanged<T, FormeChoiceChipModel<T>>? onValueChanged,
-    FormFieldSetter<T>? onSaved,
+    FormFieldValidator<T?>? validator,
+    FormeValueChanged<T?, FormeChoiceChipModel<T>>? onValueChanged,
+    FormeFieldSetter<T?>? onSaved,
     required String name,
     bool readOnly = false,
     required List<FormeChipItem<T>>? items,
     FormeChoiceChipModel<T>? model,
-    FormeErrorChanged<FormeValueFieldController<T, FormeChoiceChipModel<T>>>?
-        onErrorChanged,
-    FormeFocusChanged<FormeValueFieldController<T, FormeChoiceChipModel<T>>>?
-        onFocusChanged,
-    FormeFieldInitialed<FormeValueFieldController<T, FormeChoiceChipModel<T>>>?
-        onInitialed,
+    FormeErrorChanged<T?, FormeChoiceChipModel<T>>? onErrorChanged,
+    FormeValueFieldFocusChanged<T?, FormeChoiceChipModel<T>>? onFocusChanged,
+    FormeValueFieldInitialed<T?, FormeChoiceChipModel<T>>? onInitialed,
     Key? key,
-    FormeDecoratorBuilder<T>? decoratorBuilder,
+    FormeDecoratorBuilder<T?>? decoratorBuilder,
     InputDecoration? decoration,
     Duration? asyncValidatorDebounce,
-    FormeFieldValidator<T>? asyncValidator,
+    FormeAsyncValidator<T?>? asyncValidator,
+    FormeAsyncValidateConfiguration? asyncValidateConfiguration,
   }) : super(
           asyncValidator: asyncValidator,
-          asyncValidatorDebounce: asyncValidatorDebounce,
+          asyncValidateConfiguration: asyncValidateConfiguration,
           onInitialed: onInitialed,
           key: key,
           decoratorBuilder: decoratorBuilder ??
@@ -111,7 +109,7 @@ class FormeChoiceChip<T extends Object>
 }
 
 class _FormeChoiceChipState<T extends Object>
-    extends ValueFieldState<T, FormeChoiceChipModel<T>> {
+    extends ValueFieldState<T?, FormeChoiceChipModel<T>> {
   @override
   void afterUpdateModel(
       FormeChoiceChipModel<T> old, FormeChoiceChipModel<T> current) {

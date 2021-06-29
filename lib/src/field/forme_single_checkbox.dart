@@ -7,27 +7,20 @@ class FormeSingleCheckbox extends ValueField<bool, FormeSingleCheckboxModel> {
     FormFieldValidator<bool>? validator,
     AutovalidateMode? autovalidateMode,
     bool initialValue = false,
-    FormFieldSetter<bool>? onSaved,
+    FormeFieldSetter<bool>? onSaved,
     required String name,
     bool readOnly = false,
     FormeSingleCheckboxModel? model,
-    FormeErrorChanged<
-            FormeValueFieldController<bool, FormeSingleCheckboxModel>>?
-        onErrorChanged,
-    FormeFocusChanged<
-            FormeValueFieldController<bool, FormeSingleCheckboxModel>>?
-        onFocusChanged,
-    FormeFieldInitialed<
-            FormeValueFieldController<bool, FormeSingleCheckboxModel>>?
-        onInitialed,
+    FormeErrorChanged<bool, FormeSingleCheckboxModel>? onErrorChanged,
+    FormeValueFieldFocusChanged<bool, FormeSingleCheckboxModel>? onFocusChanged,
+    FormeValueFieldInitialed<bool, FormeSingleCheckboxModel>? onInitialed,
     Key? key,
-    Duration? asyncValidatorDebounce,
-    FormeFieldValidator<bool>? asyncValidator,
+    FormeAsyncValidateConfiguration? asyncValidateConfiguration,
+    FormeAsyncValidator<bool>? asyncValidator,
   }) : super(
           asyncValidator: asyncValidator,
-          asyncValidatorDebounce: asyncValidatorDebounce,
+          asyncValidateConfiguration: asyncValidateConfiguration,
           onInitialed: onInitialed,
-          nullValueReplacement: false,
           onFocusChanged: onFocusChanged,
           onErrorChanged: onErrorChanged,
           key: key,
@@ -41,7 +34,7 @@ class FormeSingleCheckbox extends ValueField<bool, FormeSingleCheckboxModel> {
           validator: validator,
           builder: (state) {
             bool readOnly = state.readOnly;
-            bool value = state.value!;
+            bool value = state.value;
             FormeCheckboxRenderData? checkboxRenderData =
                 state.model.checkboxRenderData;
 
@@ -61,7 +54,7 @@ class FormeSingleCheckbox extends ValueField<bool, FormeSingleCheckboxModel> {
                 contentPadding: state.model.contentPadding,
                 dense: state.model.dense,
                 title: state.model.title,
-                value: state.value!,
+                value: state.value,
                 onChanged: readOnly
                     ? null
                     : (_) {
@@ -88,7 +81,13 @@ class FormeSingleCheckbox extends ValueField<bool, FormeSingleCheckboxModel> {
             );
           },
         );
+
+  @override
+  _FormeSingleCheckboxState createState() => _FormeSingleCheckboxState();
 }
+
+class _FormeSingleCheckboxState
+    extends ValueFieldState<bool, FormeSingleCheckboxModel> {}
 
 class FormeSingleCheckboxModel extends FormeModel {
   final Widget? title;

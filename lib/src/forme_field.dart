@@ -11,7 +11,15 @@ abstract class FormeDecoratorBuilder<T> {
   );
 }
 
-typedef FormeFieldValidator<T> = Future<String?> Function(T? value);
+typedef FormeAsyncValidator<T> = Future<String?> Function(T value);
+typedef FormeValidator<T> = String? Function(T value);
+typedef FormeFieldSetter<T> = void Function(T value);
+typedef FormeValueFieldFocusChanged<T, E extends FormeModel> = void Function(
+  FormeValueFieldController<T, E> field,
+  bool hasFocus,
+);
+typedef FormeValueFieldInitialed<T, E extends FormeModel> = void Function(
+    FormeValueFieldController<T, E> field);
 
 typedef FieldContentBuilder<T extends AbstractFieldState> = Widget Function(
     T state);
@@ -30,9 +38,9 @@ mixin StatefulField<T extends AbstractFieldState<StatefulWidget, E>,
 
   bool get readOnly;
 
-  FormeFocusChanged<FormeFieldController<E>>? get onFocusChanged;
+  FormeFocusChanged<E>? get onFocusChanged;
 
-  FormeFieldInitialed<FormeFieldController<E>>? get onInitialed;
+  FormeFieldInitialed<E>? get onInitialed;
 }
 
 /// if you want to create a stateful form field, but don't want to return a value,you can use this field
@@ -42,8 +50,8 @@ class CommonField<E extends FormeModel> extends StatefulWidget
   final FieldContentBuilder<CommonFieldState<E>> builder;
   final E model;
   final bool readOnly;
-  final FormeFocusChanged<FormeFieldController<E>>? onFocusChanged;
-  final FormeFieldInitialed<FormeFieldController<E>>? onInitialed;
+  final FormeFocusChanged<E>? onFocusChanged;
+  final FormeFieldInitialed<E>? onInitialed;
   const CommonField({
     Key? key,
     required this.name,
@@ -58,10 +66,7 @@ class CommonField<E extends FormeModel> extends StatefulWidget
   CommonFieldState<E> createState() => CommonFieldState();
 }
 
-/// base field used to return a value
-///
-/// if your return value is nonnull,use [ValueField]
-class ValueField<T extends Object, E extends FormeModel> extends FormField<T>
+class ValueField<T, E extends FormeModel> extends StatefulWidget
     with StatefulField<ValueFieldState<T, E>, E> {
   final String name;
 
@@ -71,7 +76,7 @@ class ValueField<T extends Object, E extends FormeModel> extends FormField<T>
   final bool readOnly;
 
   /// used to listen focus changed
-  final FormeFocusChanged<FormeValueFieldController<T, E>>? onFocusChanged;
+  final FormeFocusChanged<E>? onFocusChanged;
 
   /// used to listen field's validate errorText changed
   ///
@@ -81,26 +86,12 @@ class ValueField<T extends Object, E extends FormeModel> extends FormField<T>
   /// 2. after called [validate] method
   ///
   /// **errorText will be null if field's errorText from nonnull to null**
-  final FormeErrorChanged<FormeValueFieldController<T, E>>? onErrorChanged;
+  final FormeErrorChanged<T, E>? onErrorChanged;
 
   /// used to build a decorator
   ///
   /// **decorator is a part of field widget**
   final FormeDecoratorBuilder<T>? decoratorBuilder;
-
-  /// used to replace null value
-  ///
-  /// will effect
-  ///
-  ///   1. [FormeValueFieldController.value]
-  ///   2. [ValueField.validator]
-  ///   3. [ValueField.onSaved]
-  ///   4. [FormeValueFieldController.valueListenable]
-  ///   5. [ValueField.onValueChanged]
-  ///   6. [Forme.onValueChanged]
-  ///
-  /// **should not setted by user**
-  final T? nullValueReplacement;
 
   /// called after [FormeController] or [FormeFieldController] initialed
   ///
@@ -108,62 +99,79 @@ class ValueField<T extends Object, E extends FormeModel> extends FormField<T>
   /// that in this method
   ///
   /// **try to get another field's controller in this method will cause an error**
-  final FormeFieldInitialed<FormeFieldController<E>>? onInitialed;
+  final FormeFieldInitialed<E>? onInitialed;
 
   /// used to perform an async validate
   ///
   /// if you specific both asyncValidator and validator , asyncValidator will only worked after validator validate success
-  ///
-  /// you can use [FormeValueFieldController.asyncErrorLoadingListenable] listen async validating state
-  final FormeFieldValidator<T>? asyncValidator;
-  final Duration? asyncValidatorDebounce;
+  final FormeAsyncValidator<T>? asyncValidator;
+  final FormeAsyncValidateConfiguration asyncValidateConfiguration;
 
+  final FieldContentBuilder<ValueFieldState<T, E>> builder;
+  final FormeValidator<T>? validator;
+  final bool enabled;
+  final FormeFieldSetter<T>? onSaved;
+  final AutovalidateMode? autovalidateMode;
+  final T initialValue;
   ValueField({
     Key? key,
     this.onValueChanged,
+    this.validator,
     this.asyncValidator,
-    this.asyncValidatorDebounce,
-    FormFieldValidator<T>? validator,
+    FormeAsyncValidateConfiguration? asyncValidateConfiguration,
     required this.name,
-    required FieldContentBuilder<ValueFieldState<T, E>> builder,
-    AutovalidateMode? autovalidateMode,
-    T? initialValue,
-    bool enabled = true,
-    FormFieldSetter<T>? onSaved,
+    required this.builder,
+    this.autovalidateMode = AutovalidateMode.disabled,
+    this.enabled = true,
+    this.onSaved,
     required this.model,
     this.readOnly = false,
     this.onErrorChanged,
     this.decoratorBuilder,
-    this.nullValueReplacement,
-    FormeFocusChanged<FormeValueFieldController<T, E>>? onFocusChanged,
-    FormeFieldInitialed<FormeValueFieldController<T, E>>? onInitialed,
+    FormeValueFieldFocusChanged<T, E>? onFocusChanged,
+    FormeValueFieldInitialed<T, E>? onInitialed,
+    required this.initialValue,
   })  : this.onFocusChanged = _convertFormeFocusChanged(onFocusChanged),
         this.onInitialed = _convertFormeFieldInitialed(onInitialed),
-        super(
-            key: key,
-            enabled: enabled,
-            onSaved: onSaved,
-            builder: (field) {
-              ValueFieldState<T, E> state = field as ValueFieldState<T, E>;
-              return builder(state);
-            },
-            validator: validator,
-            autovalidateMode: autovalidateMode,
-            initialValue: initialValue);
+        this.asyncValidateConfiguration =
+            asyncValidateConfiguration ?? FormeAsyncValidateConfiguration(),
+        super(key: key);
   @override
   ValueFieldState<T, E> createState() => ValueFieldState();
 
-  static FormeFocusChanged<FormeFieldController<E>>?
+  static FormeFocusChanged<E>?
       _convertFormeFocusChanged<T, E extends FormeModel>(
-          FormeFocusChanged<FormeValueFieldController<T, E>>? listener) {
+          FormeValueFieldFocusChanged<T, E>? listener) {
     if (listener == null) return null;
     return (v, focus) => listener(v as FormeValueFieldController<T, E>, focus);
   }
 
-  static FormeFieldInitialed<FormeFieldController<E>>?
+  static FormeFieldInitialed<E>?
       _convertFormeFieldInitialed<T, E extends FormeModel>(
-          FormeFieldInitialed<FormeValueFieldController<T, E>>? listener) {
+          FormeValueFieldInitialed<T, E>? listener) {
     if (listener == null) return null;
     return (v) => listener(v as FormeValueFieldController<T, E>);
   }
+}
+
+enum FormeAsyncValidateMode {
+  /// after performing an async validation , will not perform async validate again unless field's value changed
+  onFieldValueChanged,
+
+  /// after performing an async validation , will not perform async validate again unless forme's value changed
+  ///
+  /// you can specific names via  [FormeAsyncValidateConfiguration.names]
+  onFormeValueChanged,
+}
+
+class FormeAsyncValidateConfiguration {
+  final FormeAsyncValidateMode? mode;
+  final Duration debounce;
+  final Set<String> names;
+
+  FormeAsyncValidateConfiguration({
+    this.mode = FormeAsyncValidateMode.onFieldValueChanged,
+    Duration? debounce,
+    this.names = const {},
+  }) : this.debounce = debounce ?? Duration.zero;
 }

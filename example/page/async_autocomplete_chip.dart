@@ -48,9 +48,7 @@ class AsyncAutocompleteChip extends BasePage<List<AppProfile>,
           decoration: InputDecoration(
               labelText: 'Async Autocomplete Chip',
               suffixIcon: IconButton(
-                onPressed: () {
-                  controller.clearValue();
-                },
+                onPressed: () {},
                 icon: Icon(Icons.clear),
               )),
           model: FormeAsyncAutocompleteChipModel<AppProfile>(

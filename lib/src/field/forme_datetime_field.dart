@@ -7,34 +7,30 @@ import 'package:forme/forme.dart';
 enum FormeDateTimeFieldType { Date, DateTime }
 
 ///used to pick datetime and date
-class FormeDateTimeField extends ValueField<DateTime, FormeDateTimeFieldModel> {
+class FormeDateTimeField
+    extends ValueField<DateTime?, FormeDateTimeFieldModel> {
   FormeDateTimeField({
-    FormeValueChanged<DateTime, FormeDateTimeFieldModel>? onValueChanged,
-    FormFieldValidator<DateTime>? validator,
+    FormeValueChanged<DateTime?, FormeDateTimeFieldModel>? onValueChanged,
+    FormFieldValidator<DateTime?>? validator,
     AutovalidateMode? autovalidateMode,
     DateTime? initialValue,
-    FormFieldSetter<DateTime>? onSaved,
+    FormeFieldSetter<DateTime?>? onSaved,
     required String name,
     bool readOnly = false,
     FormeDateTimeFieldModel? model,
-    FormeErrorChanged<
-            FormeValueFieldController<DateTime, FormeDateTimeFieldModel>>?
-        onErrorChanged,
-    FormeFocusChanged<
-            FormeValueFieldController<DateTime, FormeDateTimeFieldModel>>?
+    FormeErrorChanged<DateTime?, FormeDateTimeFieldModel>? onErrorChanged,
+    FormeValueFieldFocusChanged<DateTime?, FormeDateTimeFieldModel>?
         onFocusChanged,
-    FormeFieldInitialed<
-            FormeValueFieldController<DateTime, FormeDateTimeFieldModel>>?
-        onInitialed,
+    FormeValueFieldInitialed<DateTime?, FormeDateTimeFieldModel>? onInitialed,
     Key? key,
-    FormeDecoratorBuilder<DateTime>? decoratorBuilder,
+    FormeDecoratorBuilder<DateTime?>? decoratorBuilder,
     InputDecoration? decoration,
     int? maxLines = 1,
-    Duration? asyncValidatorDebounce,
-    FormeFieldValidator<DateTime>? asyncValidator,
+    FormeAsyncValidateConfiguration? asyncValidateConfiguration,
+    FormeAsyncValidator<DateTime?>? asyncValidator,
   }) : super(
           asyncValidator: asyncValidator,
-          asyncValidatorDebounce: asyncValidatorDebounce,
+          asyncValidateConfiguration: asyncValidateConfiguration,
           onInitialed: onInitialed,
           decoratorBuilder: decoratorBuilder,
           key: key,
@@ -153,7 +149,7 @@ typedef FormeDateTimeFormatter = String Function(
     FormeDateTimeFieldType type, DateTime dateTime);
 
 class _FormeDateTimeFieldState
-    extends ValueFieldState<DateTime, FormeDateTimeFieldModel> {
+    extends ValueFieldState<DateTime?, FormeDateTimeFieldModel> {
   FormeDateTimeFormatter get _formatter =>
       model.formatter ?? FormeDateTimeField.defaultDateTimeFormatter;
 
@@ -181,7 +177,13 @@ class _FormeDateTimeFieldState
     super.dispose();
   }
 
+  @override
   void clearValue() {
+    textEditingController.text = '';
+    didChange(null);
+  }
+
+  void _clearValue() {
     setValue(null);
     textEditingController.text = '';
   }
@@ -200,10 +202,10 @@ class _FormeDateTimeFieldState
       FormeDateTimeFieldModel old, FormeDateTimeFieldModel current) {
     if (value == null) return;
     if (current.firstDate != null && current.firstDate!.isAfter(value!))
-      clearValue();
+      _clearValue();
     if (value != null &&
         current.lastDate != null &&
-        current.lastDate!.isBefore(value!)) clearValue();
+        current.lastDate!.isBefore(value!)) _clearValue();
     if (value != null &&
         (current.formatter != null ||
             (current.type != null && current.type != old.type)))

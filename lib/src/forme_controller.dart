@@ -166,17 +166,17 @@ abstract class FormeFieldController<E extends FormeModel> {
 abstract class FormeValueFieldController<T, E extends FormeModel>
     extends FormeFieldController<E> {
   /// get current value of valuefield
-  T? get value;
+  T get value;
 
   /// set field value
-  set value(T? value);
+  set value(T value);
 
   /// validate field , return errorText
   ///
   /// if [quietly] ,will not rebuild field and update and display error Text
   ///
   /// if [notify] , will trigger error listenable
-  Future<String?> validate({bool quietly = false});
+  Future<String?>? validate({bool quietly = false});
 
   /// reset field
   void reset();
@@ -326,11 +326,11 @@ abstract class FormeValueFieldControllerDelegate<T, E extends FormeModel>
   FormeValueFieldController<T, E> get delegate;
 
   @override
-  T? get value => delegate.value;
+  T get value => delegate.value;
   @override
-  set value(T? value) => delegate.value = value;
+  set value(T value) => delegate.value = value;
   @override
-  Future<String?> validate({bool quietly = false}) =>
+  Future<String?>? validate({bool quietly = false}) =>
       delegate.validate(quietly: quietly);
   @override
   void reset() => delegate.reset();
@@ -360,9 +360,9 @@ abstract class FormeValueFieldControllerDelegate<T, E extends FormeModel>
 class FormeValidateError {
   final String? text;
   final FormeValidateState state;
-  bool get hasError => text != null;
   const FormeValidateError(this.text, this.state);
 
+  bool get hasError => invalid;
   bool get valid => state == FormeValidateState.valid;
   bool get invalid => state == FormeValidateState.invalid;
   bool get validating => state == FormeValidateState.validating;

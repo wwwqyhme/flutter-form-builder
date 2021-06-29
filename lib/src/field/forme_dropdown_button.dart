@@ -2,34 +2,29 @@ import 'package:flutter/material.dart';
 import 'package:forme/forme.dart';
 
 class FormeDropdownButton<T extends Object>
-    extends ValueField<T, FormeDropdownButtonModel<T>> {
+    extends ValueField<T?, FormeDropdownButtonModel<T>> {
   FormeDropdownButton({
     required List<DropdownMenuItem<T>> items,
-    FormeValueChanged<T, FormeDropdownButtonModel<T>>? onValueChanged,
-    FormFieldValidator<T>? validator,
+    FormeValueChanged<T?, FormeDropdownButtonModel<T>>? onValueChanged,
+    FormFieldValidator<T?>? validator,
     AutovalidateMode? autovalidateMode,
     T? initialValue,
-    FormFieldSetter<T>? onSaved,
+    FormeFieldSetter<T?>? onSaved,
     required String name,
     bool readOnly = false,
     FormeDropdownButtonModel<T>? model,
-    FormeErrorChanged<
-            FormeValueFieldController<T, FormeDropdownButtonModel<T>>>?
-        onErrorChanged,
-    FormeFocusChanged<
-            FormeValueFieldController<T, FormeDropdownButtonModel<T>>>?
+    FormeErrorChanged<T?, FormeDropdownButtonModel<T>>? onErrorChanged,
+    FormeValueFieldFocusChanged<T?, FormeDropdownButtonModel<T>>?
         onFocusChanged,
-    FormeFieldInitialed<
-            FormeValueFieldController<T, FormeDropdownButtonModel<T>>>?
-        onInitialed,
+    FormeValueFieldInitialed<T?, FormeDropdownButtonModel<T>>? onInitialed,
     Key? key,
-    FormeDecoratorBuilder<T>? decoratorBuilder,
+    FormeDecoratorBuilder<T?>? decoratorBuilder,
     InputDecoration? decoration,
-    Duration? asyncValidatorDebounce,
-    FormeFieldValidator<T>? asyncValidator,
+    FormeAsyncValidateConfiguration? asyncValidateConfiguration,
+    FormeAsyncValidator<T?>? asyncValidator,
   }) : super(
           asyncValidator: asyncValidator,
-          asyncValidatorDebounce: asyncValidatorDebounce,
+          asyncValidateConfiguration: asyncValidateConfiguration,
           onInitialed: onInitialed,
           key: key,
           decoratorBuilder: decoratorBuilder ??
@@ -95,7 +90,7 @@ class FormeDropdownButton<T extends Object>
 }
 
 class _FormDropdownButtonState<T extends Object>
-    extends ValueFieldState<T, FormeDropdownButtonModel<T>> {
+    extends ValueFieldState<T?, FormeDropdownButtonModel<T>> {
   @override
   void afterUpdateModel(
       FormeDropdownButtonModel<T> old, FormeDropdownButtonModel<T> current) {

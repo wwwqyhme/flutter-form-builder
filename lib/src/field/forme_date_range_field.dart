@@ -4,34 +4,31 @@ import 'package:flutter/material.dart';
 import 'package:forme/forme.dart';
 
 class FormeDateRangeField
-    extends ValueField<DateTimeRange, FormeDateRangeFieldModel> {
+    extends ValueField<DateTimeRange?, FormeDateRangeFieldModel> {
   FormeDateRangeField({
-    FormeValueChanged<DateTimeRange, FormeDateRangeFieldModel>? onValueChanged,
-    FormFieldValidator<DateTimeRange>? validator,
+    FormeValueChanged<DateTimeRange?, FormeDateRangeFieldModel>? onValueChanged,
+    FormFieldValidator<DateTimeRange?>? validator,
     AutovalidateMode? autovalidateMode,
     DateTimeRange? initialValue,
-    FormFieldSetter<DateTimeRange>? onSaved,
+    FormeFieldSetter<DateTimeRange?>? onSaved,
     required String name,
     bool visible = true,
     FormeDateRangeFieldModel? model,
-    FormeErrorChanged<
-            FormeValueFieldController<DateTimeRange, FormeDateRangeFieldModel>>?
-        onErrorChanged,
-    FormeFocusChanged<
-            FormeValueFieldController<DateTimeRange, FormeDateRangeFieldModel>>?
+    FormeErrorChanged<DateTimeRange?, FormeDateRangeFieldModel>? onErrorChanged,
+    FormeValueFieldFocusChanged<DateTimeRange?, FormeDateRangeFieldModel>?
         onFocusChanged,
-    FormeFieldInitialed<
-            FormeValueFieldController<DateTimeRange, FormeDateRangeFieldModel>>?
+    FormeValueFieldInitialed<DateTimeRange?, FormeDateRangeFieldModel>?
         onInitialed,
     Key? key,
-    FormeDecoratorBuilder<DateTimeRange>? decoratorBuilder,
+    FormeDecoratorBuilder<DateTimeRange?>? decoratorBuilder,
     InputDecoration? decoration,
     int? maxLines = 1,
     Duration? asyncValidatorDebounce,
-    FormeFieldValidator<DateTimeRange>? asyncValidator,
+    FormeAsyncValidator<DateTimeRange?>? asyncValidator,
+    FormeAsyncValidateConfiguration? asyncValidateConfiguration,
   }) : super(
           asyncValidator: asyncValidator,
-          asyncValidatorDebounce: asyncValidatorDebounce,
+          asyncValidateConfiguration: asyncValidateConfiguration,
           onInitialed: onInitialed,
           decoratorBuilder: decoratorBuilder,
           onFocusChanged: onFocusChanged,
@@ -111,7 +108,7 @@ class FormeDateRangeField
 typedef FormeDateRangeFieldFormatter = String Function(DateTimeRange range);
 
 class _FormeDateRangeFieldState
-    extends ValueFieldState<DateTimeRange, FormeDateRangeFieldModel> {
+    extends ValueFieldState<DateTimeRange?, FormeDateRangeFieldModel> {
   FormeDateRangeFieldFormatter get _formatter =>
       model.formatter ?? FormeDateRangeField.defaultRangeDateFormatter;
 
@@ -145,7 +142,13 @@ class _FormeDateRangeFieldState
     super.dispose();
   }
 
+  @override
   void clearValue() {
+    textEditingController.text = '';
+    didChange(null);
+  }
+
+  void _clearValue() {
     setValue(null);
     textEditingController.text = '';
   }
@@ -155,10 +158,10 @@ class _FormeDateRangeFieldState
       FormeDateRangeFieldModel old, FormeDateRangeFieldModel current) {
     if (value == null) return;
     if (current.firstDate != null && current.firstDate!.isAfter(value!.start))
-      clearValue();
+      _clearValue();
     if (value != null &&
         current.lastDate != null &&
-        current.lastDate!.isBefore(value!.end)) clearValue();
+        current.lastDate!.isBefore(value!.end)) _clearValue();
     if (current.formatter != null && value != null)
       textEditingController.text = current.formatter!(value!);
   }

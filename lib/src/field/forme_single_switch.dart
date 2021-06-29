@@ -7,26 +7,21 @@ class FormeSingleSwitch extends ValueField<bool, FormeSingleSwitchModel> {
     FormFieldValidator<bool>? validator,
     AutovalidateMode? autovalidateMode,
     bool initialValue = false,
-    FormFieldSetter<bool>? onSaved,
+    FormeFieldSetter<bool>? onSaved,
     required String name,
     bool readOnly = false,
     Widget? label,
     FormeSingleSwitchModel? model,
-    FormeErrorChanged<FormeValueFieldController<bool, FormeSingleSwitchModel>>?
-        onErrorChanged,
-    FormeFocusChanged<FormeValueFieldController<bool, FormeSingleSwitchModel>>?
-        onFocusChanged,
-    FormeFieldInitialed<
-            FormeValueFieldController<bool, FormeSingleSwitchModel>>?
-        onInitialed,
+    FormeErrorChanged<bool, FormeSingleSwitchModel>? onErrorChanged,
+    FormeValueFieldFocusChanged<bool, FormeSingleSwitchModel>? onFocusChanged,
+    FormeValueFieldInitialed<bool, FormeSingleSwitchModel>? onInitialed,
     Key? key,
-    Duration? asyncValidatorDebounce,
-    FormeFieldValidator<bool>? asyncValidator,
+    FormeAsyncValidateConfiguration? asyncValidateConfiguration,
+    FormeAsyncValidator<bool>? asyncValidator,
   }) : super(
           asyncValidator: asyncValidator,
-          asyncValidatorDebounce: asyncValidatorDebounce,
+          asyncValidateConfiguration: asyncValidateConfiguration,
           onInitialed: onInitialed,
-          nullValueReplacement: false,
           key: key,
           onFocusChanged: onFocusChanged,
           onErrorChanged: onErrorChanged,
@@ -40,7 +35,7 @@ class FormeSingleSwitch extends ValueField<bool, FormeSingleSwitchModel> {
           validator: validator,
           builder: (state) {
             bool readOnly = state.readOnly;
-            bool value = state.value!;
+            bool value = state.value;
             bool listTile = state.model.listTile ?? false;
             FormeSwitchRenderData? switchRenderData =
                 state.model.switchRenderData;
@@ -62,7 +57,7 @@ class FormeSingleSwitch extends ValueField<bool, FormeSingleSwitchModel> {
                 contentPadding: state.model.contentPadding,
                 dense: state.model.dense,
                 title: state.model.title,
-                value: state.value!,
+                value: state.value,
                 onChanged: readOnly
                     ? null
                     : (_) {
@@ -90,7 +85,13 @@ class FormeSingleSwitch extends ValueField<bool, FormeSingleSwitchModel> {
             );
           },
         );
+
+  @override
+  _FormeSingleSwitchboxState createState() => _FormeSingleSwitchboxState();
 }
+
+class _FormeSingleSwitchboxState
+    extends ValueFieldState<bool, FormeSingleSwitchModel> {}
 
 class FormeSingleSwitchModel extends FormeModel {
   final Widget? title;

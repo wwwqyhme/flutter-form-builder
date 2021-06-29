@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:forme/forme.dart';
 import 'base_page.dart';
 
-class NumberFieldPage extends BasePage<num, FormeNumberFieldModel> {
+class NumberFieldPage extends BasePage<num?, FormeNumberFieldModel> {
   @override
   Widget get body {
     return Column(
@@ -86,7 +86,7 @@ class NumberFieldPage extends BasePage<num, FormeNumberFieldModel> {
                   suffixIcon: IconButton(
                     icon: Icon(Icons.clear),
                     onPressed: () {
-                      controller.value = null;
+                      controller.clearValue();
                     },
                   ),
                 ),

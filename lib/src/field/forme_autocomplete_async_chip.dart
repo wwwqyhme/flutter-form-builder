@@ -14,29 +14,22 @@ class FormeAsnycAutocompleteChip<T extends Object>
     FormFieldValidator<List<T>>? validator,
     AutovalidateMode? autovalidateMode,
     List<T>? initialValue,
-    FormFieldSetter<List<T>>? onSaved,
+    FormeFieldSetter<List<T>>? onSaved,
     bool readOnly = false,
-    FormeErrorChanged<
-            FormeValueFieldController<List<T>,
-                FormeAsyncAutocompleteChipModel<T>>>?
+    FormeErrorChanged<List<T>, FormeAsyncAutocompleteChipModel<T>>?
         onErrorChanged,
-    FormeFocusChanged<
-            FormeValueFieldController<List<T>,
-                FormeAsyncAutocompleteChipModel<T>>>?
+    FormeValueFieldFocusChanged<List<T>, FormeAsyncAutocompleteChipModel<T>>?
         onFocusChanged,
-    FormeFieldInitialed<
-            FormeValueFieldController<List<T>,
-                FormeAsyncAutocompleteChipModel<T>>>?
+    FormeValueFieldInitialed<List<T>, FormeAsyncAutocompleteChipModel<T>>?
         onInitialed,
     Key? key,
     FormeDecoratorBuilder<List<T>>? decoratorBuilder,
     InputDecoration? decoration,
-    Duration? asyncValidatorDebounce,
-    FormeFieldValidator<List<T>>? asyncValidator,
+    FormeAsyncValidateConfiguration? asyncValidateConfiguration,
+    FormeAsyncValidator<List<T>>? asyncValidator,
   }) : super(
           asyncValidator: asyncValidator,
-          asyncValidatorDebounce: asyncValidatorDebounce,
-          nullValueReplacement: [],
+          asyncValidateConfiguration: asyncValidateConfiguration,
           onInitialed: onInitialed,
           decoratorBuilder: decoratorBuilder,
           onFocusChanged: onFocusChanged,
@@ -47,7 +40,7 @@ class FormeAsnycAutocompleteChip<T extends Object>
           onValueChanged: onValueChanged,
           onSaved: onSaved,
           autovalidateMode: autovalidateMode,
-          initialValue: initialValue,
+          initialValue: initialValue ?? [],
           validator: validator,
           model: (model ?? FormeAsyncAutocompleteChipModel())
               .copyWith(FormeAsyncAutocompleteChipModel(
@@ -77,7 +70,7 @@ class FormeAsnycAutocompleteChip<T extends Object>
                   focusNode: state.focusNode,
                   multi: true,
                   onSelected: (value) {
-                    List<T> values = List.of(state.value!);
+                    List<T> values = List.of(state.value);
                     if (values.remove(value)) {
                       state.didChange(values);
                     } else {
@@ -89,14 +82,14 @@ class FormeAsnycAutocompleteChip<T extends Object>
                       state.didChange(values..add(value));
                     }
                   },
-                  isSelected: (v) => state.value!.contains(v),
+                  isSelected: (v) => state.value.contains(v),
                 ),
                 FormeRenderUtils.wrap(
                     state.model.wrapRenderData,
-                    state.value!
+                    state.value
                         .map((e) => (state.model.chipBuilder ??
                                 state.defaultChipBuilder)(state.context, e, () {
-                              state.didChange(List.of(state.value!)..remove(e));
+                              state.didChange(List.of(state.value)..remove(e));
                               state.unfocus();
                             }))
                         .toList()),
@@ -130,8 +123,8 @@ class _FormeAutocompleteTextState<T extends Object>
   @override
   void afterUpdateModel(FormeAsyncAutocompleteChipModel<T> old,
       FormeAsyncAutocompleteChipModel<T> current) {
-    if (current.max != null && current.max! < value!.length) {
-      List<T> items = List.of(value!);
+    if (current.max != null && current.max! < value.length) {
+      List<T> items = List.of(value);
       setValue(items.sublist(0, current.max!));
     }
   }
@@ -147,14 +140,9 @@ class _FormeAutocompleteTextState<T extends Object>
   }
 
   @override
-  FormeValueFieldController<List<T>, FormeAsyncAutocompleteChipModel<T>>
-      createFormeFieldController() {
-    return _FormeValueFieldController(super.createFormeFieldController(), this);
-  }
-
   void clearValue() {
     textEditingController.text = '';
-    didChange(null);
+    didChange([]);
   }
 
   @override
@@ -231,19 +219,5 @@ class FormeAsyncAutocompleteChipModel<T extends Object>
       exceedCallback: exceedCallback ?? old.exceedCallback,
       max: max ?? old.max,
     );
-  }
-}
-
-class _FormeValueFieldController<T extends Object>
-    extends FormeValueFieldControllerDelegate<List<T>,
-        FormeAsyncAutocompleteChipModel<T>> {
-  final _FormeAutocompleteTextState state;
-  final FormeValueFieldController<List<T>, FormeAsyncAutocompleteChipModel<T>>
-      delegate;
-  _FormeValueFieldController(this.delegate, this.state);
-
-  @override
-  void clearValue() {
-    state.clearValue();
   }
 }

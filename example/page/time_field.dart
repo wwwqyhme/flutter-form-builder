@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:forme/forme.dart';
 import 'base_page.dart';
 
-class TimeFieldPage extends BasePage<TimeOfDay, FormeTimeFieldModel> {
+class TimeFieldPage extends BasePage<TimeOfDay?, FormeTimeFieldModel> {
   @override
   Widget get body {
     return Column(
@@ -79,7 +79,7 @@ class TimeFieldPage extends BasePage<TimeOfDay, FormeTimeFieldModel> {
                   suffixIcon: IconButton(
                     icon: Icon(Icons.clear),
                     onPressed: () {
-                      controller.value = null;
+                      controller.clearValue();
                     },
                   ),
                 ),

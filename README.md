@@ -4,6 +4,18 @@
 
 ![screenshot2](https://raw.githubusercontent.com/wwwqyhme/forme/main/ezgif-3-fe95b1d8ade9.gif)
 
+## migrate from 2.1.x to 2.5.0
+
+Forme 2.5.0 has lots of changes 
+
+1. support `asyncValidator` on `ValueField`
+2. `validate` from `FormeValueFieldController` will return `Future<String?>?` instead of `String?`
+3. `validate` from `FormeController` will return `Future<Map<FormeValueFieldController>,String>` instead of `Map<FormeValueFieldController,String>`
+4. `ValueField` is not a subclass of `FormField` any more 
+5. you can easily detect whether a `ValueField`'s value is nullable from `ValueField`'s generic type, eg `ValueField<String>`'s value is a nonnull String , `ValueField<String?>`'s value is a nullable String
+6. remove `fieldValueListenable` from `FormeFieldController`
+7. remove `lazyFieldValueListenable` from `FormeKey` 
+
 ## Simple Usage
 
 ### add dependency
@@ -77,8 +89,10 @@ Forme is a form widget, but forme is not wrapped in a `Form`  , because I don't 
 | validator | false | `FormFieldValidator` | validate field's value |
 | autovalidateMode | false | `AutovalidateMode` | auto validate mode , default is `AutovalidateMode.disabled`|
 | initialValue | false | `dynamic` | initialValue,**can be overwritten by forme's initialValue**|
-| onSaved | false | `FormFieldSetter` | triggered when call forme or field's save method|
+| onSaved | false | `FormeFieldSetter` | triggered when call forme or field's save method|
 | decoratorBuilder | false | `FormeDecoratorBuilder` | used to decorate a field |
+| asyncValidator | false | `FormeAsyncValidator` | async validator |
+| asyncValidateConfiguration | false | `FormeAsyncValidateConfiguration` | async validate configuration |
 
 ### currently supported fields
 
@@ -203,27 +217,6 @@ suffixicon: Builder(
 ),
 ```
 
-**you shouldn't use FormeValueFieldController's errorTextListenable  out of field ,use `FormfieldListenable.errorTextListenable` instead**
-
-lifecycle of FormeValueFieldController's errorTextListenable  is same as field,when used it on another widget , `errorTextListenable` will disposed before removeListener , which will cause an error in debug mode
-
-`FormfieldListenable` is from `formKey.fieldListenable(fieldName)`,it's lifecycle is same as `Forme`,  typically used to build a widget which is not a stateful field but relies on state  of field , eg: you want to display error of a field on a Text Widget
-
-``` Dart
-Column(
-	children:[
-		FormeTextField(validator:validator,name:name),
-		Builder(builder:(context){
-			return ValueListenableBuilder<FormeValidateError?>(
-				valueListenable: formeKey.fieldListenable(name).errorTextListenable,
-				build: (context,errorText,child){
-					return errorText == null || errorText.isNotPresent ? SizedBox() : Text(errorText.value!);
-				},
-			);
-		})
-])
-```
-
 ## listenable
 
 there are five listenables in field 
@@ -234,14 +227,10 @@ there are five listenables in field
 4. valueListenable
 5. modelListenable
 
-### get listenable from FormeFieldController
+### get listenable 
 
 you can get focusListenable and readOnlyListenable from `FormeFieldController`,
 get valueListenable and errorTextListenable from `FormeValueFieldController`
-
-these listenables lifecycle is same as field , so you can't use them out of field (you will get a `changenotifier was used after being disposed` error)
-
-**right way use these listenables**
 
 ``` Dart
 FormeTextField(
@@ -260,40 +249,12 @@ FormeTextField(
 )
 ```
 
-### get listenable from FormeController
-
-you can get `FormeFieldListenable` via `FormeController.fieldListenable(String fieldName)` , this listenable's lifecycle is same as Forme ,it's safe to use it 
-out of field but in Forme.
-
-**FormeFieldListenable's valueListenable doesn't support generic type due to field's type may be changed at runtime though this shouldn't happend**
-
-**when field disposed and recreated but name not changed, these listenables will continue listen this field**
-
-### get listenable from FormeKey
-
-you can get a `LazyFormeFieldListenable`  via `FormeKey.lazyFieldListenable(name)`.
-
-`LazyFormeFieldListenable`'s behavior is same as `FormeFieldListenable`,the  difference is `LazyFormeFieldListenable` no need to wrap in a `Builder` or other widgets and not support `modelListenable`.
-
-eg: 
-``` Dart
-Forme(
-	key:formeKey,
-	child:Column(
-		children:[
-			ValueListenableBuilder(valueListenable:formeKey.fieldListenable(name)),//will cause an error
-			Builder(builder:(context){
-				return ValueListenableBuilder(valueListenable:formeKey.fieldListenable(name));
-			}),//will works
-			ValueListenableBuilder(valueListenable:formeKey.lazyFieldListenable(name)),//will works
-		]
-	)
-)
-```
 
 ## validate
 
-**validate is supported by FormeValidates**	
+### sync validate
+
+**sync validate is supported by FormeValidates**	
 
 | Validator Name |  Support Type  | When Valid |  When Invalid  |
 | --- | --- | --- | --- |
@@ -315,7 +276,24 @@ Forme(
 | `any`  | `T` | any validators is valid  |  every validators is invalid |
 | `all`  | `T` | all validators is valid  |  any validators is invalid |
 
-when you use validators from `FormeValidateUtils` , you must specific at least one errorText , otherwise errorText is an empty string
+when you use validators from `FormeValidates` , you must specific at least one errorText , otherwise errorText is an empty string
+
+### async validated
+
+async validator is supported after Forme 2.2.0 , you can specific an asyncValidator on `ValueField` , the unique difference
+between `validator` and `asyncValidator` is `asyncValidator` return a `Future` and `validator` return a `String`
+
+#### when perform a asyncValidator
+
+if `FormField.autovalidateMode` is `AutovalidateMode.disabled` , asyncValidator will never be performed unless you call `validate` from `FormeValueFieldController` manually.
+
+if you specific both `validator` and `asyncValidator` , `asyncValidator` will only be performed after `validator` passed.
+
+if you specific an `asyncValidateConfiguration` on `ValueField` and names attribute is not empty , when field's (which name is in names) value changed , `asyncValidator` will be performed if last validation is validated by `asyncValidator`.
+
+#### debounce
+
+you can specific a debounce on `asyncValidateConfiguration` , **debounce will not worked when you manually call `validate` on `FormeValueFieldController`**
 
 ## FormeKey Methods
 
@@ -357,8 +335,10 @@ Map<String, dynamic> data = formeKey.data;
 
 ### validate
 
+**since 2.2.0 , this method will return a Future ranther than a Map** 
+
 ``` Dart
-Map<FormeValueFieldController,String> errors = formKey.validate({bool quietly = false,bool notify = true});
+Future<Map<FormeValueFieldController,String>> errorsFuture = formKey.validate({bool quietly = false});
 ```
 
 ### set form data
@@ -389,12 +369,6 @@ bool quietlyValidate = formKey.quietlyValidate;
 
 ``` Dart
 formeKey.quieltyValidate = bool quietlyValidate;
-```
-
-### get a lazy FormeFieldListenable
-
-``` Dart
-FormeFieldListenable listenable = formeKey.lazyFieldListenable(String name);
 ```
 
 ## Forme Field Methods
@@ -511,8 +485,10 @@ valueField.reset();
 
 ### validate field
 
+**since 2.2.0 , this method will return a Future ranther than a String** 
+
 ``` Dart
-String? errorText = valueField.validate({bool quietly = false,bool notify = true});
+Future<String?>? errorFuture = valueField.validate({bool quietly = false});
 ```
 
 ### get error

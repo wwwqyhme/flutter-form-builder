@@ -9,14 +9,15 @@ class TextFieldPage extends BasePage<String, FormeTextFieldModel> {
       children: [
         FormeTextField(
           initialValue: '123',
-          asyncValidatorDebounce: Duration(milliseconds: 300),
+          asyncValidateConfiguration: FormeAsyncValidateConfiguration(
+              debounce: Duration(milliseconds: 300)),
           autovalidateMode: AutovalidateMode.onUserInteraction,
           onInitialed: (c) {
             print(c.value);
           },
           asyncValidator: (v) =>
               Future.delayed(Duration(milliseconds: 800), () {
-            if (v!.length > 10) return null;
+            if (v.length > 10) return null;
             return 'username is exists';
           }),
           onFocusChanged: (c, m) => print('focused changed , current is $m'),
@@ -85,7 +86,7 @@ class TextFieldPage extends BasePage<String, FormeTextFieldModel> {
                           FormeUtils.selection(text.length, text.length));
             }),
             createButton('set selection', () {
-              String text = controller.value!;
+              String text = controller.value;
               (controller as FormeTextFieldController).selection =
                   FormeUtils.selection(0, text.length);
             }),
@@ -122,7 +123,7 @@ class TextFieldPage extends BasePage<String, FormeTextFieldModel> {
                   decoration: InputDecoration(
                       suffixIcon: IconButton(
                           onPressed: () {
-                            controller.value = '';
+                            controller.clearValue();
                           },
                           icon: Icon(Icons.clear)))));
             }),
@@ -137,7 +138,7 @@ class TextFieldPage extends BasePage<String, FormeTextFieldModel> {
               ));
             }),
             builderButton('validate', (context) {
-              controller.validate(quietly: false).then((value) {
+              controller.validate(quietly: false)!.then((value) {
                 if (value != null) showError(context, value);
               });
             }),
