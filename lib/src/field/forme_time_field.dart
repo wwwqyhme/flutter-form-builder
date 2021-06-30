@@ -6,7 +6,7 @@ typedef FormeTimeFieldFormatter = String Function(TimeOfDay timeOfDay);
 /// used to pick time only
 class FormeTimeField extends ValueField<TimeOfDay?, FormeTimeFieldModel> {
   FormeTimeField({
-    FormeValueChanged<TimeOfDay?, FormeTimeFieldModel>? onValueChanged,
+    FormeSimpleValueChanged<TimeOfDay?, FormeTimeFieldModel>? onValueChanged,
     FormFieldValidator<TimeOfDay?>? validator,
     AutovalidateMode? autovalidateMode,
     TimeOfDay? initialValue,
@@ -14,10 +14,11 @@ class FormeTimeField extends ValueField<TimeOfDay?, FormeTimeFieldModel> {
     required String name,
     bool readOnly = false,
     FormeTimeFieldModel? model,
-    FormeErrorChanged<TimeOfDay?, FormeTimeFieldModel>? onErrorChanged,
-    FormeValueFieldFocusChanged<TimeOfDay?, FormeTimeFieldModel>?
+    FormeSimpleErrorChanged<TimeOfDay?, FormeTimeFieldModel>? onErrorChanged,
+    FormeSimpleValueFieldFocusChanged<TimeOfDay?, FormeTimeFieldModel>?
         onFocusChanged,
-    FormeValueFieldInitialed<TimeOfDay?, FormeTimeFieldModel>? onInitialed,
+    FormeSimpleValueFieldInitialed<TimeOfDay?, FormeTimeFieldModel>?
+        onInitialed,
     Key? key,
     FormeDecoratorBuilder<TimeOfDay>? decoratorBuilder,
     InputDecoration? decoration,
@@ -99,8 +100,8 @@ class _FormeTimeFieldState
   FormeTimeField get widget => super.widget as FormeTimeField;
 
   @override
-  void afterInitiation() {
-    super.afterInitiation();
+  void beforeInitiation() {
+    super.beforeInitiation();
     textEditingController = TextEditingController(
         text: initialValue == null ? '' : _formatter(initialValue!));
   }
@@ -114,12 +115,6 @@ class _FormeTimeFieldState
   void dispose() {
     textEditingController.dispose();
     super.dispose();
-  }
-
-  @override
-  void clearValue() {
-    didChange(null);
-    textEditingController.text = '';
   }
 
   @override

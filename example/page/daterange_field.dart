@@ -94,7 +94,7 @@ class DateRangeFieldPage
                   suffixIcon: IconButton(
                     icon: Icon(Icons.clear),
                     onPressed: () {
-                      controller.clearValue();
+                      controller.value = null;
                     },
                   ),
                 ),

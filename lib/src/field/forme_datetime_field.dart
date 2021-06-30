@@ -10,7 +10,7 @@ enum FormeDateTimeFieldType { Date, DateTime }
 class FormeDateTimeField
     extends ValueField<DateTime?, FormeDateTimeFieldModel> {
   FormeDateTimeField({
-    FormeValueChanged<DateTime?, FormeDateTimeFieldModel>? onValueChanged,
+    FormeSimpleValueChanged<DateTime?, FormeDateTimeFieldModel>? onValueChanged,
     FormFieldValidator<DateTime?>? validator,
     AutovalidateMode? autovalidateMode,
     DateTime? initialValue,
@@ -18,10 +18,11 @@ class FormeDateTimeField
     required String name,
     bool readOnly = false,
     FormeDateTimeFieldModel? model,
-    FormeErrorChanged<DateTime?, FormeDateTimeFieldModel>? onErrorChanged,
-    FormeValueFieldFocusChanged<DateTime?, FormeDateTimeFieldModel>?
+    FormeSimpleErrorChanged<DateTime?, FormeDateTimeFieldModel>? onErrorChanged,
+    FormeSimpleValueFieldFocusChanged<DateTime?, FormeDateTimeFieldModel>?
         onFocusChanged,
-    FormeValueFieldInitialed<DateTime?, FormeDateTimeFieldModel>? onInitialed,
+    FormeSimpleValueFieldInitialed<DateTime?, FormeDateTimeFieldModel>?
+        onInitialed,
     Key? key,
     FormeDecoratorBuilder<DateTime?>? decoratorBuilder,
     InputDecoration? decoration,
@@ -157,10 +158,9 @@ class _FormeDateTimeFieldState
 
   @override
   FormeDateTimeField get widget => super.widget as FormeDateTimeField;
-
   @override
-  void afterInitiation() {
-    super.afterInitiation();
+  void beforeInitiation() {
+    super.beforeInitiation();
     textEditingController = TextEditingController(
         text: value == null ? '' : _formatter(model.type!, value!));
   }
@@ -175,12 +175,6 @@ class _FormeDateTimeFieldState
   void dispose() {
     textEditingController.dispose();
     super.dispose();
-  }
-
-  @override
-  void clearValue() {
-    textEditingController.text = '';
-    didChange(null);
   }
 
   void _clearValue() {

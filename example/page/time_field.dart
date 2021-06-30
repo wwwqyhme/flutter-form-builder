@@ -9,6 +9,9 @@ class TimeFieldPage extends BasePage<TimeOfDay?, FormeTimeFieldModel> {
       children: [
         FormeTextFieldOnTapProxyWidget(
             child: FormeTimeField(
+          onInitialed: (c) {
+            print(c.value);
+          },
           autovalidateMode: AutovalidateMode.onUserInteraction,
           name: name,
           model: FormeTimeFieldModel(
@@ -79,7 +82,7 @@ class TimeFieldPage extends BasePage<TimeOfDay?, FormeTimeFieldModel> {
                   suffixIcon: IconButton(
                     icon: Icon(Icons.clear),
                     onPressed: () {
-                      controller.clearValue();
+                      controller.value = null;
                     },
                   ),
                 ),

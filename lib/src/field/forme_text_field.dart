@@ -7,9 +7,10 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:forme/forme.dart';
 
-class FormeTextField extends ValueField<String, FormeTextFieldModel> {
+class FormeTextField extends BaseValueField<String, FormeTextFieldModel,
+    FormeTextFieldController> {
   FormeTextField({
-    FormeValueChanged<String, FormeTextFieldModel>? onValueChanged,
+    FormeValueChanged<String, FormeTextFieldController>? onValueChanged,
     FormFieldValidator<String>? validator,
     AutovalidateMode? autovalidateMode,
     FormeFieldSetter<String>? onSaved,
@@ -17,9 +18,9 @@ class FormeTextField extends ValueField<String, FormeTextFieldModel> {
     required String name,
     bool readOnly = false,
     FormeTextFieldModel? model,
-    FormeErrorChanged<String, FormeTextFieldModel>? onErrorChanged,
-    FormeValueFieldFocusChanged<String, FormeTextFieldModel>? onFocusChanged,
-    FormeValueFieldInitialed<String, FormeTextFieldModel>? onInitialed,
+    FormeErrorChanged<FormeTextFieldController>? onErrorChanged,
+    FormeFocusChanged<FormeTextFieldController>? onFocusChanged,
+    FormeFieldInitialed<FormeTextFieldController>? onInitialed,
     Key? key,
     FormeDecoratorBuilder<String>? decoratorBuilder,
     InputDecoration? decoration,
@@ -70,8 +71,8 @@ class FormeTextField extends ValueField<String, FormeTextFieldModel> {
   _FormeTextFieldState createState() => _FormeTextFieldState();
 }
 
-class _FormeTextFieldState
-    extends ValueFieldState<String, FormeTextFieldModel> {
+class _FormeTextFieldState extends BaseValueFieldState<String,
+    FormeTextFieldModel, FormeTextFieldController> {
   late final TextEditingController textEditingController;
 
   @override
@@ -88,9 +89,14 @@ class _FormeTextFieldState
   }
 
   @override
+  void beforeInitiation() {
+    super.beforeInitiation();
+    textEditingController = TextEditingController(text: initialValue);
+  }
+
+  @override
   void afterInitiation() {
     super.afterInitiation();
-    textEditingController = TextEditingController(text: initialValue);
   }
 
   @override
@@ -101,14 +107,15 @@ class _FormeTextFieldState
 
   @override
   void dispose() {
+    controller.textEditingController.dispose();
     textEditingController.dispose();
     super.dispose();
   }
 
   @override
-  FormeValueFieldController<String, FormeTextFieldModel>
-      createFormeFieldController() {
-    return FormeTextFieldController(super.createFormeFieldController(), this);
+  FormeTextFieldController createFormeFieldController() {
+    return FormeTextFieldController(
+        super.defaultFormeValueFieldController(), this);
   }
 }
 
@@ -116,24 +123,30 @@ class FormeTextFieldController
     extends FormeValueFieldControllerDelegate<String, FormeTextFieldModel> {
   final FormeValueFieldController<String, FormeTextFieldModel> delegate;
   final _FormeTextFieldState _state;
-  FormeTextFieldController(this.delegate, this._state);
 
-  set textEditingValue(TextEditingValue value) {
-    _state.textEditingController.value = value;
-    _state.didChange(value.text);
+  /// this textEditingController is not the underlying `TextEditingController` that `FormeTextField` used
+  ///
+  /// **this controller should regarded as write only , though you still can change `FormeTextField`'s value via [TextEditingController.value]**
+  final TextEditingController textEditingController;
+  FormeTextFieldController(this.delegate, this._state)
+      : this.textEditingController = TextEditingController.fromValue(
+            _state.textEditingController.value) {
+    this.textEditingController.addListener(() {
+      _state.didChange(this.textEditingController.text);
+      _state.textEditingController.value = this.textEditingController.value;
+    });
   }
 
-  set selection(TextSelection selection) {
-    _state.textEditingController.selection = selection;
+  void selectAll() {
+    textEditingController.selection =
+        FormeUtils.selection(0, textEditingController.text.length);
   }
 
-  void clearComposing() {
-    _state.textEditingController.clearComposing();
-  }
+  /// get textEditingValue **from underlying controller that `FormeTextField` used**
+  TextEditingValue get textEditingValue => _state.textEditingController.value;
 
-  bool isSelectionWithinTextBounds(TextSelection selection) {
-    return _state.textEditingController.isSelectionWithinTextBounds(selection);
-  }
+  /// get selection **from underlying controller that `FormeTextField` used**
+  TextSelection get selection => _state.textEditingController.selection;
 }
 
 class FormeTextFieldModel extends FormeModel {

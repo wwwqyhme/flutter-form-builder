@@ -3,7 +3,7 @@ import 'package:forme/forme.dart';
 
 class FormeSingleCheckbox extends ValueField<bool, FormeSingleCheckboxModel> {
   FormeSingleCheckbox({
-    FormeValueChanged<bool, FormeSingleCheckboxModel>? onValueChanged,
+    FormeSimpleValueChanged<bool, FormeSingleCheckboxModel>? onValueChanged,
     FormFieldValidator<bool>? validator,
     AutovalidateMode? autovalidateMode,
     bool initialValue = false,
@@ -11,9 +11,10 @@ class FormeSingleCheckbox extends ValueField<bool, FormeSingleCheckboxModel> {
     required String name,
     bool readOnly = false,
     FormeSingleCheckboxModel? model,
-    FormeErrorChanged<bool, FormeSingleCheckboxModel>? onErrorChanged,
-    FormeValueFieldFocusChanged<bool, FormeSingleCheckboxModel>? onFocusChanged,
-    FormeValueFieldInitialed<bool, FormeSingleCheckboxModel>? onInitialed,
+    FormeSimpleErrorChanged<bool, FormeSingleCheckboxModel>? onErrorChanged,
+    FormeSimpleValueFieldFocusChanged<bool, FormeSingleCheckboxModel>?
+        onFocusChanged,
+    FormeSimpleValueFieldInitialed<bool, FormeSingleCheckboxModel>? onInitialed,
     Key? key,
     FormeAsyncValidateConfiguration? asyncValidateConfiguration,
     FormeAsyncValidator<bool>? asyncValidator,

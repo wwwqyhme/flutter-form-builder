@@ -42,6 +42,9 @@ class TextFieldPage extends BasePage<String, FormeTextFieldModel> {
                         bool sec = model.obscureText ?? false;
                         return IconButton(
                             onPressed: () {
+                              (controller as FormeTextFieldController)
+                                  .textEditingController
+                                  .text = 'xxx';
                               controller.updateModel(
                                   FormeTextFieldModel(obscureText: !sec));
                             },
@@ -79,7 +82,9 @@ class TextFieldPage extends BasePage<String, FormeTextFieldModel> {
             }),
             createButton('set value', () {
               String text = 'admin@example.com';
-              (controller as FormeTextFieldController).textEditingValue =
+              (controller as FormeTextFieldController)
+                      .textEditingController
+                      .value =
                   TextEditingValue(
                       text: text,
                       selection:
@@ -87,8 +92,9 @@ class TextFieldPage extends BasePage<String, FormeTextFieldModel> {
             }),
             createButton('set selection', () {
               String text = controller.value;
-              (controller as FormeTextFieldController).selection =
-                  FormeUtils.selection(0, text.length);
+              (controller as FormeTextFieldController)
+                  .textEditingController
+                  .selection = FormeUtils.selection(0, text.length);
             }),
             createButton('update labelText', () {
               controller.updateModel(FormeTextFieldModel(
@@ -123,7 +129,7 @@ class TextFieldPage extends BasePage<String, FormeTextFieldModel> {
                   decoration: InputDecoration(
                       suffixIcon: IconButton(
                           onPressed: () {
-                            controller.clearValue();
+                            controller.value = '';
                           },
                           icon: Icon(Icons.clear)))));
             }),

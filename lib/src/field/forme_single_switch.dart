@@ -3,7 +3,7 @@ import 'package:forme/forme.dart';
 
 class FormeSingleSwitch extends ValueField<bool, FormeSingleSwitchModel> {
   FormeSingleSwitch({
-    FormeValueChanged<bool, FormeSingleSwitchModel>? onValueChanged,
+    FormeSimpleValueChanged<bool, FormeSingleSwitchModel>? onValueChanged,
     FormFieldValidator<bool>? validator,
     AutovalidateMode? autovalidateMode,
     bool initialValue = false,
@@ -12,9 +12,10 @@ class FormeSingleSwitch extends ValueField<bool, FormeSingleSwitchModel> {
     bool readOnly = false,
     Widget? label,
     FormeSingleSwitchModel? model,
-    FormeErrorChanged<bool, FormeSingleSwitchModel>? onErrorChanged,
-    FormeValueFieldFocusChanged<bool, FormeSingleSwitchModel>? onFocusChanged,
-    FormeValueFieldInitialed<bool, FormeSingleSwitchModel>? onInitialed,
+    FormeSimpleErrorChanged<bool, FormeSingleSwitchModel>? onErrorChanged,
+    FormeSimpleValueFieldFocusChanged<bool, FormeSingleSwitchModel>?
+        onFocusChanged,
+    FormeSimpleValueFieldInitialed<bool, FormeSingleSwitchModel>? onInitialed,
     Key? key,
     FormeAsyncValidateConfiguration? asyncValidateConfiguration,
     FormeAsyncValidator<bool>? asyncValidator,

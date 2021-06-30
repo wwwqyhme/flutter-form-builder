@@ -233,14 +233,6 @@ abstract class FormeValueFieldController<T, E extends FormeModel>
   /// this notifier is used for [ValueListenableBuilder]
   ValueListenable<T?> get valueListenable;
 
-  /// clear value
-  ///
-  /// when field has multi widgets need to clear value (eg: [FormeAsyncAutocompleteText]) , use this method rather than
-  /// call `value = null` directly
-  ///
-  /// @since 2.0.3
-  void clearValue();
-
   /// get old field value
   ///
   /// **after field's value changed , you can use this method to get old value**
@@ -344,8 +336,6 @@ abstract class FormeValueFieldControllerDelegate<T, E extends FormeModel>
       delegate.errorTextListenable;
   @override
   ValueListenable<T?> get valueListenable => delegate.valueListenable;
-  @override
-  void clearValue() => delegate.clearValue();
   @override
   T? get oldValue => delegate.oldValue;
 }

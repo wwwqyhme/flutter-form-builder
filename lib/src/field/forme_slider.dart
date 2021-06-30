@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:forme/forme.dart';
+import 'package:forme/src/widget/forme_mounted_value_notifier.dart';
 
 typedef FormeLabelRender = String Function(double value);
 
 class FormeSlider extends ValueField<double, FormeSliderModel> {
   FormeSlider({
-    FormeValueChanged<double, FormeSliderModel>? onValueChanged,
+    FormeSimpleValueChanged<double, FormeSliderModel>? onValueChanged,
     FormFieldValidator<double>? validator,
     AutovalidateMode? autovalidateMode,
     double? initialValue,
@@ -16,9 +17,9 @@ class FormeSlider extends ValueField<double, FormeSliderModel> {
     required double min,
     required double max,
     FormeSliderModel? model,
-    FormeErrorChanged<double, FormeSliderModel>? onErrorChanged,
-    FormeValueFieldFocusChanged<double, FormeSliderModel>? onFocusChanged,
-    FormeValueFieldInitialed<double, FormeSliderModel>? onInitialed,
+    FormeSimpleErrorChanged<double, FormeSliderModel>? onErrorChanged,
+    FormeSimpleValueFieldFocusChanged<double, FormeSliderModel>? onFocusChanged,
+    FormeSimpleValueFieldInitialed<double, FormeSliderModel>? onInitialed,
     Key? key,
     FormeDecoratorBuilder<double>? decoratorBuilder,
     InputDecoration? decoration,
@@ -55,45 +56,48 @@ class FormeSlider extends ValueField<double, FormeSliderModel> {
             Color? activeColor = state.model.activeColor;
             Color? inactiveColor = state.model.inactiveColor;
 
-            double value = state.value;
-
-            String? sliderLabel = state.model.labelRender == null
-                ? null
-                : state.model.labelRender!(value);
-            SliderThemeData sliderThemeData =
-                state.model.sliderThemeData ?? SliderTheme.of(state.context);
-            if (sliderThemeData.thumbShape == null)
-              sliderThemeData = sliderThemeData.copyWith(
-                  thumbShape: CustomSliderThumbCircle(value: value));
-            Widget slider = SliderTheme(
-              data: sliderThemeData,
-              child: Slider(
-                value: value,
-                min: min,
-                max: max,
-                focusNode: state.focusNode,
-                label: sliderLabel,
-                divisions: divisions,
-                activeColor: activeColor,
-                inactiveColor: inactiveColor,
-                onChangeStart: (v) {
-                  state.requestFocus();
-                  state.model.onChangeStart?.call(v);
-                },
-                onChangeEnd: (v) {
-                  state.didChange(v);
-                  state.model.onChangeEnd?.call(v);
-                },
-                semanticFormatterCallback:
-                    state.model.semanticFormatterCallback,
-                mouseCursor: state.model.mouseCursor,
-                onChanged: readOnly
+            Widget slider = ValueListenableBuilder<double?>(
+              valueListenable: state.notifier,
+              builder: (context, _value, child) {
+                String? sliderLabel = state.model.labelRender == null
                     ? null
-                    : (double value) {
-                        state.updateValue(value);
-                        state.model.onChanged?.call(value);
-                      },
-              ),
+                    : state.model.labelRender!(state.value);
+                SliderThemeData sliderThemeData = state.model.sliderThemeData ??
+                    SliderTheme.of(state.context);
+                if (sliderThemeData.thumbShape == null)
+                  sliderThemeData = sliderThemeData.copyWith(
+                      thumbShape: CustomSliderThumbCircle(value: state.value));
+                return SliderTheme(
+                  data: sliderThemeData,
+                  child: Slider(
+                    value: state.value,
+                    min: min,
+                    max: max,
+                    focusNode: state.focusNode,
+                    label: sliderLabel,
+                    divisions: divisions,
+                    activeColor: activeColor,
+                    inactiveColor: inactiveColor,
+                    onChangeStart: (v) {
+                      state.requestFocus();
+                      state.model.onChangeStart?.call(v);
+                    },
+                    onChangeEnd: (v) {
+                      state.didChange(v);
+                      state.model.onChangeEnd?.call(v);
+                    },
+                    semanticFormatterCallback:
+                        state.model.semanticFormatterCallback,
+                    mouseCursor: state.model.mouseCursor,
+                    onChanged: readOnly
+                        ? null
+                        : (double value) {
+                            state.updateValue(value);
+                            state.model.onChanged?.call(value);
+                          },
+                  ),
+                );
+              },
             );
 
             return slider;
@@ -105,19 +109,28 @@ class FormeSlider extends ValueField<double, FormeSliderModel> {
 }
 
 class _FormeSliderState extends ValueFieldState<double, FormeSliderModel> {
-  double? _value;
+  late final ValueNotifier<double?> notifier;
 
   updateValue(double value) {
-    setState(() {
-      _value = value;
-    });
+    notifier.value = value;
   }
 
   @override
-  double get initialValue => model.min!;
+  void beforeInitiation() {
+    super.beforeInitiation();
+    notifier = FormeMountedValueNotifier(null, this);
+  }
 
   @override
-  double get value => _value ?? super.value;
+  double get initialValue {
+    double defaultInitialValue = widget.initialValue;
+    if (defaultInitialValue < model.min!) return model.min!;
+    if (defaultInitialValue > model.max!) return model.max!;
+    return defaultInitialValue;
+  }
+
+  @override
+  double get value => notifier.value ?? super.value;
 
   @override
   void afterUpdateModel(FormeSliderModel old, FormeSliderModel current) {
@@ -138,8 +151,14 @@ class _FormeSliderState extends ValueFieldState<double, FormeSliderModel> {
   }
 
   @override
+  void dispose() {
+    notifier.dispose();
+    super.dispose();
+  }
+
+  @override
   void onValueChanged(double? value) {
-    _value = null;
+    notifier.value = null;
   }
 }
 

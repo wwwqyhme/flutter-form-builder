@@ -240,7 +240,7 @@ class _DemoPageState extends State<DemoPage> {
                       children: [
                         IconButton(
                             onPressed: () {
-                              controller.clearValue();
+                              controller.value = '';
                             },
                             icon: Icon(Icons.clear)),
                         ValueListenableBuilder<FormeValidateError?>(
@@ -317,7 +317,7 @@ class _DemoPageState extends State<DemoPage> {
               suffixIcon: IconButton(
                   icon: Icon(Icons.clear),
                   onPressed: () {
-                    formKey.valueField('time').clearValue();
+                    formKey.valueField('time').value = null;
                   }),
             ),
           ),
@@ -351,7 +351,7 @@ class _DemoPageState extends State<DemoPage> {
                           InkWell(
                             child: Icon(Icons.clear),
                             onTap: () {
-                              formKey.valueField('dropdown').clearValue();
+                              formKey.valueField('dropdown').value = null;
                             },
                           ),
                           SizedBox(

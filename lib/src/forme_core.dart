@@ -5,22 +5,22 @@ import 'package:flutter/widgets.dart';
 import 'package:forme/forme.dart';
 import 'package:forme/src/widget/forme_mounted_value_notifier.dart';
 
-typedef FormeFieldInitialed<E extends FormeModel> = void Function(
-    FormeFieldController<E> field);
+typedef FormeFieldInitialed<K extends FormeFieldController> = void Function(
+    K field);
 
 /// triggered when form field's value changed
-typedef FormeValueChanged<T, E extends FormeModel> = void Function(
-    FormeValueFieldController<T, E> field, T newValue);
+typedef FormeValueChanged<T, K extends FormeValueFieldController> = void
+    Function(K, T newValue);
 
 /// triggered when form field's focus changed
-typedef FormeFocusChanged<E extends FormeModel> = void Function(
-  FormeFieldController<E> field,
+typedef FormeFocusChanged<K extends FormeFieldController> = void Function(
+  K field,
   bool hasFocus,
 );
 
 /// listen field errorText change
-typedef FormeErrorChanged<T, E extends FormeModel> = void Function(
-    FormeValueFieldController<T, E> field, FormeValidateError? error);
+typedef FormeErrorChanged<K extends FormeValueFieldController> = void Function(
+    K field, FormeValidateError? error);
 
 /// form key is a global key
 class FormeKey extends LabeledGlobalKey<State> implements FormeController {
@@ -218,10 +218,10 @@ class _FormeState extends State<Forme> {
       if (widget.onFocusChanged != null)
         widget.onFocusChanged!(state.controller, state._focusNotifier.value);
     });
-    if (state is ValueFieldState) {
+    if (state is BaseValueFieldState) {
       state._valueNotifier.addListener(() {
         states.forEach((element) {
-          if (element is ValueFieldState) {
+          if (element is BaseValueFieldState) {
             element._onFormeValueChanged(state.name);
           }
         });
@@ -265,6 +265,8 @@ class _FormScope {
   bool get readOnly => state.readOnly;
   bool get quietlyValidate => state.quietlyValidate;
   dynamic getInitialValue(String name) => state.widget.initialValue[name];
+  bool hasInitialValue(String name) =>
+      state.widget.initialValue.containsKey(name);
 
   void registerField(AbstractFieldState state) {
     this.state.registerField(state);
@@ -286,8 +288,8 @@ class _FormScope {
 /// 1. make your custom field extends StatefulWidget and with [StatefulField]
 /// 2. make your custom state extends State and with [AbstractFieldState]
 ///
-mixin AbstractFieldState<T extends StatefulWidget, E extends FormeModel>
-    on State<T> {
+mixin AbstractFieldState<T extends StatefulWidget, E extends FormeModel,
+    K extends FormeFieldController<E>> on State<T> {
   bool _init = false;
   FocusNode? _focusNode;
   late _FormScope _formScope;
@@ -300,7 +302,7 @@ mixin AbstractFieldState<T extends StatefulWidget, E extends FormeModel>
       FormeMountedValueNotifier(false, this);
   late final FormeMountedValueNotifier<E> _modelNotifier =
       FormeMountedValueNotifier(_field.model, this);
-  late final FormeFieldController<E> controller;
+  late final K controller;
 
   String get name => _field.name;
 
@@ -327,9 +329,7 @@ mixin AbstractFieldState<T extends StatefulWidget, E extends FormeModel>
     this.controller = createFormeFieldController();
     _formScope.registerField(this);
     afterInitiation();
-    if (_field.onInitialed != null) {
-      _field.onInitialed!(this.controller);
-    }
+    _field.onInitialed?.call(this.controller);
   }
 
   /// create a [FormeFieldController]
@@ -339,9 +339,7 @@ mixin AbstractFieldState<T extends StatefulWidget, E extends FormeModel>
   /// **when you want to get [FormeFieldController], use [ValueFieldState.controller] rather than call this method!,
   /// this method should only called by [Forme]**
   @protected
-  FormeFieldController<E> createFormeFieldController() {
-    return _FormeFieldController(this);
-  }
+  K createFormeFieldController();
 
   @override
   void dispose() {
@@ -467,8 +465,8 @@ mixin AbstractFieldState<T extends StatefulWidget, E extends FormeModel>
   @override
   void didUpdateWidget(T oldWidget) {
     super.didUpdateWidget(oldWidget);
-    StatefulField<AbstractFieldState<T, E>, E> old =
-        oldWidget as StatefulField<AbstractFieldState<T, E>, E>;
+    StatefulField<AbstractFieldState<T, E, K>, E, FormeFieldController<E>> old =
+        oldWidget as StatefulField<AbstractFieldState<T, E, K>, E, K>;
     if (_model == null) {
       updateModelInDidUpdateWidget(old.model, _field.model);
     } else {
@@ -476,24 +474,39 @@ mixin AbstractFieldState<T extends StatefulWidget, E extends FormeModel>
     }
   }
 
+  @protected
+  FormeFieldController<E> defaultFormeFieldController() {
+    return _FormeFieldController(this);
+  }
+
   E get model => _model ?? _field.model;
 
-  StatefulField<AbstractFieldState<T, E>, E> get _field =>
-      widget as StatefulField<AbstractFieldState<T, E>, E>;
+  StatefulField<AbstractFieldState<T, E, K>, E, K> get _field =>
+      widget as StatefulField<AbstractFieldState<T, E, K>, E, K>;
 }
 
 /// this State is used for [CommonField]
-class CommonFieldState<E extends FormeModel> extends State<CommonField<E>>
-    with AbstractFieldState<CommonField<E>, E> {
+abstract class BaseCommonFieldState<E extends FormeModel,
+        K extends FormeFieldController<E>> extends State<BaseCommonField<E, K>>
+    with AbstractFieldState<BaseCommonField<E, K>, E, K> {
   @override
   Widget build(BuildContext context) {
     return _InheritedFormeFieldController(controller, widget.builder(this));
   }
 }
 
+class CommonFieldState<E extends FormeModel>
+    extends BaseCommonFieldState<E, FormeFieldController<E>> {
+  @override
+  FormeFieldController<E> createFormeFieldController() {
+    return defaultFormeFieldController();
+  }
+}
+
 /// this State is only used for [ValueField]
-class ValueFieldState<T, E extends FormeModel> extends State<StatefulWidget>
-    with AbstractFieldState<StatefulWidget, E> {
+abstract class BaseValueFieldState<T, E extends FormeModel,
+        K extends FormeValueFieldController<T, E>> extends State<StatefulWidget>
+    with AbstractFieldState<StatefulWidget, E, K> {
   late final FormeMountedValueNotifier<FormeValidateError?> _errorNotifier =
       FormeMountedValueNotifier(null, this);
   late final FormeMountedValueNotifier<FormeModel?> _decoratorNotifier =
@@ -516,20 +529,14 @@ class ValueFieldState<T, E extends FormeModel> extends State<StatefulWidget>
       widget.validator != null || widget.asyncValidator != null;
 
   @override
-  FormeValueFieldController<T, E> get controller =>
-      super.controller as FormeValueFieldController<T, E>;
-
-  @override
-  ValueField<T, E> get widget => super.widget as ValueField<T, E>;
-
-  @protected
-  FormeValueFieldController<T, E> createFormeFieldController() =>
-      _FormeValueFieldController(this, super.createFormeFieldController());
+  BaseValueField<T, E, K> get widget => super.widget as BaseValueField<T, E, K>;
 
   String? get errorText => _formScope.quietlyValidate ? null : _error?.text;
 
   /// get initialValue
-  T get initialValue => widget.initialValue;
+  T get initialValue => _formScope.hasInitialValue(name)
+      ? _formScope.getInitialValue(name)
+      : widget.initialValue;
 
   /// **when you want to init something that relies on initialValue,
   /// you should do that in [beforeInitiation] rather than in this method**
@@ -600,7 +607,7 @@ class ValueFieldState<T, E extends FormeModel> extends State<StatefulWidget>
   }
 
   @override
-  void didUpdateWidget(ValueField<T, E> oldWidget) {
+  void didUpdateWidget(BaseValueField<T, E, K> oldWidget) {
     T oldValue = _value;
     super.didUpdateWidget(oldWidget);
     if (!compare(oldValue, _value)) {
@@ -636,13 +643,6 @@ class ValueFieldState<T, E extends FormeModel> extends State<StatefulWidget>
     _errorNotifier.dispose();
     _valueNotifier.dispose();
     super.dispose();
-  }
-
-  void clearValue() {
-    if (null is T)
-      didChange(null as T);
-    else
-      didChange(initialValue);
   }
 
   /// used to compare two values  determine whether changeValue
@@ -688,6 +688,11 @@ class ValueFieldState<T, E extends FormeModel> extends State<StatefulWidget>
     }
 
     return _InheritedFormeFieldController(this.controller, child);
+  }
+
+  @protected
+  FormeValueFieldController<T, E> defaultFormeValueFieldController() {
+    return _FormeValueFieldController(this, defaultFormeFieldController());
   }
 
   void _validate() {
@@ -812,6 +817,14 @@ class ValueFieldState<T, E extends FormeModel> extends State<StatefulWidget>
 
   void save() {
     widget.onSaved?.call(value);
+  }
+}
+
+class ValueFieldState<T, E extends FormeModel>
+    extends BaseValueFieldState<T, E, FormeValueFieldController<T, E>> {
+  @override
+  FormeValueFieldController<T, E> createFormeFieldController() {
+    return _FormeValueFieldController(this, _FormeFieldController(this));
   }
 }
 
@@ -950,16 +963,16 @@ class _FormeController extends FormeController {
   Iterable<FormeValueFieldController> get valueFieldControllers =>
       valueFieldStates.map((e) => e.controller);
 
-  Iterable<ValueFieldState> get valueFieldStates {
+  Iterable<BaseValueFieldState> get valueFieldStates {
     return state.states
-        .where((element) => element is ValueFieldState)
-        .map((e) => e as ValueFieldState);
+        .where((element) => element is BaseValueFieldState)
+        .map((e) => e as BaseValueFieldState);
   }
 }
 
 class _FormeFieldController<E extends FormeModel>
     implements FormeFieldController<E> {
-  final AbstractFieldState<StatefulWidget, E> state;
+  final AbstractFieldState<StatefulWidget, E, FormeFieldController<E>> state;
 
   final ValueListenable<bool> focusListenable;
   final ValueListenable<bool> readOnlyListenable;
@@ -1021,7 +1034,7 @@ class _FormeFieldController<E extends FormeModel>
 class _FormeValueFieldController<T, E extends FormeModel>
     extends FormeFieldControllerDelegate<E>
     implements FormeValueFieldController<T, E> {
-  final ValueFieldState<T, E> state;
+  final BaseValueFieldState<T, E, FormeValueFieldController<T, E>> state;
   final FormeFieldController<E> delegate;
   final ValueListenable<FormeValidateError?> errorTextListenable;
   final ValueListenable<T> valueListenable;
@@ -1047,9 +1060,6 @@ class _FormeValueFieldController<T, E extends FormeModel>
 
   @override
   set value(T value) => state.didChange(value);
-
-  @override
-  void clearValue() => state.clearValue();
 
   @override
   T? get oldValue => state.oldValue;

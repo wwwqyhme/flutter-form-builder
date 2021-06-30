@@ -2,23 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:forme/forme.dart';
 import 'package:forme/src/field/raw_autocomplete_async.dart';
 
-class FormeAsnycAutocompleteText<T extends Object>
-    extends ValueField<T?, FormeAsyncAutocompleteTextModel<T>> {
+class FormeAsnycAutocompleteText<T extends Object> extends BaseValueField<
+    T?,
+    FormeAsyncAutocompleteTextModel<T>,
+    FormeAsyncAutocompleteTextController<T>> {
   FormeAsnycAutocompleteText({
     required String name,
     required AutocompleteAsyncOptionsBuilder<T> optionsBuilder,
     FormeAsyncAutocompleteTextModel<T>? model,
-    FormeValueChanged<T?, FormeAsyncAutocompleteTextModel<T>>? onValueChanged,
     FormFieldValidator<T?>? validator,
     AutovalidateMode? autovalidateMode,
     T? initialValue,
     FormeFieldSetter<T?>? onSaved,
     bool readOnly = false,
-    FormeErrorChanged<T?, FormeAsyncAutocompleteTextModel<T>>? onErrorChanged,
-    FormeValueFieldFocusChanged<T?, FormeAsyncAutocompleteTextModel<T>>?
-        onFocusChanged,
-    FormeValueFieldInitialed<T?, FormeAsyncAutocompleteTextModel<T>>?
-        onInitialed,
+    FormeValueChanged<T?, FormeAsyncAutocompleteTextController<T>>?
+        onValueChanged,
+    FormeErrorChanged<FormeAsyncAutocompleteTextController<T>>? onErrorChanged,
+    FormeFocusChanged<FormeAsyncAutocompleteTextController<T>>? onFocusChanged,
+    FormeFieldInitialed<FormeAsyncAutocompleteTextController<T>>? onInitialed,
     Key? key,
     FormeDecoratorBuilder<T?>? decoratorBuilder,
     InputDecoration? decoration,
@@ -77,15 +78,12 @@ class FormeAsnycAutocompleteText<T extends Object>
   _FormeAutocompleteTextState<T> createState() => _FormeAutocompleteTextState();
 }
 
-class _FormeAutocompleteTextState<T extends Object>
-    extends ValueFieldState<T?, FormeAsyncAutocompleteTextModel<T>> {
+class _FormeAutocompleteTextState<T extends Object> extends BaseValueFieldState<
+    T?,
+    FormeAsyncAutocompleteTextModel<T>,
+    FormeAsyncAutocompleteTextController<T>> {
   final TextEditingController textEditingController = TextEditingController();
   final ValueNotifier<int> removeOverlayNotifier = ValueNotifier(0);
-  @override
-  void clearValue() {
-    textEditingController.text = '';
-    didChange(null);
-  }
 
   @override
   FormeAsyncAutocompleteTextModel<T> beforeSetModel(
@@ -103,6 +101,24 @@ class _FormeAutocompleteTextState<T extends Object>
     textEditingController.dispose();
     super.dispose();
   }
+
+  @override
+  FormeAsyncAutocompleteTextController<T> createFormeFieldController() {
+    return FormeAsyncAutocompleteTextController._(
+        this, defaultFormeValueFieldController());
+  }
+}
+
+class FormeAsyncAutocompleteTextController<T extends Object>
+    extends FormeValueFieldControllerDelegate<T?,
+        FormeAsyncAutocompleteTextModel<T>> {
+  final _FormeAutocompleteTextState _state;
+  final FormeValueFieldController<T?, FormeAsyncAutocompleteTextModel<T>>
+      delegate;
+  FormeAsyncAutocompleteTextController._(this._state, this.delegate);
+
+  TextEditingController get textEditingController =>
+      _state.textEditingController;
 }
 
 ///

@@ -4,7 +4,7 @@ import 'async_autocomplete_text.dart';
 import 'base_page.dart';
 
 class AutocompleteText
-    extends BasePage<User, FormeAutocompleteTextModel<User>> {
+    extends BasePage<User?, FormeAutocompleteTextModel<User>> {
   static const List<User> _userOptions = <User>[
     User(name: 'Alice', email: 'alice@example.com'),
     User(name: 'Bob', email: 'bob@example.com'),
@@ -24,7 +24,13 @@ class AutocompleteText
               return option.toString().contains(v.text.toLowerCase());
             });
           },
-          decoration: InputDecoration(labelText: 'Autocomplete Text'),
+          decoration: InputDecoration(
+              labelText: 'Autocomplete Text',
+              suffixIcon: IconButton(
+                  icon: Icon(Icons.clear),
+                  onPressed: () {
+                    controller.value = null;
+                  })),
           model: FormeAutocompleteTextModel<User>(
               textFieldModel: FormeTextFieldModel(maxLines: 1)),
           name: name,

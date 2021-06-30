@@ -14,18 +14,27 @@ abstract class FormeDecoratorBuilder<T> {
 typedef FormeAsyncValidator<T> = Future<String?> Function(T value);
 typedef FormeValidator<T> = String? Function(T value);
 typedef FormeFieldSetter<T> = void Function(T value);
-typedef FormeValueFieldFocusChanged<T, E extends FormeModel> = void Function(
+
+typedef FormeSimpleFieldInitialed<E extends FormeModel> = void Function(
+    FormeFieldController<E> field);
+typedef FormeSimpleValueFieldInitialed<T, E extends FormeModel> = void Function(
+    FormeValueFieldController<T, E> field);
+typedef FormeSimpleValueChanged<T, E extends FormeModel> = void Function(
+    FormeValueFieldController<T, E> field, T newValue);
+typedef FormeSimpleErrorChanged<T, E extends FormeModel> = void Function(
+    FormeValueFieldController<T, E> field, FormeValidateError? error);
+typedef FormeSimpleValueFieldFocusChanged<T, E extends FormeModel> = void
+    Function(
   FormeValueFieldController<T, E> field,
   bool hasFocus,
 );
-typedef FormeValueFieldInitialed<T, E extends FormeModel> = void Function(
-    FormeValueFieldController<T, E> field);
+typedef FormeSimpleFieldFocusChanged<E extends FormeModel> = void Function(
+  FormeFieldController<E> field,
+  bool hasFocus,
+);
 
-typedef FieldContentBuilder<T extends AbstractFieldState> = Widget Function(
-    T state);
-
-mixin StatefulField<T extends AbstractFieldState<StatefulWidget, E>,
-    E extends FormeModel> on StatefulWidget {
+mixin StatefulField<T extends AbstractFieldState<StatefulWidget, E, K>,
+    E extends FormeModel, K extends FormeFieldController<E>> on StatefulWidget {
   /// field's name
   ///
   /// used to control field
@@ -38,21 +47,21 @@ mixin StatefulField<T extends AbstractFieldState<StatefulWidget, E>,
 
   bool get readOnly;
 
-  FormeFocusChanged<E>? get onFocusChanged;
+  FormeFocusChanged<K>? get onFocusChanged;
 
-  FormeFieldInitialed<E>? get onInitialed;
+  FormeFieldInitialed<K>? get onInitialed;
 }
 
-/// if you want to create a stateful form field, but don't want to return a value,you can use this field
-class CommonField<E extends FormeModel> extends StatefulWidget
-    with StatefulField<CommonFieldState<E>, E> {
+abstract class BaseCommonField<E extends FormeModel,
+        K extends FormeFieldController<E>> extends StatefulWidget
+    with StatefulField<BaseCommonFieldState<E, K>, E, K> {
   final String name;
-  final FieldContentBuilder<CommonFieldState<E>> builder;
+  final Widget Function(BaseCommonFieldState<E, K>) builder;
   final E model;
   final bool readOnly;
-  final FormeFocusChanged<E>? onFocusChanged;
-  final FormeFieldInitialed<E>? onInitialed;
-  const CommonField({
+  final FormeFocusChanged<FormeFieldController<E>>? onFocusChanged;
+  final FormeFieldInitialed<FormeFieldController<E>>? onInitialed;
+  const BaseCommonField({
     Key? key,
     required this.name,
     required this.builder,
@@ -63,20 +72,48 @@ class CommonField<E extends FormeModel> extends StatefulWidget
   }) : super(key: key);
 
   @override
+  BaseCommonFieldState<E, K> createState();
+}
+
+/// if you want to create a stateful form field, but don't want to return a value,you can use this field
+class CommonField<E extends FormeModel>
+    extends BaseCommonField<E, FormeFieldController<E>> {
+  CommonField({
+    Key? key,
+    required String name,
+    required Widget Function(CommonFieldState<E>) builder,
+    required E model,
+    bool readOnly = false,
+    FormeSimpleFieldFocusChanged<E>? onFocusChanged,
+    FormeSimpleFieldInitialed<E>? onInitialed,
+  }) : super(
+          key: key,
+          name: name,
+          builder: (state) {
+            return builder(state as CommonFieldState<E>);
+          },
+          model: model,
+          readOnly: readOnly,
+          onFocusChanged: onFocusChanged,
+          onInitialed: onInitialed,
+        );
+
+  @override
   CommonFieldState<E> createState() => CommonFieldState();
 }
 
-class ValueField<T, E extends FormeModel> extends StatefulWidget
-    with StatefulField<ValueFieldState<T, E>, E> {
+abstract class BaseValueField<T, E extends FormeModel,
+        K extends FormeValueFieldController<T, E>> extends StatefulWidget
+    with StatefulField<BaseValueFieldState<T, E, K>, E, K> {
   final String name;
 
   /// **if you want to get current field error in value changed, you should call [WidgetsBinding.instance.addPostFrameCallback]**
-  final FormeValueChanged<T, E>? onValueChanged;
+  final FormeValueChanged<T, K>? onValueChanged;
   final E model;
   final bool readOnly;
 
   /// used to listen focus changed
-  final FormeFocusChanged<E>? onFocusChanged;
+  final FormeFocusChanged<K>? onFocusChanged;
 
   /// used to listen field's validate errorText changed
   ///
@@ -86,7 +123,7 @@ class ValueField<T, E extends FormeModel> extends StatefulWidget
   /// 2. after called [validate] method
   ///
   /// **errorText will be null if field's errorText from nonnull to null**
-  final FormeErrorChanged<T, E>? onErrorChanged;
+  final FormeErrorChanged<K>? onErrorChanged;
 
   /// used to build a decorator
   ///
@@ -99,7 +136,7 @@ class ValueField<T, E extends FormeModel> extends StatefulWidget
   /// that in this method
   ///
   /// **try to get another field's controller in this method will cause an error**
-  final FormeFieldInitialed<E>? onInitialed;
+  final FormeFieldInitialed<K>? onInitialed;
 
   /// used to perform an async validate
   ///
@@ -107,13 +144,13 @@ class ValueField<T, E extends FormeModel> extends StatefulWidget
   final FormeAsyncValidator<T>? asyncValidator;
   final FormeAsyncValidateConfiguration asyncValidateConfiguration;
 
-  final FieldContentBuilder<ValueFieldState<T, E>> builder;
+  final Widget Function(BaseValueFieldState<T, E, K>) builder;
   final FormeValidator<T>? validator;
   final bool enabled;
   final FormeFieldSetter<T>? onSaved;
   final AutovalidateMode? autovalidateMode;
   final T initialValue;
-  ValueField({
+  BaseValueField({
     Key? key,
     this.onValueChanged,
     this.validator,
@@ -128,30 +165,61 @@ class ValueField<T, E extends FormeModel> extends StatefulWidget
     this.readOnly = false,
     this.onErrorChanged,
     this.decoratorBuilder,
-    FormeValueFieldFocusChanged<T, E>? onFocusChanged,
-    FormeValueFieldInitialed<T, E>? onInitialed,
     required this.initialValue,
-  })  : this.onFocusChanged = _convertFormeFocusChanged(onFocusChanged),
-        this.onInitialed = _convertFormeFieldInitialed(onInitialed),
-        this.asyncValidateConfiguration =
+    this.onFocusChanged,
+    this.onInitialed,
+  })  : this.asyncValidateConfiguration =
             asyncValidateConfiguration ?? FormeAsyncValidateConfiguration(),
         super(key: key);
+
+  @override
+  BaseValueFieldState<T, E, K> createState();
+}
+
+class ValueField<T, E extends FormeModel>
+    extends BaseValueField<T, E, FormeValueFieldController<T, E>> {
+  ValueField({
+    Key? key,
+    required String name,
+    FormeSimpleValueChanged<T, E>? onValueChanged,
+    required E model,
+    bool readOnly = false,
+    FormeSimpleValueFieldFocusChanged<T, E>? onFocusChanged,
+    FormeSimpleErrorChanged<T, E>? onErrorChanged,
+    FormeDecoratorBuilder<T>? decoratorBuilder,
+    FormeSimpleValueFieldInitialed<T, E>? onInitialed,
+    FormeAsyncValidator<T>? asyncValidator,
+    FormeAsyncValidateConfiguration? asyncValidateConfiguration,
+    required Widget Function(ValueFieldState<T, E>) builder,
+    FormeValidator<T>? validator,
+    bool enabled = true,
+    FormeFieldSetter<T>? onSaved,
+    AutovalidateMode? autovalidateMode,
+    required T initialValue,
+  }) : super(
+          decoratorBuilder: decoratorBuilder,
+          key: key,
+          name: name,
+          onErrorChanged: onErrorChanged,
+          onValueChanged: onValueChanged,
+          onFocusChanged: onFocusChanged,
+          onSaved: onSaved,
+          onInitialed: onInitialed,
+          readOnly: readOnly,
+          autovalidateMode: autovalidateMode,
+          asyncValidateConfiguration: asyncValidateConfiguration,
+          asyncValidator: asyncValidator,
+          validator: validator,
+          enabled: enabled,
+          builder: (state) {
+            return builder(state as ValueFieldState<T, E>);
+          },
+          initialValue: initialValue,
+          model: model,
+        );
+
   @override
   ValueFieldState<T, E> createState() => ValueFieldState();
-
-  static FormeFocusChanged<E>?
-      _convertFormeFocusChanged<T, E extends FormeModel>(
-          FormeValueFieldFocusChanged<T, E>? listener) {
-    if (listener == null) return null;
-    return (v, focus) => listener(v as FormeValueFieldController<T, E>, focus);
-  }
-
-  static FormeFieldInitialed<E>?
-      _convertFormeFieldInitialed<T, E extends FormeModel>(
-          FormeValueFieldInitialed<T, E>? listener) {
-    if (listener == null) return null;
-    return (v) => listener(v as FormeValueFieldController<T, E>);
-  }
 }
 
 enum FormeAsyncValidateMode {

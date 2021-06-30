@@ -3,25 +3,24 @@ import 'package:forme/forme.dart';
 
 import 'raw_autocomplete_async.dart';
 
-class FormeAsnycAutocompleteChip<T extends Object>
-    extends ValueField<List<T>, FormeAsyncAutocompleteChipModel<T>> {
+class FormeAsnycAutocompleteChip<T extends Object> extends BaseValueField<
+    List<T>,
+    FormeAsyncAutocompleteChipModel<T>,
+    FormeAsyncAutocompleteChipController<T>> {
   FormeAsnycAutocompleteChip({
     required String name,
     required AutocompleteAsyncOptionsBuilder<T> optionsBuilder,
     FormeAsyncAutocompleteChipModel<T>? model,
-    FormeValueChanged<List<T>, FormeAsyncAutocompleteChipModel<T>>?
+    FormeValueChanged<List<T>, FormeAsyncAutocompleteChipController<T>>?
         onValueChanged,
     FormFieldValidator<List<T>>? validator,
     AutovalidateMode? autovalidateMode,
     List<T>? initialValue,
     FormeFieldSetter<List<T>>? onSaved,
     bool readOnly = false,
-    FormeErrorChanged<List<T>, FormeAsyncAutocompleteChipModel<T>>?
-        onErrorChanged,
-    FormeValueFieldFocusChanged<List<T>, FormeAsyncAutocompleteChipModel<T>>?
-        onFocusChanged,
-    FormeValueFieldInitialed<List<T>, FormeAsyncAutocompleteChipModel<T>>?
-        onInitialed,
+    FormeErrorChanged<FormeAsyncAutocompleteChipController<T>>? onErrorChanged,
+    FormeFocusChanged<FormeAsyncAutocompleteChipController<T>>? onFocusChanged,
+    FormeFieldInitialed<FormeAsyncAutocompleteChipController<T>>? onInitialed,
     Key? key,
     FormeDecoratorBuilder<List<T>>? decoratorBuilder,
     InputDecoration? decoration,
@@ -102,8 +101,10 @@ class FormeAsnycAutocompleteChip<T extends Object>
   _FormeAutocompleteTextState<T> createState() => _FormeAutocompleteTextState();
 }
 
-class _FormeAutocompleteTextState<T extends Object>
-    extends ValueFieldState<List<T>, FormeAsyncAutocompleteChipModel<T>> {
+class _FormeAutocompleteTextState<T extends Object> extends BaseValueFieldState<
+    List<T>,
+    FormeAsyncAutocompleteChipModel<T>,
+    FormeAsyncAutocompleteChipController<T>> {
   final TextEditingController textEditingController = TextEditingController();
   final ValueNotifier<int> removeOverlayNotifier = ValueNotifier(0);
   Widget defaultChipBuilder(
@@ -140,17 +141,29 @@ class _FormeAutocompleteTextState<T extends Object>
   }
 
   @override
-  void clearValue() {
-    textEditingController.text = '';
-    didChange([]);
-  }
-
-  @override
   void dispose() {
     removeOverlayNotifier.dispose();
     textEditingController.dispose();
     super.dispose();
   }
+
+  @override
+  FormeAsyncAutocompleteChipController<T> createFormeFieldController() {
+    return FormeAsyncAutocompleteChipController._(
+        this, defaultFormeValueFieldController());
+  }
+}
+
+class FormeAsyncAutocompleteChipController<T extends Object>
+    extends FormeValueFieldControllerDelegate<List<T>,
+        FormeAsyncAutocompleteChipModel<T>> {
+  final _FormeAutocompleteTextState _state;
+  final FormeValueFieldController<List<T>, FormeAsyncAutocompleteChipModel<T>>
+      delegate;
+  FormeAsyncAutocompleteChipController._(this._state, this.delegate);
+
+  TextEditingController get textEditingController =>
+      _state.textEditingController;
 }
 
 class FormeAsyncAutocompleteChipModel<T extends Object>

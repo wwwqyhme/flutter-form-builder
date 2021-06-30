@@ -2,23 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:forme/forme.dart';
 import 'package:forme/src/widget/forme_mounted_value_notifier.dart';
 
-class FormeAutocompleteText<T extends Object>
-    extends ValueField<T?, FormeAutocompleteTextModel<T>> {
+class FormeAutocompleteText<T extends Object> extends BaseValueField<T?,
+    FormeAutocompleteTextModel<T>, FormeAutocompleteTextController<T>> {
   FormeAutocompleteText({
     required String name,
     required AutocompleteOptionsBuilder<T> optionsBuilder,
     InputDecoration? decoration,
     FormeAutocompleteTextModel<T>? model,
-    FormeValueChanged<T?, FormeAutocompleteTextModel<T>>? onValueChanged,
     FormFieldValidator<T?>? validator,
     AutovalidateMode? autovalidateMode,
     T? initialValue,
     FormeFieldSetter<T?>? onSaved,
     bool readOnly = false,
-    FormeErrorChanged<T?, FormeAutocompleteTextModel<T>>? onErrorChanged,
-    FormeValueFieldFocusChanged<T?, FormeAutocompleteTextModel<T>>?
-        onFocusChanged,
-    FormeValueFieldInitialed<T?, FormeAutocompleteTextModel<T>>? onInitialed,
+    FormeErrorChanged<FormeAutocompleteTextController<T>>? onErrorChanged,
+    FormeFocusChanged<FormeAutocompleteTextController<T>>? onFocusChanged,
+    FormeFieldInitialed<FormeAutocompleteTextController<T>>? onInitialed,
+    FormeValueChanged<T?, FormeAutocompleteTextController<T>>? onValueChanged,
     Key? key,
     FormeDecoratorBuilder<T?>? decoratorBuilder,
     int? maxLines = 1,
@@ -49,7 +48,9 @@ class FormeAutocompleteText<T extends Object>
           builder: (baseState) {
             _FormeAutocompleteTextState<T> state =
                 baseState as _FormeAutocompleteTextState<T>;
-            return Autocomplete<T>(
+            return RawAutocomplete<T>(
+                focusNode: state.focusNode,
+                textEditingController: state.textEditingController,
                 optionsBuilder: readOnly
                     ? (v) => Iterable<T>.empty()
                     : state.model.optionsBuilder!,
@@ -64,8 +65,6 @@ class FormeAutocompleteText<T extends Object>
                     TextEditingController textEditingController,
                     FocusNode focusNode,
                     VoidCallback onFieldSubmitted) {
-                  state.textEditingController = textEditingController;
-                  state.effecitiveFocusNode = focusNode;
                   return OrientationBuilder(builder: (context, o) {
                     WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
                       state.fieldViewWidgetNotifier.value =
@@ -110,10 +109,9 @@ class FormeAutocompleteText<T extends Object>
   _FormeAutocompleteTextState<T> createState() => _FormeAutocompleteTextState();
 }
 
-class _FormeAutocompleteTextState<T extends Object>
-    extends ValueFieldState<T?, FormeAutocompleteTextModel<T>> {
-  TextEditingController? textEditingController;
-  FocusNode? _effecitiveFocusNode;
+class _FormeAutocompleteTextState<T extends Object> extends BaseValueFieldState<
+    T?, FormeAutocompleteTextModel<T>, FormeAutocompleteTextController<T>> {
+  late final TextEditingController textEditingController;
 
   bool focusWhenUnFocused = false;
 
@@ -125,20 +123,30 @@ class _FormeAutocompleteTextState<T extends Object>
   AutocompleteOptionToString<T> get displayStringForOption =>
       model.displayStringForOption ?? RawAutocomplete.defaultStringForOption;
 
-  set effecitiveFocusNode(FocusNode focusNode) {
-    if (_effecitiveFocusNode != focusNode) {
-      _effecitiveFocusNode = focusNode;
-      _effecitiveFocusNode!.addListener(() {
-        if (!_effecitiveFocusNode!.hasFocus && focusWhenUnFocused) {
-          focusWhenUnFocused = false;
-          _effecitiveFocusNode!.requestFocus();
-        }
-        if (widget.onFocusChanged != null) {
-          if (widget.onFocusChanged != null)
-            widget.onFocusChanged!(controller, _effecitiveFocusNode!.hasFocus);
-        }
-      });
+  @override
+  beforeInitiation() {
+    super.beforeInitiation();
+    if (initialValue != null) {
+      textEditingController =
+          TextEditingController(text: displayStringForOption(initialValue!));
+    } else {
+      textEditingController = TextEditingController();
     }
+  }
+
+  @override
+  afterInitiation() {
+    super.afterInitiation();
+    focusNode.addListener(() {
+      if (!focusNode.hasFocus && focusWhenUnFocused) {
+        focusWhenUnFocused = false;
+        focusNode.requestFocus();
+      }
+      if (widget.onFocusChanged != null) {
+        if (widget.onFocusChanged != null)
+          widget.onFocusChanged!(controller, focusNode.hasFocus);
+      }
+    });
   }
 
   Widget defaultOptionsViewBuilder(
@@ -176,26 +184,6 @@ class _FormeAutocompleteTextState<T extends Object>
   }
 
   @override
-  void requestFocus() {
-    _effecitiveFocusNode?.requestFocus();
-  }
-
-  @override
-  void unfocus({UnfocusDisposition disposition = UnfocusDisposition.scope}) {
-    _effecitiveFocusNode?.unfocus(disposition: disposition);
-  }
-
-  @override
-  void afterInitiation() {
-    super.afterInitiation();
-    if (initialValue != null) {
-      WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
-        textEditingController?.text = displayStringForOption(initialValue!);
-      });
-    }
-  }
-
-  @override
   void didChange(T? newValue) {
     super.didChange(newValue);
     if (newValue == null && value == null) onValueChanged(null);
@@ -209,19 +197,14 @@ class _FormeAutocompleteTextState<T extends Object>
     } else {
       text = displayStringForOption(value);
     }
-    if (textEditingController?.text != text) {
-      textEditingController?.text = text;
+    if (textEditingController.text != text) {
+      textEditingController.text = text;
     }
   }
 
   @override
-  void clearValue() {
-    textEditingController?.text = '';
-    didChange(null);
-  }
-
-  @override
   void dispose() {
+    textEditingController.dispose();
     fieldViewWidgetNotifier.dispose();
     rebuildOptionsViewNotifier.dispose();
     super.dispose();
@@ -229,8 +212,8 @@ class _FormeAutocompleteTextState<T extends Object>
 
   @override
   void reset() {
+    textEditingController.text = '';
     super.reset();
-    textEditingController?.text = '';
   }
 
   void rebuildOptionsView() {
@@ -259,7 +242,7 @@ class _FormeAutocompleteTextState<T extends Object>
     if (current.displayStringForOption != null && value != null) {
       WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
         String selectionString = current.displayStringForOption!(value!);
-        textEditingController?.value = TextEditingValue(
+        textEditingController.value = TextEditingValue(
           selection: TextSelection.collapsed(offset: selectionString.length),
           text: selectionString,
         );
@@ -273,6 +256,23 @@ class _FormeAutocompleteTextState<T extends Object>
       });
     }
   }
+
+  @override
+  FormeAutocompleteTextController<T> createFormeFieldController() {
+    return FormeAutocompleteTextController._(
+        this, super.defaultFormeValueFieldController());
+  }
+}
+
+class FormeAutocompleteTextController<T extends Object>
+    extends FormeValueFieldControllerDelegate<T?,
+        FormeAutocompleteTextModel<T>> {
+  final _FormeAutocompleteTextState _state;
+  final FormeValueFieldController<T?, FormeAutocompleteTextModel<T>> delegate;
+  FormeAutocompleteTextController._(this._state, this.delegate);
+
+  TextEditingController get textEditingController =>
+      _state.textEditingController;
 }
 
 class FormeAutocompleteTextModel<T extends Object> extends FormeModel {

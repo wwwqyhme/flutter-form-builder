@@ -10,7 +10,7 @@ class FormRangeLabelRender {
 
 class FormeRangeSlider extends ValueField<RangeValues, FormeRangeSliderModel> {
   FormeRangeSlider({
-    FormeValueChanged<RangeValues, FormeRangeSliderModel>? onValueChanged,
+    FormeSimpleValueChanged<RangeValues, FormeRangeSliderModel>? onValueChanged,
     FormFieldValidator<RangeValues>? validator,
     AutovalidateMode? autovalidateMode,
     RangeValues? initialValue,
@@ -20,10 +20,11 @@ class FormeRangeSlider extends ValueField<RangeValues, FormeRangeSliderModel> {
     FormeRangeSliderModel? model,
     required double min,
     required double max,
-    FormeErrorChanged<RangeValues, FormeRangeSliderModel>? onErrorChanged,
-    FormeValueFieldFocusChanged<RangeValues, FormeRangeSliderModel>?
+    FormeSimpleErrorChanged<RangeValues, FormeRangeSliderModel>? onErrorChanged,
+    FormeSimpleValueFieldFocusChanged<RangeValues, FormeRangeSliderModel>?
         onFocusChanged,
-    FormeValueFieldInitialed<RangeValues, FormeRangeSliderModel>? onInitialed,
+    FormeSimpleValueFieldInitialed<RangeValues, FormeRangeSliderModel>?
+        onInitialed,
     Key? key,
     FormeDecoratorBuilder<RangeValues>? decoratorBuilder,
     InputDecoration? decoration,
@@ -62,51 +63,55 @@ class FormeRangeSlider extends ValueField<RangeValues, FormeRangeSliderModel> {
               Color? activeColor = state.model.activeColor;
               Color? inactiveColor = state.model.inactiveColor;
 
-              RangeValues rangeValues = state.value;
-              RangeLabels? sliderLabels;
+              Widget slider = ValueListenableBuilder(
+                  valueListenable: state.notifier,
+                  builder: (context, _value, _child) {
+                    RangeLabels? sliderLabels;
 
-              if (state.model.rangeLabelRender != null) {
-                String start = state.model.rangeLabelRender!
-                    .startRender(rangeValues.start);
-                String end =
-                    state.model.rangeLabelRender!.endRender(rangeValues.end);
-                sliderLabels = RangeLabels(start, end);
-              }
+                    if (state.model.rangeLabelRender != null) {
+                      String start = state.model.rangeLabelRender!
+                          .startRender(state.value.start);
+                      String end = state.model.rangeLabelRender!
+                          .endRender(state.value.end);
+                      sliderLabels = RangeLabels(start, end);
+                    }
 
-              SliderThemeData sliderThemeData =
-                  state.model.sliderThemeData ?? SliderTheme.of(state.context);
-              if (sliderThemeData.thumbShape == null)
-                sliderThemeData = sliderThemeData.copyWith(
-                    rangeThumbShape:
-                        CustomRangeSliderThumbCircle(value: rangeValues));
-              Widget slider = SliderTheme(
-                data: sliderThemeData,
-                child: RangeSlider(
-                  values: rangeValues,
-                  min: min,
-                  max: max,
-                  divisions: divisions,
-                  labels: sliderLabels,
-                  activeColor: activeColor,
-                  inactiveColor: inactiveColor,
-                  onChangeStart: (v) {
-                    state.requestFocus();
-                    state.model.onChangeStart?.call(v);
-                  },
-                  onChangeEnd: (v) {
-                    state.didChange(v);
-                    state.model.onChangeEnd?.call(v);
-                  },
-                  semanticFormatterCallback:
-                      state.model.semanticFormatterCallback,
-                  onChanged: readOnly
-                      ? null
-                      : (RangeValues values) {
-                          state.updateValue(values);
-                          state.model.onChanged?.call(values);
+                    SliderThemeData sliderThemeData =
+                        state.model.sliderThemeData ??
+                            SliderTheme.of(state.context);
+                    if (sliderThemeData.thumbShape == null)
+                      sliderThemeData = sliderThemeData.copyWith(
+                          rangeThumbShape:
+                              CustomRangeSliderThumbCircle(value: state.value));
+                    return SliderTheme(
+                      data: sliderThemeData,
+                      child: RangeSlider(
+                        values: state.value,
+                        min: min,
+                        max: max,
+                        divisions: divisions,
+                        labels: sliderLabels,
+                        activeColor: activeColor,
+                        inactiveColor: inactiveColor,
+                        onChangeStart: (v) {
+                          state.requestFocus();
+                          state.model.onChangeStart?.call(v);
                         },
-                ),
-              );
+                        onChangeEnd: (v) {
+                          state.didChange(v);
+                          state.model.onChangeEnd?.call(v);
+                        },
+                        semanticFormatterCallback:
+                            state.model.semanticFormatterCallback,
+                        onChanged: readOnly
+                            ? null
+                            : (RangeValues values) {
+                                state.updateValue(values);
+                                state.model.onChanged?.call(values);
+                              },
+                      ),
+                    );
+                  });
 
               return Focus(
                 focusNode: state.focusNode,
@@ -120,23 +125,39 @@ class FormeRangeSlider extends ValueField<RangeValues, FormeRangeSliderModel> {
 
 class _FormeRangeSliderState
     extends ValueFieldState<RangeValues, FormeRangeSliderModel> {
-  RangeValues? _value;
-
-  @override
-  RangeValues get initialValue => RangeValues(model.min!, model.max!);
+  late final ValueNotifier<RangeValues?> notifier;
 
   updateValue(RangeValues value) {
-    setState(() {
-      _value = value;
-    });
+    notifier.value = value;
   }
 
   @override
-  RangeValues get value => _value ?? super.value;
+  void beforeInitiation() {
+    super.beforeInitiation();
+    notifier = FormeMountedValueNotifier(null, this);
+  }
+
+  @override
+  RangeValues get initialValue {
+    RangeValues defaultInitialValue = super.initialValue;
+    RangeValues currentInitialValue = defaultInitialValue;
+    if (defaultInitialValue.start < model.min!)
+      currentInitialValue = RangeValues(model.min!, defaultInitialValue.end);
+    else if (defaultInitialValue.end < model.min!)
+      currentInitialValue = RangeValues(defaultInitialValue.start, model.min!);
+    if (defaultInitialValue.end > model.max!)
+      currentInitialValue = RangeValues(defaultInitialValue.start, model.max!);
+    else if (defaultInitialValue.start > model.max!)
+      currentInitialValue = RangeValues(model.max!, defaultInitialValue.end);
+    return currentInitialValue;
+  }
+
+  @override
+  RangeValues get value => notifier.value ?? super.value;
 
   @override
   void onValueChanged(RangeValues? value) {
-    _value = null;
+    notifier.value = null;
   }
 
   @override
@@ -167,6 +188,12 @@ class _FormeRangeSliderState
       current = current.copyWith(FormeRangeSliderModel(max: old.max));
     }
     return current;
+  }
+
+  @override
+  void dispose() {
+    notifier.dispose();
+    super.dispose();
   }
 }
 

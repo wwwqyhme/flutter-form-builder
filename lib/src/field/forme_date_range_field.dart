@@ -6,7 +6,8 @@ import 'package:forme/forme.dart';
 class FormeDateRangeField
     extends ValueField<DateTimeRange?, FormeDateRangeFieldModel> {
   FormeDateRangeField({
-    FormeValueChanged<DateTimeRange?, FormeDateRangeFieldModel>? onValueChanged,
+    FormeSimpleValueChanged<DateTimeRange?, FormeDateRangeFieldModel>?
+        onValueChanged,
     FormFieldValidator<DateTimeRange?>? validator,
     AutovalidateMode? autovalidateMode,
     DateTimeRange? initialValue,
@@ -14,10 +15,11 @@ class FormeDateRangeField
     required String name,
     bool visible = true,
     FormeDateRangeFieldModel? model,
-    FormeErrorChanged<DateTimeRange?, FormeDateRangeFieldModel>? onErrorChanged,
-    FormeValueFieldFocusChanged<DateTimeRange?, FormeDateRangeFieldModel>?
+    FormeSimpleErrorChanged<DateTimeRange?, FormeDateRangeFieldModel>?
+        onErrorChanged,
+    FormeSimpleValueFieldFocusChanged<DateTimeRange?, FormeDateRangeFieldModel>?
         onFocusChanged,
-    FormeValueFieldInitialed<DateTimeRange?, FormeDateRangeFieldModel>?
+    FormeSimpleValueFieldInitialed<DateTimeRange?, FormeDateRangeFieldModel>?
         onInitialed,
     Key? key,
     FormeDecoratorBuilder<DateTimeRange?>? decoratorBuilder,
@@ -125,8 +127,8 @@ class _FormeDateRangeFieldState
   }
 
   @override
-  void afterInitiation() {
-    super.afterInitiation();
+  void beforeInitiation() {
+    super.beforeInitiation();
     textEditingController = TextEditingController(
         text: initialValue == null ? '' : _formatter(initialValue!));
   }
@@ -140,12 +142,6 @@ class _FormeDateRangeFieldState
   void dispose() {
     textEditingController.dispose();
     super.dispose();
-  }
-
-  @override
-  void clearValue() {
-    textEditingController.text = '';
-    didChange(null);
   }
 
   void _clearValue() {

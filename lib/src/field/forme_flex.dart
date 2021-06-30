@@ -64,7 +64,7 @@ abstract class _FormeFlex extends CommonField<FormeFlexModel> {
     required String name,
     FormeFlexRenderData? formeFlexRenderData,
     required this.children,
-    required FieldContentBuilder<CommonFieldState<FormeFlexModel>> builder,
+    required Widget Function(CommonFieldState<FormeFlexModel>) builder,
   }) : super(
             name: name,
             builder: builder,

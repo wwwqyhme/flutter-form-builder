@@ -4,7 +4,7 @@ import 'package:forme/forme.dart';
 
 class FormeNumberField extends ValueField<num?, FormeNumberFieldModel> {
   FormeNumberField({
-    FormeValueChanged<num?, FormeNumberFieldModel>? onValueChanged,
+    FormeSimpleValueChanged<num?, FormeNumberFieldModel>? onValueChanged,
     FormFieldValidator<num?>? validator,
     AutovalidateMode? autovalidateMode,
     num? initialValue,
@@ -13,9 +13,10 @@ class FormeNumberField extends ValueField<num?, FormeNumberFieldModel> {
     required String name,
     bool readOnly = false,
     FormeNumberFieldModel? model,
-    FormeErrorChanged<num?, FormeNumberFieldModel>? onErrorChanged,
-    FormeValueFieldFocusChanged<num?, FormeNumberFieldModel>? onFocusChanged,
-    FormeValueFieldInitialed<num?, FormeNumberFieldModel>? onInitialed,
+    FormeSimpleErrorChanged<num?, FormeNumberFieldModel>? onErrorChanged,
+    FormeSimpleValueFieldFocusChanged<num?, FormeNumberFieldModel>?
+        onFocusChanged,
+    FormeSimpleValueFieldInitialed<num?, FormeNumberFieldModel>? onInitialed,
     Key? key,
     FormeDecoratorBuilder<num?>? decoratorBuilder,
     InputDecoration? decoration,
@@ -132,10 +133,9 @@ class _NumberFieldState extends ValueFieldState<num?, FormeNumberFieldModel> {
       : model.decimal == 0
           ? super.value!.toInt()
           : super.value!.toDouble();
-
   @override
-  void afterInitiation() {
-    super.afterInitiation();
+  void beforeInitiation() {
+    super.beforeInitiation();
     textEditingController = TextEditingController(
         text: initialValue == null ? '' : initialValue.toString());
   }
@@ -156,12 +156,6 @@ class _NumberFieldState extends ValueFieldState<num?, FormeNumberFieldModel> {
   void dispose() {
     textEditingController.dispose();
     super.dispose();
-  }
-
-  @override
-  void clearValue() {
-    textEditingController.text = '';
-    didChange(null);
   }
 
   void _clearValue() {

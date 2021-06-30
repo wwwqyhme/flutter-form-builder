@@ -544,7 +544,7 @@ class CustomTextField extends StatelessWidget {
                                   icon: Icon(Icons.clear,
                                       color: Colors.orange[200], size: 24),
                                   onPressed: () {
-                                    controller.clearValue();
+                                    controller.value = '';
                                   });
                             }
                             return SizedBox();

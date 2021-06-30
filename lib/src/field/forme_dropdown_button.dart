@@ -5,7 +5,7 @@ class FormeDropdownButton<T extends Object>
     extends ValueField<T?, FormeDropdownButtonModel<T>> {
   FormeDropdownButton({
     required List<DropdownMenuItem<T>> items,
-    FormeValueChanged<T?, FormeDropdownButtonModel<T>>? onValueChanged,
+    FormeSimpleValueChanged<T?, FormeDropdownButtonModel<T>>? onValueChanged,
     FormFieldValidator<T?>? validator,
     AutovalidateMode? autovalidateMode,
     T? initialValue,
@@ -13,10 +13,11 @@ class FormeDropdownButton<T extends Object>
     required String name,
     bool readOnly = false,
     FormeDropdownButtonModel<T>? model,
-    FormeErrorChanged<T?, FormeDropdownButtonModel<T>>? onErrorChanged,
-    FormeValueFieldFocusChanged<T?, FormeDropdownButtonModel<T>>?
+    FormeSimpleErrorChanged<T?, FormeDropdownButtonModel<T>>? onErrorChanged,
+    FormeSimpleValueFieldFocusChanged<T?, FormeDropdownButtonModel<T>>?
         onFocusChanged,
-    FormeValueFieldInitialed<T?, FormeDropdownButtonModel<T>>? onInitialed,
+    FormeSimpleValueFieldInitialed<T?, FormeDropdownButtonModel<T>>?
+        onInitialed,
     Key? key,
     FormeDecoratorBuilder<T?>? decoratorBuilder,
     InputDecoration? decoration,

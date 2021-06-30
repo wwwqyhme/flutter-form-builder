@@ -59,16 +59,17 @@ class FormeFilterChip<T extends Object>
     List<T>? initialValue,
     AutovalidateMode? autovalidateMode,
     FormFieldValidator<List<T>>? validator,
-    FormeValueChanged<List<T>, FormeFilterChipModel<T>>? onValueChanged,
+    FormeSimpleValueChanged<List<T>, FormeFilterChipModel<T>>? onValueChanged,
     FormeFieldSetter<List<T>>? onSaved,
     required String name,
     bool readOnly = false,
     required List<FormeChipItem<T>>? items,
     FormeFilterChipModel<T>? model,
-    FormeErrorChanged<List<T>, FormeFilterChipModel<T>>? onErrorChanged,
-    FormeValueFieldFocusChanged<List<T>, FormeFilterChipModel<T>>?
+    FormeSimpleErrorChanged<List<T>, FormeFilterChipModel<T>>? onErrorChanged,
+    FormeSimpleValueFieldFocusChanged<List<T>, FormeFilterChipModel<T>>?
         onFocusChanged,
-    FormeValueFieldInitialed<List<T>, FormeFilterChipModel<T>>? onInitialed,
+    FormeSimpleValueFieldInitialed<List<T>, FormeFilterChipModel<T>>?
+        onInitialed,
     Key? key,
     FormeDecoratorBuilder<List<T>>? decoratorBuilder,
     InputDecoration? decoration,
@@ -171,11 +172,6 @@ class FormeFilterChip<T extends Object>
 
 class _FormeFilterChipState<T extends Object>
     extends ValueFieldState<List<T>, FormeFilterChipModel<T>> {
-  @override
-  void clearValue() {
-    didChange([]);
-  }
-
   @override
   void afterUpdateModel(
       FormeFilterChipModel<T> old, FormeFilterChipModel<T> current) {

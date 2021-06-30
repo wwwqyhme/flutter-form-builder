@@ -4,7 +4,7 @@ import 'package:forme/forme.dart';
 class FormeRadioGroup<T extends Object>
     extends ValueField<T?, FormeRadioGroupModel<T>> {
   FormeRadioGroup({
-    FormeValueChanged<T?, FormeRadioGroupModel<T>>? onValueChanged,
+    FormeSimpleValueChanged<T?, FormeRadioGroupModel<T>>? onValueChanged,
     FormFieldValidator<T?>? validator,
     AutovalidateMode? autovalidateMode,
     T? initialValue,
@@ -13,9 +13,10 @@ class FormeRadioGroup<T extends Object>
     bool readOnly = false,
     required List<FormeListTileItem<T>>? items,
     FormeRadioGroupModel<T>? model,
-    FormeErrorChanged<T?, FormeRadioGroupModel<T>>? onErrorChanged,
-    FormeValueFieldFocusChanged<T?, FormeRadioGroupModel<T>>? onFocusChanged,
-    FormeValueFieldInitialed<T?, FormeRadioGroupModel<T>>? onInitialed,
+    FormeSimpleErrorChanged<T?, FormeRadioGroupModel<T>>? onErrorChanged,
+    FormeSimpleValueFieldFocusChanged<T?, FormeRadioGroupModel<T>>?
+        onFocusChanged,
+    FormeSimpleValueFieldInitialed<T?, FormeRadioGroupModel<T>>? onInitialed,
     Key? key,
     FormeDecoratorBuilder<T?>? decoratorBuilder,
     InputDecoration? decoration,

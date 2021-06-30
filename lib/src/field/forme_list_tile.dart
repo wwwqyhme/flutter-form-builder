@@ -38,7 +38,7 @@ enum FormeListTileType { Checkbox, Switch }
 class FormeListTile<T extends Object>
     extends ValueField<List<T>, FormeListTileModel<T>> {
   FormeListTile({
-    FormeValueChanged<List<T>, FormeListTileModel<T>>? onValueChanged,
+    FormeSimpleValueChanged<List<T>, FormeListTileModel<T>>? onValueChanged,
     FormFieldValidator<List<T>>? validator,
     AutovalidateMode? autovalidateMode,
     List<T>? initialValue,
@@ -48,9 +48,10 @@ class FormeListTile<T extends Object>
     FormeListTileType type = FormeListTileType.Checkbox,
     required List<FormeListTileItem<T>>? items,
     FormeListTileModel<T>? model,
-    FormeErrorChanged<List<T>, FormeListTileModel<T>>? onErrorChanged,
-    FormeValueFieldFocusChanged<List<T>, FormeListTileModel<T>>? onFocusChanged,
-    FormeValueFieldInitialed<List<T>, FormeListTileModel<T>>? onInitialed,
+    FormeSimpleErrorChanged<List<T>, FormeListTileModel<T>>? onErrorChanged,
+    FormeSimpleValueFieldFocusChanged<List<T>, FormeListTileModel<T>>?
+        onFocusChanged,
+    FormeSimpleValueFieldInitialed<List<T>, FormeListTileModel<T>>? onInitialed,
     Key? key,
     FormeDecoratorBuilder<List<T>>? decoratorBuilder,
     InputDecoration? decoration,
@@ -255,10 +256,6 @@ class FormeListTile<T extends Object>
 class _FormeListTileState<T extends Object>
     extends ValueFieldState<List<T>, FormeListTileModel<T>> {
   bool allowSelectAll = false;
-  @override
-  void clearValue() {
-    didChange([]);
-  }
 
   @override
   void afterUpdateModel(

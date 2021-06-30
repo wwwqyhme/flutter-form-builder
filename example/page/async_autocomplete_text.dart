@@ -3,7 +3,7 @@ import 'package:forme/forme.dart';
 import 'base_page.dart';
 
 class AsyncAutocompleteText
-    extends BasePage<User, FormeAsyncAutocompleteTextModel<User>> {
+    extends BasePage<User?, FormeAsyncAutocompleteTextModel<User>> {
   static const List<User> _userOptions = <User>[
     User(name: 'Alice', email: 'alice@example.com'),
     User(name: 'Bob', email: 'bob@example.com'),
@@ -38,7 +38,9 @@ class AsyncAutocompleteText
                 decoration: InputDecoration(
                     labelText: 'Async Autocomplete Text',
                     suffixIcon: IconButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        controller.value = null;
+                      },
                       icon: Icon(Icons.clear),
                     )),
               )),

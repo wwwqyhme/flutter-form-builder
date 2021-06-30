@@ -99,7 +99,7 @@ class DateTimeFieldPage extends BasePage<DateTime?, FormeDateTimeFieldModel> {
                   suffixIcon: IconButton(
                     icon: Icon(Icons.clear),
                     onPressed: () {
-                      controller.clearValue();
+                      controller.value = null;
                     },
                   ),
                 ),
