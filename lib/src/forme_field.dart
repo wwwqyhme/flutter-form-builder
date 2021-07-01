@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
+import 'package:forme/forme.dart';
 import 'forme_controller.dart';
 
 import 'forme_core.dart';
@@ -14,6 +15,11 @@ abstract class FormeDecoratorBuilder<T> {
 typedef FormeAsyncValidator<T> = Future<String?> Function(T value);
 typedef FormeValidator<T> = String? Function(T value);
 typedef FormeFieldSetter<T> = void Function(T value);
+typedef FormeFieldWidgetBuilder<
+        T extends AbstractFieldState<StatefulField<E, FormeFieldController<E>>,
+            E, FormeFieldController<E>>,
+        E extends FormeModel>
+    = Widget Function(T state);
 
 typedef FormeSimpleFieldInitialed<E extends FormeModel> = void Function(
     FormeFieldController<E> field);
@@ -33,18 +39,17 @@ typedef FormeSimpleFieldFocusChanged<E extends FormeModel> = void Function(
   bool hasFocus,
 );
 
-mixin StatefulField<T extends AbstractFieldState<StatefulWidget, E, K>,
-    E extends FormeModel, K extends FormeFieldController<E>> on StatefulWidget {
+mixin StatefulField<E extends FormeModel, K extends FormeFieldController<E>>
+    on StatefulWidget {
   /// field's name
   ///
   /// used to control field
   String get name;
 
-  @override
-  T createState();
-
+  /// model is a configuration for model
   E get model;
 
+  /// whether field should be readOnly or not
   bool get readOnly;
 
   FormeFocusChanged<K>? get onFocusChanged;
@@ -54,9 +59,9 @@ mixin StatefulField<T extends AbstractFieldState<StatefulWidget, E, K>,
 
 abstract class BaseCommonField<E extends FormeModel,
         K extends FormeFieldController<E>> extends StatefulWidget
-    with StatefulField<BaseCommonFieldState<E, K>, E, K> {
+    with StatefulField<E, K> {
   final String name;
-  final Widget Function(BaseCommonFieldState<E, K>) builder;
+  final FormeFieldWidgetBuilder<BaseCommonFieldState<E, K>, E> builder;
   final E model;
   final bool readOnly;
   final FormeFocusChanged<FormeFieldController<E>>? onFocusChanged;
@@ -81,7 +86,7 @@ class CommonField<E extends FormeModel>
   CommonField({
     Key? key,
     required String name,
-    required Widget Function(CommonFieldState<E>) builder,
+    required FormeFieldWidgetBuilder<CommonFieldState<E>, E> builder,
     required E model,
     bool readOnly = false,
     FormeSimpleFieldFocusChanged<E>? onFocusChanged,
@@ -104,7 +109,7 @@ class CommonField<E extends FormeModel>
 
 abstract class BaseValueField<T, E extends FormeModel,
         K extends FormeValueFieldController<T, E>> extends StatefulWidget
-    with StatefulField<BaseValueFieldState<T, E, K>, E, K> {
+    with StatefulField<E, K> {
   final String name;
 
   /// **if you want to get current field error in value changed, you should call [WidgetsBinding.instance.addPostFrameCallback]**
@@ -144,17 +149,21 @@ abstract class BaseValueField<T, E extends FormeModel,
   final FormeAsyncValidator<T>? asyncValidator;
   final FormeAsyncValidateConfiguration asyncValidateConfiguration;
 
-  final Widget Function(BaseValueFieldState<T, E, K>) builder;
+  final FormeFieldWidgetBuilder<BaseValueFieldState<T, E, K>, E> builder;
   final FormeValidator<T>? validator;
   final bool enabled;
   final FormeFieldSetter<T>? onSaved;
   final AutovalidateMode? autovalidateMode;
   final T initialValue;
+
+  /// comparator is used to compare value changed
+  final FormeValueComparator<T> comparator;
   BaseValueField({
     Key? key,
     this.onValueChanged,
     this.validator,
     this.asyncValidator,
+    FormeValueComparator? comparator,
     FormeAsyncValidateConfiguration? asyncValidateConfiguration,
     required this.name,
     required this.builder,
@@ -168,12 +177,17 @@ abstract class BaseValueField<T, E extends FormeModel,
     required this.initialValue,
     this.onFocusChanged,
     this.onInitialed,
-  })  : this.asyncValidateConfiguration =
+  })  : this.comparator = comparator ?? _comparator(),
+        this.asyncValidateConfiguration =
             asyncValidateConfiguration ?? FormeAsyncValidateConfiguration(),
         super(key: key);
 
   @override
   BaseValueFieldState<T, E, K> createState();
+
+  static FormeValueComparator _comparator() {
+    return (a, b) => FormeUtils.compare(a, b);
+  }
 }
 
 class ValueField<T, E extends FormeModel>

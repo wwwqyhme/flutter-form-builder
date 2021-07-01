@@ -179,6 +179,9 @@ abstract class FormeValueFieldController<T, E extends FormeModel>
   Future<String?>? validate({bool quietly = false});
 
   /// reset field
+  ///
+  /// 1. set field value to initialValue
+  /// 2. clear error message
   void reset();
 
   /// get error

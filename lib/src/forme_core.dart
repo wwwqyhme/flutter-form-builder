@@ -5,6 +5,9 @@ import 'package:flutter/widgets.dart';
 import 'package:forme/forme.dart';
 import 'package:forme/src/widget/forme_mounted_value_notifier.dart';
 
+///used to compare two values
+typedef FormeValueComparator<T> = bool Function(T oldValue, T newValue);
+
 typedef FormeFieldInitialed<K extends FormeFieldController> = void Function(
     K field);
 
@@ -288,7 +291,7 @@ class _FormScope {
 /// 1. make your custom field extends StatefulWidget and with [StatefulField]
 /// 2. make your custom state extends State and with [AbstractFieldState]
 ///
-mixin AbstractFieldState<T extends StatefulWidget, E extends FormeModel,
+mixin AbstractFieldState<T extends StatefulField<E, K>, E extends FormeModel,
     K extends FormeFieldController<E>> on State<T> {
   bool _init = false;
   FocusNode? _focusNode;
@@ -301,10 +304,10 @@ mixin AbstractFieldState<T extends StatefulWidget, E extends FormeModel,
   late final FormeMountedValueNotifier<bool> _readOnlyNotifier =
       FormeMountedValueNotifier(false, this);
   late final FormeMountedValueNotifier<E> _modelNotifier =
-      FormeMountedValueNotifier(_field.model, this);
+      FormeMountedValueNotifier(widget.model, this);
   late final K controller;
 
-  String get name => _field.name;
+  String get name => widget.name;
 
   /// get current widget's focus node
   ///
@@ -329,7 +332,7 @@ mixin AbstractFieldState<T extends StatefulWidget, E extends FormeModel,
     this.controller = createFormeFieldController();
     _formScope.registerField(this);
     afterInitiation();
-    _field.onInitialed?.call(this.controller);
+    widget.onInitialed?.call(this.controller);
   }
 
   /// create a [FormeFieldController]
@@ -359,8 +362,8 @@ mixin AbstractFieldState<T extends StatefulWidget, E extends FormeModel,
   void afterInitiation() {
     _focusNotifier.addListener(() {
       onFocusChanged(focusNode.hasFocus);
-      if (_field.onFocusChanged != null)
-        _field.onFocusChanged!(this.controller, focusNode.hasFocus);
+      if (widget.onFocusChanged != null)
+        widget.onFocusChanged!(this.controller, focusNode.hasFocus);
     });
   }
 
@@ -442,7 +445,7 @@ mixin AbstractFieldState<T extends StatefulWidget, E extends FormeModel,
     }
   }
 
-  bool get readOnly => _formScope.readOnly || (_readOnly ?? _field.readOnly);
+  bool get readOnly => _formScope.readOnly || (_readOnly ?? widget.readOnly);
   set readOnly(bool readOnly) {
     if (readOnly != _readOnly) {
       setState(() {
@@ -465,12 +468,10 @@ mixin AbstractFieldState<T extends StatefulWidget, E extends FormeModel,
   @override
   void didUpdateWidget(T oldWidget) {
     super.didUpdateWidget(oldWidget);
-    StatefulField<AbstractFieldState<T, E, K>, E, FormeFieldController<E>> old =
-        oldWidget as StatefulField<AbstractFieldState<T, E, K>, E, K>;
     if (_model == null) {
-      updateModelInDidUpdateWidget(old.model, _field.model);
+      updateModelInDidUpdateWidget(oldWidget.model, widget.model);
     } else {
-      updateModelInDidUpdateWidget(_field.model, _model!);
+      updateModelInDidUpdateWidget(widget.model, _model!);
     }
   }
 
@@ -479,10 +480,7 @@ mixin AbstractFieldState<T extends StatefulWidget, E extends FormeModel,
     return _FormeFieldController(this);
   }
 
-  E get model => _model ?? _field.model;
-
-  StatefulField<AbstractFieldState<T, E, K>, E, K> get _field =>
-      widget as StatefulField<AbstractFieldState<T, E, K>, E, K>;
+  E get model => _model ?? widget.model;
 }
 
 /// this State is used for [CommonField]
@@ -505,8 +503,9 @@ class CommonFieldState<E extends FormeModel>
 
 /// this State is only used for [ValueField]
 abstract class BaseValueFieldState<T, E extends FormeModel,
-        K extends FormeValueFieldController<T, E>> extends State<StatefulWidget>
-    with AbstractFieldState<StatefulWidget, E, K> {
+        K extends FormeValueFieldController<T, E>>
+    extends State<BaseValueField<T, E, K>>
+    with AbstractFieldState<BaseValueField<T, E, K>, E, K> {
   late final FormeMountedValueNotifier<FormeValidateError?> _errorNotifier =
       FormeMountedValueNotifier(null, this);
   late final FormeMountedValueNotifier<FormeModel?> _decoratorNotifier =
@@ -527,9 +526,6 @@ abstract class BaseValueFieldState<T, E extends FormeModel,
 
   bool get _hasValidator =>
       widget.validator != null || widget.asyncValidator != null;
-
-  @override
-  BaseValueField<T, E, K> get widget => super.widget as BaseValueField<T, E, K>;
 
   String? get errorText => _formScope.quietlyValidate ? null : _error?.text;
 
@@ -573,23 +569,23 @@ abstract class BaseValueFieldState<T, E extends FormeModel,
     });
   }
 
-  _onFormeValueChanged(String name) {
-    void allowValidate() {
-      _ignoreValidate = false;
-      if (!_lastValidateIsAsync) return;
-      setState(() {});
-    }
+  void _allowValidate() {
+    _ignoreValidate = false;
+    if (!_lastValidateIsAsync) return;
+    setState(() {});
+  }
 
+  _onFormeValueChanged(String name) {
     if (widget.asyncValidateConfiguration.mode ==
         FormeAsyncValidateMode.onFieldValueChanged) {
       if (name == this.name) {
-        allowValidate();
+        _allowValidate();
       }
     } else if (widget.asyncValidateConfiguration.mode ==
         FormeAsyncValidateMode.onFormeValueChanged) {
       if (widget.asyncValidateConfiguration.names.contains(name) ||
           name == this.name) {
-        allowValidate();
+        _allowValidate();
       }
     }
   }
@@ -645,14 +641,9 @@ abstract class BaseValueFieldState<T, E extends FormeModel,
     super.dispose();
   }
 
-  /// used to compare two values  determine whether changeValue
-  ///
-  /// default used [FormeUtils.compare]
-  ///
-  /// override this method if it don't fit your needs
   @protected
   bool compare(T a, T b) {
-    return FormeUtils.compare(a, b);
+    return widget.comparator(a, b);
   }
 
   /// override this method if you want to listen value changed
@@ -972,7 +963,8 @@ class _FormeController extends FormeController {
 
 class _FormeFieldController<E extends FormeModel>
     implements FormeFieldController<E> {
-  final AbstractFieldState<StatefulWidget, E, FormeFieldController<E>> state;
+  final AbstractFieldState<StatefulField<E, FormeFieldController<E>>, E,
+      FormeFieldController<E>> state;
 
   final ValueListenable<bool> focusListenable;
   final ValueListenable<bool> readOnlyListenable;
