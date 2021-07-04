@@ -1,8 +1,6 @@
 ## Screenshot
 
-![screenshot](https://raw.githubusercontent.com/wwwqyhme/forme/main/ezgif-2-4c5414cc2d89.gif)
-
-![screenshot2](https://raw.githubusercontent.com/wwwqyhme/forme/main/ezgif-3-fe95b1d8ade9.gif)
+![screenshot](https://raw.githubusercontent.com/wwwqyhme/forme/main/forme_2.5.0_screenshot.gif)
 
 ## migrate from 2.1.x to 2.5.0
 
@@ -27,7 +25,7 @@ flutter pub add forme
 ### create forme
 
 ``` dart
-FormeKey key = FormeKey();// formekey is a global key , also can be used to control form
+FormeKey key = FormeKey();// formekey is a global key , also  used to control form
 Widget child = formContent;
 Widget forme = Forme(
 	key:key,
@@ -76,23 +74,16 @@ Forme is a form widget, but forme is not wrapped in a `Form`  , because I don't 
 | name | true | `String` | field's id,**should be unique in form** |
 | builder | true | `FieldContentBuilder` | build field content|
 | readOnly | false | `bool` | whether field should be readOnly,default is `false` |
-| onFocusChanged | false | `FormeFocusChanged` | listen field's focus change |
 | model | true | `FormeModel` | `FormeModel` used to provider widget render data |
-| onInitialed | false | `FormeFieldInitialed` | triggered when `FormeFieldController` initialed , when you specific a initialValue on `ValueField` or `Forme` , valueListenable will not listen this value , you can handle this value in `onInitialed` |
+| listener | false | `FormeFieldListener` |  user to listen `onInitialed`,`onFocusChanged`|
+
 
 ### attributes supported by all value fields
 
 | Attribute |  Required  | Type | Description  |
 | --- | --- | --- | --- |
-| onValueChanged | false | `FormeValueChanged` | listen field's value change |
-| onErrorChanged | false | `FormeErrorChanged` | listen field's errorText change |
-| validator | false | `FormFieldValidator` | validate field's value |
-| autovalidateMode | false | `AutovalidateMode` | auto validate mode , default is `AutovalidateMode.disabled`|
-| initialValue | false | `dynamic` | initialValue,**can be overwritten by forme's initialValue**|
-| onSaved | false | `FormeFieldSetter` | triggered when call forme or field's save method|
 | decoratorBuilder | false | `FormeDecoratorBuilder` | used to decorate a field |
-| asyncValidator | false | `FormeAsyncValidator` | async validator |
-| asyncValidateConfiguration | false | `FormeAsyncValidateConfiguration` | async validate configuration |
+| listener | false | `FormeValueFieldListenable` |  user to listen `onValueChanged`,`onErrorChanged`,`onValidate`,`onAsyncValidate`,'onSaved'|
 
 ### currently supported fields
 
@@ -289,11 +280,11 @@ if `FormField.autovalidateMode` is `AutovalidateMode.disabled` , asyncValidator 
 
 if you specific both `validator` and `asyncValidator` , `asyncValidator` will only be performed after `validator` passed.
 
-if you specific an `asyncValidateConfiguration` on `ValueField` and names attribute is not empty , when field's (which name is in names) value changed , `asyncValidator` will be performed if last validation is validated by `asyncValidator`.
+**after successful performed an async validator , async validator will not performed any more until field's value changed**
 
 #### debounce
 
-you can specific a debounce on `asyncValidateConfiguration` , **debounce will not worked when you manually call `validate` on `FormeValueFieldController`**
+you can specific a debounce on `FormeValueFieldListener` , **debounce will not worked when you manually call `validate` on `FormeValueFieldController`**
 
 ## FormeKey Methods
 
