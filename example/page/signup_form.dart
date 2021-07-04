@@ -147,9 +147,12 @@ class _SignUpScreenState extends State<SignupFormPage> {
       hint: "First Name",
       name: 'firstName',
       formeKey: formeKey,
-      asyncValidator: (v) => Future.delayed(
-          Duration(seconds: 2), () => v == 'admin' ? null : 'username exists'),
-      validator: FormeValidates.size(min: 5, errorText: 'at least 5 length'),
+      listener: FormeValueFieldListener(
+        autovalidateMode: AutovalidateMode.onUserInteraction,
+        onValidate: FormeValidates.size(min: 5, errorText: 'at least 5 length'),
+        onAsyncValidate: (f, v) => Future.delayed(Duration(seconds: 2),
+            () => v == 'admin' ? null : 'username exists'),
+      ),
     );
   }
 
@@ -160,8 +163,11 @@ class _SignUpScreenState extends State<SignupFormPage> {
       hint: "Last Name",
       name: 'lastName',
       formeKey: formeKey,
-      validator: (v) =>
-          v!.length < 6 ? 'Last Name\'s must bigger than 6' : null,
+      listener: FormeValueFieldListener(
+        autovalidateMode: AutovalidateMode.onUserInteraction,
+        onValidate: FormeValidates.size(
+            min: 6, errorText: 'Last Name\'s must bigger than 6'),
+      ),
     );
   }
 
@@ -206,8 +212,10 @@ class _SignUpScreenState extends State<SignupFormPage> {
               children: <Widget>[
                 FormeSingleSwitch(
                   name: 'accept',
-                  validator: (v) =>
-                      !v! ? 'you must accept all terms and conditions' : null,
+                  listener: FormeValueFieldListener(
+                    onValidate: FormeValidates.equals(true,
+                        errorText: 'you must accept all terms and conditions'),
+                  ),
                 ),
                 Text(
                   "I accept all terms and conditions",
@@ -452,17 +460,14 @@ class CustomTextField extends StatelessWidget {
   late final bool medium;
   final String name;
   final FormeKey formeKey;
-
-  final FormFieldValidator<String>? validator;
-  final FormeAsyncValidator<String>? asyncValidator;
+  final FormeValueFieldListener<String, FormeTextFieldController>? listener;
 
   CustomTextField({
     this.hint,
     this.keyboardType,
     this.icon,
     this.obscureText = false,
-    this.validator,
-    this.asyncValidator,
+    this.listener,
     required this.name,
     required this.formeKey,
   });
@@ -481,25 +486,27 @@ class CustomTextField extends StatelessWidget {
           children: [
             FormeTextField(
               name: name,
-              validator: validator,
-              asyncValidator: asyncValidator,
-              autovalidateMode: AutovalidateMode.onUserInteraction,
-              onErrorChanged: (m, a) {
-                InputBorder border;
-                if (a == null || !a.hasError) {
-                  border = OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30.0),
-                      borderSide: BorderSide.none);
-                } else {
-                  border = OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30.0),
-                      borderSide:
-                          BorderSide(color: Colors.orange[200]!, width: 2));
-                }
-                m.updateModel(FormeTextFieldModel(
-                    decoration: InputDecoration(
-                        focusedBorder: border, enabledBorder: border)));
-              },
+              listener: FormeValueFieldListener(
+                autovalidateMode: listener?.autovalidateMode,
+                onValidate: listener?.onValidate,
+                onAsyncValidate: listener?.onAsyncValidate,
+                onErrorChanged: (m, a) {
+                  InputBorder border;
+                  if (a == null || !a.hasError) {
+                    border = OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(30.0),
+                        borderSide: BorderSide.none);
+                  } else {
+                    border = OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(30.0),
+                        borderSide:
+                            BorderSide(color: Colors.orange[200]!, width: 2));
+                  }
+                  m.updateModel(FormeTextFieldModel(
+                      decoration: InputDecoration(
+                          focusedBorder: border, enabledBorder: border)));
+                },
+              ),
               model: FormeTextFieldModel(
                 keyboardType: keyboardType,
                 maxLines: 1,

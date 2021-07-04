@@ -7,46 +7,32 @@ typedef FormeLabelRender = String Function(double value);
 
 class FormeSlider extends ValueField<double, FormeSliderModel> {
   FormeSlider({
-    FormeSimpleValueChanged<double, FormeSliderModel>? onValueChanged,
-    FormFieldValidator<double>? validator,
-    AutovalidateMode? autovalidateMode,
     double? initialValue,
-    FormeFieldSetter<double>? onSaved,
     required String name,
     bool readOnly = false,
     required double min,
     required double max,
     FormeSliderModel? model,
-    FormeSimpleErrorChanged<double, FormeSliderModel>? onErrorChanged,
-    FormeSimpleValueFieldFocusChanged<double, FormeSliderModel>? onFocusChanged,
-    FormeSimpleValueFieldInitialed<double, FormeSliderModel>? onInitialed,
     Key? key,
     FormeDecoratorBuilder<double>? decoratorBuilder,
     InputDecoration? decoration,
-    FormeAsyncValidateConfiguration? asyncValidateConfiguration,
-    FormeAsyncValidator<double>? asyncValidator,
+    FormeValueFieldListener<double,
+            FormeValueFieldController<double, FormeSliderModel>>?
+        listener,
   }) : super(
-          asyncValidator: asyncValidator,
-          asyncValidateConfiguration: asyncValidateConfiguration,
-          onInitialed: onInitialed,
+          listener: listener,
           decoratorBuilder: decoratorBuilder ??
               (decoration == null
                   ? null
                   : FormeInputDecoratorBuilder(decoration: decoration)),
           key: key,
-          onFocusChanged: onFocusChanged,
-          onErrorChanged: onErrorChanged,
           model: (model ?? FormeSliderModel()).copyWith(FormeSliderModel(
             max: max,
             min: min,
           )),
           readOnly: readOnly,
           name: name,
-          onValueChanged: onValueChanged,
-          onSaved: onSaved,
-          validator: validator,
           initialValue: initialValue ?? min,
-          autovalidateMode: autovalidateMode,
           builder: (baseState) {
             _FormeSliderState state = baseState as _FormeSliderState;
             bool readOnly = state.readOnly;

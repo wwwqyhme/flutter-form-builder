@@ -9,25 +9,29 @@ class TextFieldPage extends BasePage<String, FormeTextFieldModel> {
       children: [
         FormeTextField(
           initialValue: '123',
-          asyncValidateConfiguration: FormeAsyncValidateConfiguration(
-              debounce: Duration(milliseconds: 300)),
-          autovalidateMode: AutovalidateMode.onUserInteraction,
-          onInitialed: (c) {
-            print(c.value);
-          },
-          asyncValidator: (v) =>
-              Future.delayed(Duration(milliseconds: 800), () {
-            if (v.length > 10) return null;
-            return 'username is exists';
-          }),
-          onFocusChanged: (c, m) => print('focused changed , current is $m'),
-          onErrorChanged: (field, errorText) {
-            print("validate result: ${errorText?.text}");
-          },
-          onValueChanged: (c, m) {
-            print(
-                'value changed , current value is $m , old value is ${c.oldValue}');
-          },
+          listener: FormeValueFieldListener(
+            autovalidateMode: AutovalidateMode.onUserInteraction,
+            onInitialed: (c) {
+              print(c.value);
+            },
+            onAsyncValidate: (f, v) =>
+                Future.delayed(Duration(milliseconds: 800), () {
+              if (v.length > 10) return null;
+              return 'username is exists';
+            }),
+            onFocusChanged: (c, m) => print('focused changed , current is $m'),
+            onErrorChanged: (field, errorText) {
+              print("validate result: ${errorText?.text}");
+            },
+            onValueChanged: (c, m) {
+              print(
+                  'value changed , current value is $m , old value is ${c.oldValue}');
+            },
+            onValidate: FormeValidates.any([
+              FormeValidates.size(min: 5),
+              FormeValidates.email(),
+            ], errorText: 'must be an email or length > 5'),
+          ),
           model: FormeTextFieldModel(autofocus: true),
           name: name,
           decoration: InputDecoration(
@@ -55,10 +59,6 @@ class TextFieldPage extends BasePage<String, FormeTextFieldModel> {
               );
             }),
           ),
-          validator: FormeValidates.any([
-            FormeValidates.size(min: 5),
-            FormeValidates.email(),
-          ], errorText: 'must be an email or length > 5'),
         ),
         Builder(builder: (context) {
           return ValueListenableBuilder<FormeValidateError?>(

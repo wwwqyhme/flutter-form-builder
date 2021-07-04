@@ -16,9 +16,12 @@ class DropdownButtonFieldPage
                     child: child,
                   ),
               emptyChecker: (value) => value == null),
-          autovalidateMode: AutovalidateMode.onUserInteraction,
           name: name,
-          validator: (value) => value == null ? 'pls select one item!' : null,
+          listener: FormeValueFieldListener(
+            onValidate:
+                FormeValidates.notNull(errorText: 'pls select one item!'),
+            autovalidateMode: AutovalidateMode.onUserInteraction,
+          ),
         ),
         Wrap(
           children: [

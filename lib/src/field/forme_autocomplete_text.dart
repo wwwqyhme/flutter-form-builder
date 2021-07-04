@@ -9,35 +9,19 @@ class FormeAutocompleteText<T extends Object> extends BaseValueField<T?,
     required AutocompleteOptionsBuilder<T> optionsBuilder,
     InputDecoration? decoration,
     FormeAutocompleteTextModel<T>? model,
-    FormFieldValidator<T?>? validator,
-    AutovalidateMode? autovalidateMode,
     T? initialValue,
-    FormeFieldSetter<T?>? onSaved,
     bool readOnly = false,
-    FormeErrorChanged<FormeAutocompleteTextController<T>>? onErrorChanged,
-    FormeFocusChanged<FormeAutocompleteTextController<T>>? onFocusChanged,
-    FormeFieldInitialed<FormeAutocompleteTextController<T>>? onInitialed,
-    FormeValueChanged<T?, FormeAutocompleteTextController<T>>? onValueChanged,
     Key? key,
     FormeDecoratorBuilder<T?>? decoratorBuilder,
     int? maxLines = 1,
-    FormeAsyncValidateConfiguration? asyncValidateConfiguration,
-    FormeAsyncValidator<T?>? asyncValidator,
+    FormeValueFieldListener<T, FormeAutocompleteTextController<T>>? listener,
   }) : super(
-          asyncValidator: asyncValidator,
-          asyncValidateConfiguration: asyncValidateConfiguration,
-          onInitialed: onInitialed,
+          listener: listener,
           decoratorBuilder: decoratorBuilder,
-          onFocusChanged: onFocusChanged,
-          onErrorChanged: onErrorChanged,
           key: key,
           readOnly: readOnly,
           name: name,
-          onValueChanged: onValueChanged,
-          onSaved: onSaved,
-          autovalidateMode: autovalidateMode,
           initialValue: initialValue,
-          validator: validator,
           model: (model ?? FormeAutocompleteTextModel())
               .copyWith(FormeAutocompleteTextModel(
                   optionsBuilder: optionsBuilder,
@@ -141,10 +125,6 @@ class _FormeAutocompleteTextState<T extends Object> extends BaseValueFieldState<
       if (!focusNode.hasFocus && focusWhenUnFocused) {
         focusWhenUnFocused = false;
         focusNode.requestFocus();
-      }
-      if (widget.onFocusChanged != null) {
-        if (widget.onFocusChanged != null)
-          widget.onFocusChanged!(controller, focusNode.hasFocus);
       }
     });
   }

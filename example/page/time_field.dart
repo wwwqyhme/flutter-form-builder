@@ -9,16 +9,18 @@ class TimeFieldPage extends BasePage<TimeOfDay?, FormeTimeFieldModel> {
       children: [
         FormeTextFieldOnTapProxyWidget(
             child: FormeTimeField(
-          onInitialed: (c) {
-            print(c.value);
-          },
-          autovalidateMode: AutovalidateMode.onUserInteraction,
+          listener: FormeValueFieldListener(
+            onInitialed: (c) {
+              print(c.value);
+            },
+            autovalidateMode: AutovalidateMode.onUserInteraction,
+            onValidate: FormeValidates.notNull(errorText: 'select a time!'),
+          ),
           name: name,
           model: FormeTimeFieldModel(
               textFieldModel: FormeTextFieldModel(
             decoration: InputDecoration(labelText: 'DateTime'),
           )),
-          validator: (value) => value == null ? 'select a time!' : null,
         )),
         Wrap(
           children: [

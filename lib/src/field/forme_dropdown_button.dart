@@ -5,28 +5,18 @@ class FormeDropdownButton<T extends Object>
     extends ValueField<T?, FormeDropdownButtonModel<T>> {
   FormeDropdownButton({
     required List<DropdownMenuItem<T>> items,
-    FormeSimpleValueChanged<T?, FormeDropdownButtonModel<T>>? onValueChanged,
-    FormFieldValidator<T?>? validator,
-    AutovalidateMode? autovalidateMode,
     T? initialValue,
-    FormeFieldSetter<T?>? onSaved,
     required String name,
     bool readOnly = false,
     FormeDropdownButtonModel<T>? model,
-    FormeSimpleErrorChanged<T?, FormeDropdownButtonModel<T>>? onErrorChanged,
-    FormeSimpleValueFieldFocusChanged<T?, FormeDropdownButtonModel<T>>?
-        onFocusChanged,
-    FormeSimpleValueFieldInitialed<T?, FormeDropdownButtonModel<T>>?
-        onInitialed,
     Key? key,
     FormeDecoratorBuilder<T?>? decoratorBuilder,
     InputDecoration? decoration,
-    FormeAsyncValidateConfiguration? asyncValidateConfiguration,
-    FormeAsyncValidator<T?>? asyncValidator,
+    FormeValueFieldListener<T?,
+            FormeValueFieldController<T?, FormeDropdownButtonModel<T>>>?
+        listener,
   }) : super(
-          asyncValidator: asyncValidator,
-          asyncValidateConfiguration: asyncValidateConfiguration,
-          onInitialed: onInitialed,
+          listener: listener,
           key: key,
           decoratorBuilder: decoratorBuilder ??
               (decoration == null
@@ -37,19 +27,13 @@ class FormeDropdownButton<T extends Object>
                       wrapper: (child) {
                         return DropdownButtonHideUnderline(child: child);
                       })),
-          onFocusChanged: onFocusChanged,
-          onErrorChanged: onErrorChanged,
           model: (model ?? FormeDropdownButtonModel<T>())
               .copyWith(FormeDropdownButtonModel<T>(
             items: items,
           )),
           readOnly: readOnly,
           name: name,
-          onValueChanged: onValueChanged,
-          onSaved: onSaved,
-          validator: validator,
           initialValue: initialValue,
-          autovalidateMode: autovalidateMode,
           builder: (state) {
             bool readOnly = state.readOnly;
             double iconSize = state.model.iconSize ?? 24;

@@ -13,12 +13,14 @@ class RangeSliderFieldPage
               decoration: InputDecoration(labelText: 'Range Slider')),
           min: 1,
           max: 100,
-          autovalidateMode: AutovalidateMode.onUserInteraction,
           name: name,
           model: FormeRangeSliderModel(),
-          validator: (value) => value!.start < 50
-              ? 'start value must bigger than 50 ,current is $value'
-              : null,
+          listener: FormeValueFieldListener(
+            onValidate: (f, value) => value.start < 50
+                ? 'start value must bigger than 50 ,current is $value'
+                : null,
+            autovalidateMode: AutovalidateMode.onUserInteraction,
+          ),
         ),
         Wrap(
           children: [

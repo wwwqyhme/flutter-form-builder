@@ -9,16 +9,19 @@ class DateTimeFieldPage extends BasePage<DateTime?, FormeDateTimeFieldModel> {
       children: [
         FormeTextFieldOnTapProxyWidget(
           child: FormeDateTimeField(
-            autovalidateMode: AutovalidateMode.onUserInteraction,
             name: name,
             model: FormeDateTimeFieldModel(
                 textFieldModel: FormeTextFieldModel(
               readOnly: false,
               decoration: InputDecoration(labelText: 'DateTime'),
             )),
-            asyncValidator: (value) =>
-                Future.delayed(Duration(seconds: 1), () => 'invalid date'),
-            validator: (value) => value == null ? 'select a datetime!' : null,
+            listener: FormeValueFieldListener(
+              onValidate:
+                  FormeValidates.notNull(errorText: 'pls select a datetime!'),
+              autovalidateMode: AutovalidateMode.onUserInteraction,
+              onAsyncValidate: (f, v) =>
+                  Future.delayed(Duration(seconds: 1), () => 'invalid date'),
+            ),
           ),
         ),
         Wrap(

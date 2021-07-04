@@ -4,44 +4,29 @@ import 'package:forme/forme.dart';
 class FormeRadioGroup<T extends Object>
     extends ValueField<T?, FormeRadioGroupModel<T>> {
   FormeRadioGroup({
-    FormeSimpleValueChanged<T?, FormeRadioGroupModel<T>>? onValueChanged,
-    FormFieldValidator<T?>? validator,
-    AutovalidateMode? autovalidateMode,
     T? initialValue,
-    FormeFieldSetter<T?>? onSaved,
     required String name,
     bool readOnly = false,
     required List<FormeListTileItem<T>>? items,
     FormeRadioGroupModel<T>? model,
-    FormeSimpleErrorChanged<T?, FormeRadioGroupModel<T>>? onErrorChanged,
-    FormeSimpleValueFieldFocusChanged<T?, FormeRadioGroupModel<T>>?
-        onFocusChanged,
-    FormeSimpleValueFieldInitialed<T?, FormeRadioGroupModel<T>>? onInitialed,
     Key? key,
     FormeDecoratorBuilder<T?>? decoratorBuilder,
     InputDecoration? decoration,
-    FormeAsyncValidateConfiguration? asyncValidateConfiguration,
-    FormeAsyncValidator<T?>? asyncValidator,
+    FormeValueFieldListener<T?,
+            FormeValueFieldController<T?, FormeRadioGroupModel<T>>>?
+        listener,
   }) : super(
-            asyncValidator: asyncValidator,
-            asyncValidateConfiguration: asyncValidateConfiguration,
-            onInitialed: onInitialed,
+            listener: listener,
             decoratorBuilder: decoratorBuilder ??
                 (decoration == null
                     ? null
                     : FormeInputDecoratorBuilder(decoration: decoration)),
-            onFocusChanged: onFocusChanged,
-            onErrorChanged: onErrorChanged,
             key: key,
             model: (model ?? FormeRadioGroupModel<T>())
                 .copyWith(FormeRadioGroupModel(items: items)),
             readOnly: readOnly,
             name: name,
-            onValueChanged: onValueChanged,
-            onSaved: onSaved,
-            autovalidateMode: autovalidateMode,
             initialValue: initialValue,
-            validator: validator,
             builder: (state) {
               bool readOnly = state.readOnly;
               int split = state.model.split ?? 2;

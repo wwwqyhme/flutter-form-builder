@@ -211,25 +211,23 @@ class _DemoPageState extends State<DemoPage> {
           Expanded(
             child: FormeTextField(
               name: 'text',
-              onFocusChanged: (field, hasFocus) {
-                field.updateModel(FormeTextFieldModel(
-                    decoration: InputDecoration(labelText: 'Focus:$hasFocus')));
-              },
-              validator:
-                  FormeValidates.size(min: 5, errorText: 'at least 5 length'),
-              asyncValidateConfiguration: FormeAsyncValidateConfiguration(
-                debounce: Duration(seconds: 1),
-                mode: FormeAsyncValidateMode.onFormeValueChanged,
-                names: {'number'},
+              listener: FormeValueFieldListener(
+                onFocusChanged: (field, hasFocus) {
+                  field.updateModel(FormeTextFieldModel(
+                      decoration:
+                          InputDecoration(labelText: 'Focus:$hasFocus')));
+                },
+                autovalidateMode: AutovalidateMode.onUserInteraction,
+                onValidate:
+                    FormeValidates.size(min: 5, errorText: 'at least 5 length'),
+                onAsyncValidate: (f, value) {
+                  return Future.delayed(Duration(seconds: 2), () {
+                    return value.length <= 10
+                        ? 'length must bigger than 10,current is ${value.length} '
+                        : null;
+                  });
+                },
               ),
-              autovalidateMode: AutovalidateMode.onUserInteraction,
-              asyncValidator: (value) {
-                return Future.delayed(Duration(seconds: 2), () {
-                  return value.length <= 10
-                      ? 'length must bigger than 10,current is ${value.length} '
-                      : null;
-                });
-              },
               decoration: InputDecoration(
                 labelText: 'Text',
                 suffixIconConstraints: BoxConstraints.tightFor(),
@@ -366,9 +364,12 @@ class _DemoPageState extends State<DemoPage> {
             ),
           ),
           decoration: InputDecoration(labelText: 'Dropdown'),
-          autovalidateMode: AutovalidateMode.onUserInteraction,
           name: 'dropdown',
-          validator: (value) => value == null ? 'pls select one item!' : null,
+          listener: FormeValueFieldListener(
+            autovalidateMode: AutovalidateMode.onUserInteraction,
+            onValidate:
+                FormeValidates.notNull(errorText: 'pls select one item!'),
+          ),
         ),
         SizedBox(
           height: 20,
@@ -400,12 +401,11 @@ class _DemoPageState extends State<DemoPage> {
           name: 'sliderVisible',
           child: FormeSlider(
             decoration: InputDecoration(labelText: 'Slider'),
-            autovalidateMode: AutovalidateMode.onUserInteraction,
-            validator: (value) {
-              return value! < 50
-                  ? 'value must bigger than 50 ,current is $value'
-                  : null;
-            },
+            listener: FormeValueFieldListener(
+              autovalidateMode: AutovalidateMode.onUserInteraction,
+              onValidate: FormeValidates.min(50,
+                  errorText: 'value must bigger than 50'),
+            ),
             name: 'slider',
             min: 0,
             max: 100,
@@ -449,8 +449,10 @@ class _DemoPageState extends State<DemoPage> {
             ),
             split: 2,
           ),
-          autovalidateMode: AutovalidateMode.onUserInteraction,
-          validator: (value) => value != '2' ? 'pls select 2' : null,
+          listener: FormeValueFieldListener(
+            autovalidateMode: AutovalidateMode.onUserInteraction,
+            onValidate: FormeValidates.equals('2', errorText: 'pls select 2'),
+          ),
         ),
         FormeListTile<String>(
           decoration: InputDecoration(labelText: 'Checkbox Tile'),
@@ -514,7 +516,9 @@ class _DemoPageState extends State<DemoPage> {
           },
           decoration: InputDecoration(labelText: 'Autocomplete Text'),
           name: 'autocomplete',
-          validator: (v) => v == null ? 'pls select one !' : null,
+          listener: FormeValueFieldListener(
+            onValidate: FormeValidates.notNull(errorText: 'pls select one'),
+          ),
         ),
         FormeAsnycAutocompleteText<User>(
           optionsBuilder: (v) {
@@ -543,7 +547,9 @@ class _DemoPageState extends State<DemoPage> {
                 maxLines: 1,
               )),
           name: 'asyncAutocomplete',
-          validator: (v) => v == null ? 'pls select one !' : null,
+          listener: FormeValueFieldListener(
+            onValidate: FormeValidates.notNull(errorText: 'pls select one'),
+          ),
         ),
         FormeAsnycAutocompleteChip<User>(
           optionsBuilder: (v) {
@@ -560,7 +566,9 @@ class _DemoPageState extends State<DemoPage> {
           },
           decoration: InputDecoration(labelText: 'Autocomplete Chip'),
           name: 'autocompleteChip',
-          validator: (v) => v!.isEmpty ? 'pls select one !' : null,
+          listener: FormeValueFieldListener(
+            onValidate: FormeValidates.notEmpty(errorText: 'pls select one'),
+          ),
           model: FormeAsyncAutocompleteChipModel<User>(
             emptyOptionBuilder: (context) => Text('empty'),
           ),

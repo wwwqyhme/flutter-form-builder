@@ -10,36 +10,24 @@ class FormRangeLabelRender {
 
 class FormeRangeSlider extends ValueField<RangeValues, FormeRangeSliderModel> {
   FormeRangeSlider({
-    FormeSimpleValueChanged<RangeValues, FormeRangeSliderModel>? onValueChanged,
-    FormFieldValidator<RangeValues>? validator,
-    AutovalidateMode? autovalidateMode,
     RangeValues? initialValue,
-    FormeFieldSetter<RangeValues>? onSaved,
     required String name,
     bool readOnly = false,
     FormeRangeSliderModel? model,
     required double min,
     required double max,
-    FormeSimpleErrorChanged<RangeValues, FormeRangeSliderModel>? onErrorChanged,
-    FormeSimpleValueFieldFocusChanged<RangeValues, FormeRangeSliderModel>?
-        onFocusChanged,
-    FormeSimpleValueFieldInitialed<RangeValues, FormeRangeSliderModel>?
-        onInitialed,
     Key? key,
     FormeDecoratorBuilder<RangeValues>? decoratorBuilder,
     InputDecoration? decoration,
-    FormeAsyncValidateConfiguration? asyncValidateConfiguration,
-    FormeAsyncValidator<RangeValues>? asyncValidator,
+    FormeValueFieldListener<RangeValues,
+            FormeValueFieldController<RangeValues, FormeRangeSliderModel>>?
+        listener,
   }) : super(
-            asyncValidator: asyncValidator,
-            asyncValidateConfiguration: asyncValidateConfiguration,
-            onInitialed: onInitialed,
+            listener: listener,
             decoratorBuilder: decoratorBuilder ??
                 (decoration == null
                     ? null
                     : FormeInputDecoratorBuilder(decoration: decoration)),
-            onFocusChanged: onFocusChanged,
-            onErrorChanged: onErrorChanged,
             key: key,
             model: (model ?? FormeRangeSliderModel())
                 .copyWith(FormeRangeSliderModel(
@@ -48,11 +36,7 @@ class FormeRangeSlider extends ValueField<RangeValues, FormeRangeSliderModel> {
             )),
             readOnly: readOnly,
             name: name,
-            onValueChanged: onValueChanged,
-            onSaved: onSaved,
-            validator: validator,
             initialValue: initialValue ?? RangeValues(min, max),
-            autovalidateMode: autovalidateMode,
             builder: (baseState) {
               _FormeRangeSliderState state =
                   baseState as _FormeRangeSliderState;

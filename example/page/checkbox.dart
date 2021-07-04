@@ -9,10 +9,12 @@ class CheckboxPage extends BasePage<bool, FormeSingleCheckboxModel> {
       children: [
         FormeSingleCheckbox(
           model: FormeSingleCheckboxModel(),
-          autovalidateMode: AutovalidateMode.onUserInteraction,
           name: name,
-          validator: (value) =>
-              !value! ? 'you must accept before continue!' : null,
+          listener: FormeValueFieldListener(
+            onValidate: FormeValidates.equals(true,
+                errorText: 'you must accept before continue!'),
+            autovalidateMode: AutovalidateMode.onUserInteraction,
+          ),
         ),
         Wrap(
           children: [

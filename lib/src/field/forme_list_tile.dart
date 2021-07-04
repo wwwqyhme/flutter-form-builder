@@ -38,45 +38,30 @@ enum FormeListTileType { Checkbox, Switch }
 class FormeListTile<T extends Object>
     extends ValueField<List<T>, FormeListTileModel<T>> {
   FormeListTile({
-    FormeSimpleValueChanged<List<T>, FormeListTileModel<T>>? onValueChanged,
-    FormFieldValidator<List<T>>? validator,
-    AutovalidateMode? autovalidateMode,
     List<T>? initialValue,
-    FormeFieldSetter<List<T>>? onSaved,
     required String name,
     bool readOnly = false,
     FormeListTileType type = FormeListTileType.Checkbox,
     required List<FormeListTileItem<T>>? items,
     FormeListTileModel<T>? model,
-    FormeSimpleErrorChanged<List<T>, FormeListTileModel<T>>? onErrorChanged,
-    FormeSimpleValueFieldFocusChanged<List<T>, FormeListTileModel<T>>?
-        onFocusChanged,
-    FormeSimpleValueFieldInitialed<List<T>, FormeListTileModel<T>>? onInitialed,
     Key? key,
     FormeDecoratorBuilder<List<T>>? decoratorBuilder,
     InputDecoration? decoration,
-    FormeAsyncValidateConfiguration? asyncValidateConfiguration,
-    FormeAsyncValidator<List<T>>? asyncValidator,
+    FormeValueFieldListener<List<T>,
+            FormeValueFieldController<List<T>, FormeListTileModel<T>>>?
+        listener,
   }) : super(
-            asyncValidator: asyncValidator,
-            asyncValidateConfiguration: asyncValidateConfiguration,
-            onInitialed: onInitialed,
+            listener: listener,
             decoratorBuilder: decoratorBuilder ??
                 (decoration == null
                     ? null
                     : FormeInputDecoratorBuilder(decoration: decoration)),
-            onFocusChanged: onFocusChanged,
-            onErrorChanged: onErrorChanged,
             key: key,
             model: (model ?? FormeListTileModel<T>())
                 .copyWith(FormeListTileModel(items: items, type: type)),
             readOnly: readOnly,
             name: name,
-            onValueChanged: onValueChanged,
-            onSaved: onSaved,
-            autovalidateMode: autovalidateMode,
             initialValue: initialValue ?? [],
-            validator: validator,
             builder: (state) {
               bool readOnly = state.readOnly;
               int split = state.model.split ?? 2;

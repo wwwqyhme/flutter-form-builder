@@ -12,14 +12,16 @@ class SliderFieldPage extends BasePage<double, FormeSliderModel> {
               decoration: InputDecoration(labelText: 'Slider')),
           min: 1,
           max: 100,
-          autovalidateMode: AutovalidateMode.onUserInteraction,
           name: name,
           model: FormeSliderModel(),
-          validator: (value) => value! < 50
-              ? 'value must bigger than 50 ,current is $value'
-              : null,
-          asyncValidator: (value) => Future.delayed(Duration(milliseconds: 800),
-              () => 'this is an errorText from async validator'),
+          listener: FormeValueFieldListener(
+            autovalidateMode: AutovalidateMode.onUserInteraction,
+            onValidate:
+                FormeValidates.min(50, errorText: 'value must bigger than 50 '),
+            onAsyncValidate: (f, value) => Future.delayed(
+                Duration(milliseconds: 800),
+                () => 'this is an errorText from async validator'),
+          ),
         ),
         Wrap(
           children: [

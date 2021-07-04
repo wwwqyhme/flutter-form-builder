@@ -1,11 +1,12 @@
 ## 2.5.0
 
-1. support `asyncValidator` on `ValueField`
-2. remove `fieldListenable` from `FormeFieldController`
-3. remove `lazyFieldListenable` from `FormeKey`
-4. `ValueField` is not a `FormField` any more
-5. you can create a nonnull or nullable `ValueField` by `ValueField`'s generic type , eg:`ValueField<String>` is nonnull , but `ValueField<String?>` is nullable
-6. remove `clearValue` from `FormeValueFieldController`
+1. remove `onValueChanged`,`onErrorChanged`,`onFocusChanged`,`onInitialed`,`validator`,`autovalidateMode` on `Field` , they are moved to `FormeFieldListener` , `validator` is renamed to `onValidate` 
+2. support `onAsyncValidate` and `asyncValidatorDebounce` on `FormeValueFieldListener` to support async validate
+3. remove `fieldListenable` from `FormeFieldController`
+4. remove `lazyFieldListenable` from `FormeKey`
+5. `ValueField` is not a `FormField` any more
+6. you can create a nonnull or nullable `ValueField` by `ValueField`'s generic type , eg:`ValueField<String>` is nonnull , but `ValueField<String?>` is nullable
+7. remove `clearValue` from `FormeValueFieldController`
 
 ## 2.1.2
 

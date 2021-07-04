@@ -10,40 +10,24 @@ import 'package:forme/forme.dart';
 class FormeTextField extends BaseValueField<String, FormeTextFieldModel,
     FormeTextFieldController> {
   FormeTextField({
-    FormeValueChanged<String, FormeTextFieldController>? onValueChanged,
-    FormFieldValidator<String>? validator,
-    AutovalidateMode? autovalidateMode,
-    FormeFieldSetter<String>? onSaved,
     String? initialValue,
     required String name,
     bool readOnly = false,
     FormeTextFieldModel? model,
-    FormeErrorChanged<FormeTextFieldController>? onErrorChanged,
-    FormeFocusChanged<FormeTextFieldController>? onFocusChanged,
-    FormeFieldInitialed<FormeTextFieldController>? onInitialed,
     Key? key,
     FormeDecoratorBuilder<String>? decoratorBuilder,
     InputDecoration? decoration,
     int? maxLines = 1,
-    FormeAsyncValidateConfiguration? asyncValidateConfiguration,
-    FormeAsyncValidator<String>? asyncValidator,
+    FormeValueFieldListener<String, FormeTextFieldController>? listener,
   }) : super(
-          asyncValidator: asyncValidator,
-          asyncValidateConfiguration: asyncValidateConfiguration,
-          onInitialed: onInitialed,
+          listener: listener,
           decoratorBuilder: decoratorBuilder,
           key: key,
-          onFocusChanged: onFocusChanged,
-          onErrorChanged: onErrorChanged,
           model: (model ?? FormeTextFieldModel()).copyWith(
               FormeTextFieldModel(decoration: decoration, maxLines: maxLines)),
           name: name,
           readOnly: readOnly,
-          onValueChanged: onValueChanged,
-          onSaved: onSaved,
           initialValue: initialValue ?? '',
-          validator: validator,
-          autovalidateMode: autovalidateMode,
           builder: (baseState) {
             bool readOnly = baseState.readOnly;
             _FormeTextFieldState state = baseState as _FormeTextFieldState;

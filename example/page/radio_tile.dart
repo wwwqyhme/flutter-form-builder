@@ -33,9 +33,12 @@ class RadioTileFieldPage
             ),
           ],
           model: FormeRadioGroupModel<String>(),
-          autovalidateMode: AutovalidateMode.onUserInteraction,
           name: name,
-          validator: (value) => value == null ? 'select one item!' : null,
+          listener: FormeValueFieldListener(
+            onValidate:
+                FormeValidates.notNull(errorText: 'pls select one item!'),
+            autovalidateMode: AutovalidateMode.onUserInteraction,
+          ),
         ),
         Wrap(
           children: [

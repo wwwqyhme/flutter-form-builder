@@ -10,11 +10,13 @@ class ChoiceChipFieldPage extends BasePage<String, FormeChoiceChipModel> {
         FormeChoiceChip<String>(
           decoratorBuilder: FormeInputDecoratorBuilder(
               decoration: InputDecoration(labelText: 'Choice Chip')),
-          autovalidateMode: AutovalidateMode.onUserInteraction,
           name: name,
           items: FormeUtils.toFormeChipItems(['flutter', 'android', 'iOS']),
           model: FormeChoiceChipModel(),
-          validator: (value) => value == null ? 'select one item!' : null,
+          listener: FormeValueFieldListener(
+            onValidate: FormeValidates.notNull(errorText: 'pls select one!'),
+            autovalidateMode: AutovalidateMode.onUserInteraction,
+          ),
         ),
         Wrap(
           children: [

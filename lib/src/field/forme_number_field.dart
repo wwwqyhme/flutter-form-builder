@@ -4,32 +4,21 @@ import 'package:forme/forme.dart';
 
 class FormeNumberField extends ValueField<num?, FormeNumberFieldModel> {
   FormeNumberField({
-    FormeSimpleValueChanged<num?, FormeNumberFieldModel>? onValueChanged,
-    FormFieldValidator<num?>? validator,
-    AutovalidateMode? autovalidateMode,
     num? initialValue,
     ValueChanged<num?>? onSubmitted,
-    FormeFieldSetter<num?>? onSaved,
     required String name,
     bool readOnly = false,
     FormeNumberFieldModel? model,
-    FormeSimpleErrorChanged<num?, FormeNumberFieldModel>? onErrorChanged,
-    FormeSimpleValueFieldFocusChanged<num?, FormeNumberFieldModel>?
-        onFocusChanged,
-    FormeSimpleValueFieldInitialed<num?, FormeNumberFieldModel>? onInitialed,
     Key? key,
     FormeDecoratorBuilder<num?>? decoratorBuilder,
     InputDecoration? decoration,
     int? maxLines = 1,
-    FormeAsyncValidateConfiguration? asyncValidateConfiguration,
-    FormeAsyncValidator<num?>? asyncValidator,
+    FormeValueFieldListener<num?,
+            FormeValueFieldController<num?, FormeNumberFieldModel>>?
+        listener,
   }) : super(
-          asyncValidator: asyncValidator,
-          asyncValidateConfiguration: asyncValidateConfiguration,
-          onInitialed: onInitialed,
+          listener: listener,
           decoratorBuilder: decoratorBuilder,
-          onFocusChanged: onFocusChanged,
-          onErrorChanged: onErrorChanged,
           key: key,
           model:
               (model ?? FormeNumberFieldModel()).copyWith(FormeNumberFieldModel(
@@ -40,11 +29,7 @@ class FormeNumberField extends ValueField<num?, FormeNumberFieldModel> {
           )),
           readOnly: readOnly,
           name: name,
-          onSaved: onSaved,
-          onValueChanged: onValueChanged,
-          validator: validator,
           initialValue: initialValue,
-          autovalidateMode: autovalidateMode,
           builder: (state) {
             bool readOnly = state.readOnly;
             FocusNode focusNode = state.focusNode;

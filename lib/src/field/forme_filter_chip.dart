@@ -57,44 +57,28 @@ class FormeFilterChip<T extends Object>
     extends ValueField<List<T>, FormeFilterChipModel<T>> {
   FormeFilterChip({
     List<T>? initialValue,
-    AutovalidateMode? autovalidateMode,
-    FormFieldValidator<List<T>>? validator,
-    FormeSimpleValueChanged<List<T>, FormeFilterChipModel<T>>? onValueChanged,
-    FormeFieldSetter<List<T>>? onSaved,
     required String name,
     bool readOnly = false,
     required List<FormeChipItem<T>>? items,
     FormeFilterChipModel<T>? model,
-    FormeSimpleErrorChanged<List<T>, FormeFilterChipModel<T>>? onErrorChanged,
-    FormeSimpleValueFieldFocusChanged<List<T>, FormeFilterChipModel<T>>?
-        onFocusChanged,
-    FormeSimpleValueFieldInitialed<List<T>, FormeFilterChipModel<T>>?
-        onInitialed,
     Key? key,
     FormeDecoratorBuilder<List<T>>? decoratorBuilder,
     InputDecoration? decoration,
-    FormeAsyncValidateConfiguration? asyncValidateConfiguration,
-    FormeAsyncValidator<List<T>>? asyncValidator,
+    FormeValueFieldListener<List<T>,
+            FormeValueFieldController<List<T>, FormeFilterChipModel<T>>>?
+        listener,
   }) : super(
-          asyncValidator: asyncValidator,
-          asyncValidateConfiguration: asyncValidateConfiguration,
-          onInitialed: onInitialed,
+          listener: listener,
           decoratorBuilder: decoratorBuilder ??
               (decoration == null
                   ? null
                   : FormeInputDecoratorBuilder(decoration: decoration)),
           key: key,
-          onFocusChanged: onFocusChanged,
           model: (model ?? FormeFilterChipModel<T>())
               .copyWith(FormeFilterChipModel<T>(items: items)),
           readOnly: readOnly,
           name: name,
-          validator: validator,
-          onValueChanged: onValueChanged,
-          onSaved: onSaved,
-          autovalidateMode: autovalidateMode,
           initialValue: initialValue ?? [],
-          onErrorChanged: onErrorChanged,
           builder: (state) {
             bool readOnly = state.readOnly;
             FormeFilterChipModel<T> model = state.model;

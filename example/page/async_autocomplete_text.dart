@@ -15,7 +15,6 @@ class AsyncAutocompleteText
     return Column(
       children: [
         FormeAsnycAutocompleteText<User>(
-          onFocusChanged: (c, f) => print(f),
           optionsBuilder: (v) {
             if (v.text == '') {
               return Future.delayed(Duration.zero, () {
@@ -45,7 +44,9 @@ class AsyncAutocompleteText
                     )),
               )),
           name: name,
-          validator: (v) => v == null ? 'pls select one !' : null,
+          listener: FormeValueFieldListener(
+            onValidate: FormeValidates.notNull(errorText: 'pls select one!'),
+          ),
         ),
         Padding(
           padding: EdgeInsets.only(top: 250),

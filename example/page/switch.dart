@@ -9,10 +9,12 @@ class SwitchPage extends BasePage<bool, FormeSingleSwitchModel> {
       children: [
         FormeSingleSwitch(
           model: FormeSingleSwitchModel(),
-          autovalidateMode: AutovalidateMode.onUserInteraction,
           name: name,
-          validator: (value) =>
-              !value! ? 'you must accept before continue!' : null,
+          listener: FormeValueFieldListener(
+            autovalidateMode: AutovalidateMode.onUserInteraction,
+            onValidate: FormeValidates.equals(true,
+                errorText: 'you must accept before continue!'),
+          ),
         ),
         Wrap(
           children: [

@@ -11,15 +11,17 @@ class FilterChipFieldPage extends BasePage<List<String>, FormeFilterChipModel> {
           FormeFilterChip<String>(
             decoratorBuilder: FormeInputDecoratorBuilder(
                 decoration: InputDecoration(labelText: 'Filter Chip')),
-            autovalidateMode: AutovalidateMode.onUserInteraction,
             name: name,
             items: FormeUtils.toFormeChipItems(['flutter', 'android', 'iOS']),
             model: FormeFilterChipModel(
               exceedCallback: () =>
                   showError(context, 'you can select only  one item!'),
             ),
-            validator: (value) =>
-                value!.length < 2 ? 'select at least two items!' : null,
+            listener: FormeValueFieldListener(
+              onValidate: FormeValidates.size(
+                  min: 2, errorText: 'select at least two items!'),
+              autovalidateMode: AutovalidateMode.onUserInteraction,
+            ),
           ),
           Wrap(
             children: [

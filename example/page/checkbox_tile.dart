@@ -33,9 +33,11 @@ class CheckboxTileFieldPage
           ],
           type: FormeListTileType.Checkbox,
           model: FormeListTileModel<String>(),
-          autovalidateMode: AutovalidateMode.onUserInteraction,
+          listener: FormeValueFieldListener(
+            onValidate: FormeValidates.notEmpty(errorText: 'pls select one!'),
+            autovalidateMode: AutovalidateMode.onUserInteraction,
+          ),
           name: name,
-          validator: (value) => value!.isEmpty ? 'select one item!' : null,
         ),
         Wrap(
           children: [

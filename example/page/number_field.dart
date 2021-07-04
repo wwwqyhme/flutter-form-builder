@@ -8,16 +8,19 @@ class NumberFieldPage extends BasePage<num?, FormeNumberFieldModel> {
     return Column(
       children: [
         FormeNumberField(
-          autovalidateMode: AutovalidateMode.onUserInteraction,
           name: name,
           model: FormeNumberFieldModel(
               max: 99,
               textFieldModel: FormeTextFieldModel(
                 decoration: InputDecoration(labelText: 'Number'),
               )),
-          validator: (value) => value == null || value < 50
-              ? 'value must bigger than 50,current value is $value'
-              : null,
+          listener: FormeValueFieldListener(
+            onValidate: FormeValidates.all([
+              FormeValidates.notNull(),
+              FormeValidates.min(50),
+            ], errorText: 'value must bigger than 50'),
+            autovalidateMode: AutovalidateMode.onUserInteraction,
+          ),
         ),
         Wrap(
           children: [

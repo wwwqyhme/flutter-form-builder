@@ -5,28 +5,18 @@ class FormeChoiceChip<T extends Object>
     extends ValueField<T?, FormeChoiceChipModel<T>> {
   FormeChoiceChip({
     T? initialValue,
-    AutovalidateMode? autovalidateMode,
-    FormFieldValidator<T?>? validator,
-    FormeSimpleValueChanged<T?, FormeChoiceChipModel<T>>? onValueChanged,
-    FormeFieldSetter<T?>? onSaved,
     required String name,
     bool readOnly = false,
     required List<FormeChipItem<T>>? items,
     FormeChoiceChipModel<T>? model,
-    FormeSimpleErrorChanged<T?, FormeChoiceChipModel<T>>? onErrorChanged,
-    FormeSimpleValueFieldFocusChanged<T?, FormeChoiceChipModel<T>>?
-        onFocusChanged,
-    FormeSimpleValueFieldInitialed<T?, FormeChoiceChipModel<T>>? onInitialed,
     Key? key,
     FormeDecoratorBuilder<T?>? decoratorBuilder,
     InputDecoration? decoration,
-    Duration? asyncValidatorDebounce,
-    FormeAsyncValidator<T?>? asyncValidator,
-    FormeAsyncValidateConfiguration? asyncValidateConfiguration,
+    FormeValueFieldListener<T,
+            FormeValueFieldController<T?, FormeChoiceChipModel<T>>>?
+        listener,
   }) : super(
-          asyncValidator: asyncValidator,
-          asyncValidateConfiguration: asyncValidateConfiguration,
-          onInitialed: onInitialed,
+          listener: listener,
           key: key,
           decoratorBuilder: decoratorBuilder ??
               (decoration == null
@@ -38,13 +28,7 @@ class FormeChoiceChip<T extends Object>
           )),
           readOnly: readOnly,
           name: name,
-          validator: validator,
-          onValueChanged: onValueChanged,
-          onSaved: onSaved,
-          autovalidateMode: autovalidateMode,
           initialValue: initialValue,
-          onErrorChanged: onErrorChanged,
-          onFocusChanged: onFocusChanged,
           builder: (state) {
             bool readOnly = state.readOnly;
             FormeChoiceChipModel<T> model = state.model;

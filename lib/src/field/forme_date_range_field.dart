@@ -6,34 +6,21 @@ import 'package:forme/forme.dart';
 class FormeDateRangeField
     extends ValueField<DateTimeRange?, FormeDateRangeFieldModel> {
   FormeDateRangeField({
-    FormeSimpleValueChanged<DateTimeRange?, FormeDateRangeFieldModel>?
-        onValueChanged,
-    FormFieldValidator<DateTimeRange?>? validator,
-    AutovalidateMode? autovalidateMode,
     DateTimeRange? initialValue,
-    FormeFieldSetter<DateTimeRange?>? onSaved,
     required String name,
     bool visible = true,
     FormeDateRangeFieldModel? model,
-    FormeSimpleErrorChanged<DateTimeRange?, FormeDateRangeFieldModel>?
-        onErrorChanged,
-    FormeSimpleValueFieldFocusChanged<DateTimeRange?, FormeDateRangeFieldModel>?
-        onFocusChanged,
-    FormeSimpleValueFieldInitialed<DateTimeRange?, FormeDateRangeFieldModel>?
-        onInitialed,
     Key? key,
     FormeDecoratorBuilder<DateTimeRange?>? decoratorBuilder,
     InputDecoration? decoration,
     int? maxLines = 1,
-    Duration? asyncValidatorDebounce,
-    FormeAsyncValidator<DateTimeRange?>? asyncValidator,
-    FormeAsyncValidateConfiguration? asyncValidateConfiguration,
+    FormeValueFieldListener<
+            DateTimeRange?,
+            FormeValueFieldController<DateTimeRange?,
+                FormeDateRangeFieldModel>>?
+        listener,
   }) : super(
-          asyncValidator: asyncValidator,
-          asyncValidateConfiguration: asyncValidateConfiguration,
-          onInitialed: onInitialed,
           decoratorBuilder: decoratorBuilder,
-          onFocusChanged: onFocusChanged,
           key: key,
           model: (model ?? FormeDateRangeFieldModel())
               .copyWith(FormeDateRangeFieldModel(
@@ -43,12 +30,7 @@ class FormeDateRangeField
             ),
           )),
           name: name,
-          onValueChanged: onValueChanged,
-          onSaved: onSaved,
-          validator: validator,
           initialValue: initialValue,
-          autovalidateMode: autovalidateMode,
-          onErrorChanged: onErrorChanged,
           builder: (state) {
             bool readOnly = state.readOnly;
             FocusNode focusNode = state.focusNode;

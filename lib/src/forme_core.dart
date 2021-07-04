@@ -5,26 +5,6 @@ import 'package:flutter/widgets.dart';
 import 'package:forme/forme.dart';
 import 'package:forme/src/widget/forme_mounted_value_notifier.dart';
 
-///used to compare two values
-typedef FormeValueComparator<T> = bool Function(T oldValue, T newValue);
-
-typedef FormeFieldInitialed<K extends FormeFieldController> = void Function(
-    K field);
-
-/// triggered when form field's value changed
-typedef FormeValueChanged<T, K extends FormeValueFieldController> = void
-    Function(K, T newValue);
-
-/// triggered when form field's focus changed
-typedef FormeFocusChanged<K extends FormeFieldController> = void Function(
-  K field,
-  bool hasFocus,
-);
-
-/// listen field errorText change
-typedef FormeErrorChanged<K extends FormeValueFieldController> = void Function(
-    K field, FormeValidateError? error);
-
 /// form key is a global key
 class FormeKey extends LabeledGlobalKey<State> implements FormeController {
   FormeKey({String? debugLabel}) : super(debugLabel);
@@ -132,7 +112,7 @@ class Forme extends StatefulWidget {
   final Map<String, dynamic> initialValue;
 
   /// used to listen field's validate error changed
-  final FormeErrorChanged? onErrorChanged;
+  final FormeValueChanged? onErrorChanged;
 
   final WillPopCallback? onWillPop;
 
@@ -223,11 +203,6 @@ class _FormeState extends State<Forme> {
     });
     if (state is BaseValueFieldState) {
       state._valueNotifier.addListener(() {
-        states.forEach((element) {
-          if (element is BaseValueFieldState) {
-            element._onFormeValueChanged(state.name);
-          }
-        });
         if (widget.onValueChanged != null)
           widget.onValueChanged!(state.controller, state._valueNotifier.value);
       });
@@ -332,7 +307,7 @@ mixin AbstractFieldState<T extends StatefulField<E, K>, E extends FormeModel,
     this.controller = createFormeFieldController();
     _formScope.registerField(this);
     afterInitiation();
-    widget.onInitialed?.call(this.controller);
+    widget.listener?.onInitialed?.call(this.controller);
   }
 
   /// create a [FormeFieldController]
@@ -362,8 +337,8 @@ mixin AbstractFieldState<T extends StatefulField<E, K>, E extends FormeModel,
   void afterInitiation() {
     _focusNotifier.addListener(() {
       onFocusChanged(focusNode.hasFocus);
-      if (widget.onFocusChanged != null)
-        widget.onFocusChanged!(this.controller, focusNode.hasFocus);
+      widget.listener?.onFocusChanged
+          ?.call(this.controller, focusNode.hasFocus);
     });
   }
 
@@ -516,7 +491,6 @@ abstract class BaseValueFieldState<T, E extends FormeModel,
   FormeValidateError? _error;
   Timer? _asyncValidatorDebounce;
   bool _ignoreValidate = false;
-  bool _lastValidateIsAsync = false;
   bool _hasInteractedByUser = false;
   int _validateGen = 0;
   late T _value;
@@ -524,8 +498,9 @@ abstract class BaseValueFieldState<T, E extends FormeModel,
   T get value => _value;
   T? get oldValue => _oldValue;
 
-  bool get _hasValidator =>
-      widget.validator != null || widget.asyncValidator != null;
+  bool get _hasValidator => widget.listener?.onValidate != null;
+  bool get _hasAsyncValidator => widget.listener?.onAsyncValidate != null;
+  bool get _hasAnyValidator => _hasValidator || _hasAsyncValidator;
 
   String? get errorText => _formScope.quietlyValidate ? null : _error?.text;
 
@@ -557,37 +532,17 @@ abstract class BaseValueFieldState<T, E extends FormeModel,
     });
 
     _valueNotifier.addListener(() {
+      _ignoreValidate = false;
       onValueChanged(_valueNotifier.value);
-      if (widget.onValueChanged != null)
-        widget.onValueChanged!(this.controller, _valueNotifier.value);
+      widget.listener?.onValueChanged
+          ?.call(this.controller, _valueNotifier.value);
     });
 
     _errorNotifier.addListener(() {
       onErrorChanged(_errorNotifier.value);
-      if (widget.onErrorChanged != null)
-        widget.onErrorChanged!(this.controller, _errorNotifier.value);
+      widget.listener?.onErrorChanged
+          ?.call(this.controller, _errorNotifier.value);
     });
-  }
-
-  void _allowValidate() {
-    _ignoreValidate = false;
-    if (!_lastValidateIsAsync) return;
-    setState(() {});
-  }
-
-  _onFormeValueChanged(String name) {
-    if (widget.asyncValidateConfiguration.mode ==
-        FormeAsyncValidateMode.onFieldValueChanged) {
-      if (name == this.name) {
-        _allowValidate();
-      }
-    } else if (widget.asyncValidateConfiguration.mode ==
-        FormeAsyncValidateMode.onFormeValueChanged) {
-      if (widget.asyncValidateConfiguration.names.contains(name) ||
-          name == this.name) {
-        _allowValidate();
-      }
-    }
   }
 
   void didChange(T newValue) {
@@ -619,7 +574,6 @@ abstract class BaseValueFieldState<T, E extends FormeModel,
       _error = null;
       _hasInteractedByUser = false;
       _ignoreValidate = false;
-      _lastValidateIsAsync = false;
       _oldValue = oldValue;
       _value = initialValue;
     });
@@ -659,10 +613,11 @@ abstract class BaseValueFieldState<T, E extends FormeModel,
   @override
   @mustCallSuper
   Widget build(BuildContext context) {
-    bool needValidate = _hasValidator &&
+    bool needValidate = _hasAnyValidator &&
         widget.enabled &&
-        ((widget.autovalidateMode == AutovalidateMode.always) ||
-            (widget.autovalidateMode == AutovalidateMode.onUserInteraction &&
+        ((widget.listener!.autovalidateMode == AutovalidateMode.always) ||
+            (widget.listener!.autovalidateMode ==
+                    AutovalidateMode.onUserInteraction &&
                 _hasInteractedByUser));
 
     if (needValidate) {
@@ -701,23 +656,21 @@ abstract class BaseValueFieldState<T, E extends FormeModel,
       });
     }
 
-    if (widget.validator != null) {
-      _lastValidateIsAsync = false;
-      String? errorText = widget.validator!(value);
-      if (errorText != null || widget.asyncValidator == null) {
+    if (_hasValidator) {
+      String? errorText = widget.listener!.onValidate!(controller, value);
+      if (errorText != null || !_hasAsyncValidator) {
         notifyError(errorText, FormeValidateState.invalid);
         return;
       }
     }
-    if (widget.asyncValidator != null) {
-      _lastValidateIsAsync = true;
+    if (_hasAsyncValidator) {
       notifyError(null, FormeValidateState.validating);
       _asyncValidatorDebounce?.cancel();
       _asyncValidatorDebounce =
-          Timer(widget.asyncValidateConfiguration.debounce, () {
+          Timer(widget.listener!.asyncValidatorDebounce, () {
         FormeValidateState? state;
         String? errorText;
-        widget.asyncValidator!(value).then((text) {
+        widget.listener!.onAsyncValidate!(controller, value).then((text) {
           state = text == null
               ? FormeValidateState.valid
               : FormeValidateState.invalid;
@@ -728,8 +681,7 @@ abstract class BaseValueFieldState<T, E extends FormeModel,
             setState(() {
               _error = FormeValidateError(
                   errorText, state == null ? FormeValidateState.fail : state!);
-              if (widget.asyncValidateConfiguration.mode != null)
-                _ignoreValidate = true;
+              _ignoreValidate = true;
             });
             _errorNotifier.value = _error;
           }
@@ -777,21 +729,21 @@ abstract class BaseValueFieldState<T, E extends FormeModel,
       }
     }
 
-    if (widget.validator != null) {
-      String? errorText = widget.validator!(value);
-      if (errorText != null || widget.asyncValidator == null) {
+    if (_hasValidator) {
+      String? errorText = widget.listener!.onValidate!(controller, value);
+      if (errorText != null || !_hasAsyncValidator) {
         notify(errorText, FormeValidateState.invalid);
         return Future.delayed(Duration.zero, () => errorText);
       }
     }
 
-    if (widget.asyncValidator != null) {
+    if (_hasAsyncValidator) {
       if (!quietly) {
         notify(null, FormeValidateState.validating);
       }
       FormeValidateState? state;
       String? errorText;
-      return widget.asyncValidator!(value).then((text) {
+      return widget.listener!.onAsyncValidate!(controller, value).then((text) {
         state = text == null
             ? FormeValidateState.valid
             : FormeValidateState.invalid;
@@ -807,7 +759,7 @@ abstract class BaseValueFieldState<T, E extends FormeModel,
   }
 
   void save() {
-    widget.onSaved?.call(value);
+    widget.listener?.onSaved?.call(controller, value);
   }
 }
 

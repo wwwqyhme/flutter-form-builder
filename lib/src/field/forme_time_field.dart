@@ -6,33 +6,21 @@ typedef FormeTimeFieldFormatter = String Function(TimeOfDay timeOfDay);
 /// used to pick time only
 class FormeTimeField extends ValueField<TimeOfDay?, FormeTimeFieldModel> {
   FormeTimeField({
-    FormeSimpleValueChanged<TimeOfDay?, FormeTimeFieldModel>? onValueChanged,
-    FormFieldValidator<TimeOfDay?>? validator,
-    AutovalidateMode? autovalidateMode,
     TimeOfDay? initialValue,
-    FormeFieldSetter<TimeOfDay?>? onSaved,
     required String name,
     bool readOnly = false,
     FormeTimeFieldModel? model,
-    FormeSimpleErrorChanged<TimeOfDay?, FormeTimeFieldModel>? onErrorChanged,
-    FormeSimpleValueFieldFocusChanged<TimeOfDay?, FormeTimeFieldModel>?
-        onFocusChanged,
-    FormeSimpleValueFieldInitialed<TimeOfDay?, FormeTimeFieldModel>?
-        onInitialed,
     Key? key,
     FormeDecoratorBuilder<TimeOfDay>? decoratorBuilder,
     InputDecoration? decoration,
     int? maxLines = 1,
-    FormeAsyncValidateConfiguration? asyncValidateConfiguration,
-    FormeAsyncValidator<TimeOfDay?>? asyncValidator,
+    FormeValueFieldListener<TimeOfDay?,
+            FormeValueFieldController<TimeOfDay?, FormeTimeFieldModel>>?
+        listener,
   }) : super(
-          asyncValidator: asyncValidator,
-          asyncValidateConfiguration: asyncValidateConfiguration,
-          onInitialed: onInitialed,
+          listener: listener,
           key: key,
           decoratorBuilder: decoratorBuilder,
-          onFocusChanged: onFocusChanged,
-          onErrorChanged: onErrorChanged,
           model: model ??
               FormeTimeFieldModel(
                 textFieldModel: FormeTextFieldModel(
@@ -41,11 +29,7 @@ class FormeTimeField extends ValueField<TimeOfDay?, FormeTimeFieldModel> {
                 ),
               ),
           name: name,
-          onValueChanged: onValueChanged,
-          onSaved: onSaved,
-          validator: validator,
           initialValue: initialValue,
-          autovalidateMode: autovalidateMode,
           builder: (state) {
             bool readOnly = state.readOnly;
             FocusNode focusNode = state.focusNode;

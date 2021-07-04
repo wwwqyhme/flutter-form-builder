@@ -3,37 +3,22 @@ import 'package:forme/forme.dart';
 
 class FormeSingleSwitch extends ValueField<bool, FormeSingleSwitchModel> {
   FormeSingleSwitch({
-    FormeSimpleValueChanged<bool, FormeSingleSwitchModel>? onValueChanged,
-    FormFieldValidator<bool>? validator,
-    AutovalidateMode? autovalidateMode,
     bool initialValue = false,
-    FormeFieldSetter<bool>? onSaved,
     required String name,
     bool readOnly = false,
     Widget? label,
     FormeSingleSwitchModel? model,
-    FormeSimpleErrorChanged<bool, FormeSingleSwitchModel>? onErrorChanged,
-    FormeSimpleValueFieldFocusChanged<bool, FormeSingleSwitchModel>?
-        onFocusChanged,
-    FormeSimpleValueFieldInitialed<bool, FormeSingleSwitchModel>? onInitialed,
     Key? key,
-    FormeAsyncValidateConfiguration? asyncValidateConfiguration,
-    FormeAsyncValidator<bool>? asyncValidator,
+    FormeValueFieldListener<bool,
+            FormeValueFieldController<bool, FormeSingleSwitchModel>>?
+        listener,
   }) : super(
-          asyncValidator: asyncValidator,
-          asyncValidateConfiguration: asyncValidateConfiguration,
-          onInitialed: onInitialed,
+          listener: listener,
           key: key,
-          onFocusChanged: onFocusChanged,
-          onErrorChanged: onErrorChanged,
           model: model ?? FormeSingleSwitchModel(),
           readOnly: readOnly,
           name: name,
-          onValueChanged: onValueChanged,
-          onSaved: onSaved,
-          autovalidateMode: autovalidateMode,
           initialValue: initialValue,
-          validator: validator,
           builder: (state) {
             bool readOnly = state.readOnly;
             bool value = state.value;

@@ -33,9 +33,11 @@ class SwitchTileFieldPage
           ],
           type: FormeListTileType.Switch,
           model: FormeListTileModel<String>(),
-          autovalidateMode: AutovalidateMode.onUserInteraction,
           name: name,
-          validator: (value) => value!.isEmpty ? 'select one item!' : null,
+          listener: FormeValueFieldListener(
+            autovalidateMode: AutovalidateMode.onUserInteraction,
+            onValidate: FormeValidates.notEmpty(errorText: 'select one item!'),
+          ),
         ),
         Wrap(
           children: [

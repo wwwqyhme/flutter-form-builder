@@ -9,13 +9,16 @@ class DateRangeFieldPage
     return Column(
       children: [
         FormeDateRangeField(
-          autovalidateMode: AutovalidateMode.onUserInteraction,
           name: name,
           model: FormeDateRangeFieldModel(
               textFieldModel: FormeTextFieldModel(
             decoration: InputDecoration(labelText: 'DateRange'),
           )),
-          validator: (value) => value == null ? 'select a date range!' : null,
+          listener: FormeValueFieldListener(
+            onValidate:
+                FormeValidates.notNull(errorText: 'pls select a date range!'),
+            autovalidateMode: AutovalidateMode.onUserInteraction,
+          ),
         ),
         Wrap(
           children: [

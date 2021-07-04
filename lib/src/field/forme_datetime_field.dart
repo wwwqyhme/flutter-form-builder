@@ -10,33 +10,21 @@ enum FormeDateTimeFieldType { Date, DateTime }
 class FormeDateTimeField
     extends ValueField<DateTime?, FormeDateTimeFieldModel> {
   FormeDateTimeField({
-    FormeSimpleValueChanged<DateTime?, FormeDateTimeFieldModel>? onValueChanged,
-    FormFieldValidator<DateTime?>? validator,
-    AutovalidateMode? autovalidateMode,
     DateTime? initialValue,
-    FormeFieldSetter<DateTime?>? onSaved,
     required String name,
     bool readOnly = false,
     FormeDateTimeFieldModel? model,
-    FormeSimpleErrorChanged<DateTime?, FormeDateTimeFieldModel>? onErrorChanged,
-    FormeSimpleValueFieldFocusChanged<DateTime?, FormeDateTimeFieldModel>?
-        onFocusChanged,
-    FormeSimpleValueFieldInitialed<DateTime?, FormeDateTimeFieldModel>?
-        onInitialed,
     Key? key,
     FormeDecoratorBuilder<DateTime?>? decoratorBuilder,
     InputDecoration? decoration,
     int? maxLines = 1,
-    FormeAsyncValidateConfiguration? asyncValidateConfiguration,
-    FormeAsyncValidator<DateTime?>? asyncValidator,
+    FormeValueFieldListener<DateTime?,
+            FormeValueFieldController<DateTime?, FormeDateTimeFieldModel>>?
+        listener,
   }) : super(
-          asyncValidator: asyncValidator,
-          asyncValidateConfiguration: asyncValidateConfiguration,
-          onInitialed: onInitialed,
+          listener: listener,
           decoratorBuilder: decoratorBuilder,
           key: key,
-          onFocusChanged: onFocusChanged,
-          onErrorChanged: onErrorChanged,
           model: (model ?? FormeDateTimeFieldModel())
               .copyWith(FormeDateTimeFieldModel(
             type: FormeDateTimeFieldType.Date,
@@ -46,11 +34,7 @@ class FormeDateTimeField
             ),
           )),
           name: name,
-          onValueChanged: onValueChanged,
-          onSaved: onSaved,
-          validator: validator,
           initialValue: initialValue,
-          autovalidateMode: autovalidateMode,
           builder: (state) {
             bool readOnly = state.readOnly;
             FocusNode focusNode = state.focusNode;

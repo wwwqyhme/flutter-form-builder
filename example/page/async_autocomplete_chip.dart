@@ -92,7 +92,9 @@ class AsyncAutocompleteChip extends BasePage<List<AppProfile>,
             },
           ),
           name: name,
-          validator: (v) => v!.isEmpty ? 'pls select one !' : null,
+          listener: FormeValueFieldListener(
+            onValidate: FormeValidates.notEmpty(errorText: 'pls select one!'),
+          ),
         ),
         Padding(
           padding: EdgeInsets.only(top: 250),
