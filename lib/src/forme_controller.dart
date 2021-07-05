@@ -33,13 +33,9 @@ abstract class FormeController {
   ///
   /// if [Forme.quietlyValidate] is true, this method will not display default error
   ///
-  /// **if [quietly] is true , this method will not update and display error though [Forme.quietlyValidate] is false**
+  /// if [quietly] is true , this method will not update and display error though [Forme.quietlyValidate] is false
   ///
-  /// **if [notify] is false, error will not be notified
-  ///  **
-  ///
-  /// key is [FormeValueFieldController]
-  /// value is errorMsg
+  /// **this method is depends on [Future.wait] and eagerError is true**
   Future<Map<FormeValueFieldController, String>> validate(
       {bool quietly = false});
 
@@ -132,7 +128,7 @@ abstract class FormeFieldController<E extends FormeModel> {
   /// m.update(FormeTextFieldModel(inputDecoration:InputDecoration(labelStyle:TextStyle(fontSize:20))));
   /// ```
   ///
-  /// **update a null value will not work! if you update some attributes to null,use [set model] instead**
+  /// **update a null value will not work! if you want to set some attributes to null,use [set model] instead**
   void updateModel(E model);
 
   /// make current field visible in viewport
@@ -143,8 +139,6 @@ abstract class FormeFieldController<E extends FormeModel> {
       double? alignment});
 
   /// focus listenable
-  ///
-  /// it's lifecycle is same as field
   ValueListenable<bool> get focusListenable;
 
   /// readOnly listenable
@@ -174,8 +168,6 @@ abstract class FormeValueFieldController<T, E extends FormeModel>
   /// validate field , return errorText
   ///
   /// if [quietly] ,will not rebuild field and update and display error Text
-  ///
-  /// if [notify] , will trigger error listenable
   Future<String?>? validate({bool quietly = false});
 
   /// reset field
@@ -188,9 +180,10 @@ abstract class FormeValueFieldController<T, E extends FormeModel>
   ///
   /// error is null means this field has not validated yet
   ///
-  /// if error is not null and [FormeValidateError.text] is null ,means field is valid
-  ///
-  /// if error is not null and [FormeValidateError.text] is not null ,means is invalid
+  /// 1. [FormeValidateError.state] is `valid` , means field passed validation
+  /// 2. [FormeValidateError.state] is `invalid` , means field not passed validation , [FormeValidateError.text] is not null
+  /// 3. [FormeValidateError.state] is `validating` , means an async validation is in progress
+  /// 4. [FormeValidateError.state] is `fail` , means an error is occurred when performing an async validation , but [Form ValidateError] will not include this error , you must handle it by yourself
   ///
   /// **you still can get error text even though [Forme.quietlyValidate] is true**
   ///

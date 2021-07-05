@@ -144,7 +144,6 @@ class _FormeState extends State<Forme> {
   bool? _readOnly;
   bool? _quietlyValidate;
 
-  @protected
   int gen = 0;
 
   bool get readOnly => _readOnly ?? widget.readOnly;
@@ -545,6 +544,7 @@ abstract class BaseValueFieldState<T, E extends FormeModel,
     });
   }
 
+  @mustCallSuper
   void didChange(T newValue) {
     T oldValue = _value;
     if (!compare(oldValue, newValue)) {
@@ -567,6 +567,7 @@ abstract class BaseValueFieldState<T, E extends FormeModel,
     }
   }
 
+  @mustCallSuper
   void reset() {
     T oldValue = _value;
     setState(() {

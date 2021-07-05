@@ -9,15 +9,16 @@
 
 ## migrate from 2.1.x to 2.5.0
 
-Forme 2.5.0 has lots of changes 
-
-1. support `asyncValidator` on `ValueField`
-2. `validate` from `FormeValueFieldController` will return `Future<String?>?` instead of `String?`
-3. `validate` from `FormeController` will return `Future<Map<FormeValueFieldController>,String>` instead of `Map<FormeValueFieldController,String>`
-4. `ValueField` is not a subclass of `FormField` any more 
-5. you can easily detect whether a `ValueField`'s value is nullable from `ValueField`'s generic type, eg `ValueField<String>`'s value is a nonnull String , `ValueField<String?>`'s value is a nullable String
-6. remove `fieldValueListenable` from `FormeFieldController`
-7. remove `lazyFieldValueListenable` from `FormeKey` 
+1. remove `onValueChanged`,`onErrorChanged`,`onFocusChanged`,`onInitialed`,`validator`,`autovalidateMode` on `Field` , they are moved to `FormeFieldListener` , `validator` is renamed to `onValidate` 
+2. support `onAsyncValidate` and `asyncValidatorDebounce` on `FormeValueFieldListener` to support async validate
+3. `validator` is renamed to `onValidate`
+4. `onValidate` accept two params , the first is current controller , second is current value
+5. remove `fieldListenable` from `FormeFieldController`
+6. remove `lazyFieldListenable` from `FormeKey`
+7. `ValueField` is not a `FormField` any more
+8. you can create a nonnull or nullable `ValueField` by `ValueField`'s generic type , eg:`ValueField<String>` is nonnull , but `ValueField<String?>` is nullable
+9. remove `clearValue` from `FormeValueFieldController`
+10. support `comparator` on `ValueField` , which used to compare values before update field's value
 
 ## Simple Usage
 
@@ -79,7 +80,7 @@ Forme is a form widget, but forme is not wrapped in a `Form`  , because I don't 
 | name | true | `String` | field's id,**should be unique in form** |
 | builder | true | `FieldContentBuilder` | build field content|
 | readOnly | false | `bool` | whether field should be readOnly,default is `false` |
-| model | true | `FormeModel` | `FormeModel` used to provider widget render data |
+| model | true | `FormeModel` | `FormeModel` used to provide widget render data |
 | listener | false | `FormeFieldListener` |  user to listen `onInitialed`,`onFocusChanged`|
 
 
@@ -88,7 +89,7 @@ Forme is a form widget, but forme is not wrapped in a `Form`  , because I don't 
 | Attribute |  Required  | Type | Description  |
 | --- | --- | --- | --- |
 | decoratorBuilder | false | `FormeDecoratorBuilder` | used to decorate a field |
-| listener | false | `FormeValueFieldListenable` |  user to listen `onValueChanged`,`onErrorChanged`,`onValidate`,`onAsyncValidate`,'onSaved'|
+| listener | false | `FormeValueFieldListenable` |  user to listen `onValueChanged`,`onErrorChanged`,`onValidate`,`onAsyncValidate`,`onSaved`|
 
 ### currently supported fields
 
@@ -276,14 +277,14 @@ when you use validators from `FormeValidates` , you must specific at least one e
 
 ### async validated
 
-async validator is supported after Forme 2.2.0 , you can specific an asyncValidator on `ValueField` , the unique difference
-between `validator` and `asyncValidator` is `asyncValidator` return a `Future` and `validator` return a `String`
+async validator is supported after Forme 2.5.0 , you can specific an `onAsyncValidate` on `ValueField`'s listener , the unique difference
+between `onValidate` and `onAsyncValidate` is `onAsyncValidate` return a `Future<String>` and `onValidate` return a `String`
 
 #### when perform a asyncValidator
 
-if `FormField.autovalidateMode` is `AutovalidateMode.disabled` , asyncValidator will never be performed unless you call `validate` from `FormeValueFieldController` manually.
+if `ValueField.autovalidateMode` is `AutovalidateMode.disabled` , asyncValidator will never be performed unless you call `validate` from `FormeValueFieldController` manually.
 
-if you specific both `validator` and `asyncValidator` , `asyncValidator` will only be performed after `validator` passed.
+if you specific both `onValidate` and `onAsyncValidate` , `onAsyncValidate` will only be performed after `onValidate` return null.
 
 **after successful performed an async validator , async validator will not performed any more until field's value changed**
 
@@ -331,7 +332,7 @@ Map<String, dynamic> data = formeKey.data;
 
 ### validate
 
-**since 2.2.0 , this method will return a Future ranther than a Map** 
+**since 2.5.0 , this method will return a Future ranther than a Map** 
 
 ``` Dart
 Future<Map<FormeValueFieldController,String>> errorsFuture = formKey.validate({bool quietly = false});
@@ -481,7 +482,7 @@ valueField.reset();
 
 ### validate field
 
-**since 2.2.0 , this method will return a Future ranther than a String** 
+**since 2.5.0 , this method will return a Future ranther than a String** 
 
 ``` Dart
 Future<String?>? errorFuture = valueField.validate({bool quietly = false});
