@@ -166,9 +166,9 @@ class FormeValidates {
       Uri? uri = Uri.tryParse(v);
       if (uri == null) return errorText;
 
-      if (schema != null && schema.length > 0 && !uri.isScheme(schema))
+      if (schema != null && schema.isNotEmpty && !uri.isScheme(schema))
         return errorText;
-      if (host != null && host.length > 0 && uri.host != host) return errorText;
+      if (host != null && host.isNotEmpty && uri.host != host) return errorText;
       if (port != null && uri.port != port) return errorText;
     };
   }

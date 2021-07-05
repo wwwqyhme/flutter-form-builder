@@ -763,7 +763,6 @@ abstract class BaseValueFieldState<T, E extends FormeModel,
         }
       });
     }
-    return null;
   }
 
   void save() {
@@ -865,7 +864,6 @@ class _FormeController extends FormeController {
                     return future.then((value) =>
                         _FormeValueFieldControllerWithError(controller, value));
                   }
-                  return null;
                 })
                 .where((element) => element != null)
                 .map((e) => e as Future<_FormeValueFieldControllerWithError>),

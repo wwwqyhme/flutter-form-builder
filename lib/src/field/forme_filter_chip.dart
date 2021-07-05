@@ -176,7 +176,7 @@ class _FormeFilterChipState<T extends Object>
     }
     if (current.count != null && current.count! < value.length) {
       List<T> items = List.of(value);
-      setValue(items.sublist(0, current.count!));
+      setValue(items.sublist(0, current.count));
     }
   }
 

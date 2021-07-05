@@ -110,7 +110,7 @@ class _FormeAutocompleteTextState<T extends Object> extends BaseValueFieldState<
       FormeAsyncAutocompleteChipModel<T> current) {
     if (current.max != null && current.max! < value.length) {
       List<T> items = List.of(value);
-      setValue(items.sublist(0, current.max!));
+      setValue(items.sublist(0, current.max));
     }
   }
 

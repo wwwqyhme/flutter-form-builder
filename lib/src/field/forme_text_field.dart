@@ -84,9 +84,8 @@ class _FormeTextFieldState extends BaseValueFieldState<String,
   }
 
   @override
-  void onValueChanged(String? value) {
-    if (textEditingController.text != value)
-      textEditingController.text = value!;
+  void onValueChanged(String value) {
+    if (textEditingController.text != value) textEditingController.text = value;
   }
 
   @override

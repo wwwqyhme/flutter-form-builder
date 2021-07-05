@@ -21,7 +21,7 @@ class TextFieldPage extends BasePage<String, FormeTextFieldModel> {
             }),
             onFocusChanged: (c, m) => print('focused changed , current is $m'),
             onErrorChanged: (field, errorText) {
-              print("validate result: ${errorText?.text}");
+              print(errorText);
             },
             onValueChanged: (c, m) {
               print(

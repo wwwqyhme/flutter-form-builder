@@ -172,6 +172,7 @@ class AsyncAutocompleteChip extends BasePage<List<AppProfile>,
   String get title => 'FormeAutocompleteChip';
 }
 
+@immutable
 class AppProfile {
   final String name;
   final String email;

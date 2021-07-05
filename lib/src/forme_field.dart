@@ -229,3 +229,28 @@ class ValueField<T, E extends FormeModel>
   @override
   ValueFieldState<T, E> createState() => ValueFieldState();
 }
+
+class SimpleValueField<T> extends ValueField<T, FormeEmptyModel> {
+  SimpleValueField({
+    Key? key,
+    required String name,
+    bool readOnly = false,
+    FormeDecoratorBuilder<T>? decoratorBuilder,
+    required FormeFieldWidgetBuilder<ValueFieldState<T, FormeEmptyModel>,
+            FormeEmptyModel>
+        builder,
+    bool enabled = true,
+    required T initialValue,
+    FormeValueFieldListener<T, FormeValueFieldController<T, FormeEmptyModel>>?
+        listener,
+  }) : super(
+            model: FormeEmptyModel(),
+            name: name,
+            readOnly: readOnly,
+            key: key,
+            decoratorBuilder: decoratorBuilder,
+            builder: builder,
+            enabled: enabled,
+            initialValue: initialValue,
+            listener: listener);
+}

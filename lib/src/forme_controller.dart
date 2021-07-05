@@ -350,6 +350,7 @@ abstract class FormeValueFieldControllerDelegate<T, E extends FormeModel>
 /// if error is not null and text is null , means field is valid
 ///
 /// if error is not null and text is not null , means field is not valid
+@immutable
 class FormeValidateError {
   final String? text;
   final FormeValidateState state;
@@ -366,6 +367,8 @@ class FormeValidateError {
   @override
   bool operator ==(Object o) =>
       o is FormeValidateError && o.text == text && o.state == state;
+  @override
+  String toString() => 'state: $state , errorText: $text';
 }
 
 /// used to update a field
@@ -381,14 +384,14 @@ abstract class FormeModel {
   FormeModel copyWith(FormeModel old);
 }
 
-class EmptyStateModel extends FormeModel {
-  EmptyStateModel._();
-  static final EmptyStateModel model = EmptyStateModel._();
-  factory EmptyStateModel() => model;
+class FormeEmptyModel extends FormeModel {
+  FormeEmptyModel._();
+  static final FormeEmptyModel model = FormeEmptyModel._();
+  factory FormeEmptyModel() => model;
 
   @override
   FormeModel copyWith(FormeModel old) {
-    return EmptyStateModel();
+    return FormeEmptyModel();
   }
 }
 
