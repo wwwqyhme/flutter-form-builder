@@ -3,6 +3,14 @@
 [![stars](https://img.shields.io/github/stars/wwwqyhme/forme?style=social)](https://github.com/wwwqyhme/forme)
 [![PUB](https://img.shields.io/pub/v/forme?include_prereleases)](https://pub.dev/packages/forme)
 
+## demo(web)
+
+material_fields  
+[https://wwwqyhme.github.io/forme/](https://wwwqyhme.github.io/forme/)
+
+cupertino_fields  
+[https://wwwqyhme.github.io/forme_cupertino/](https://wwwqyhme.github.io/forme_cupertino/)
+
 ## Screenshot
 
 ![screenshot](https://raw.githubusercontent.com/wwwqyhme/forme/main/forme_2.5.0_screenshot.gif)
