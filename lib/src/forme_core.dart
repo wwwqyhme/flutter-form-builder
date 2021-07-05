@@ -659,7 +659,11 @@ abstract class BaseValueFieldState<T, E extends FormeModel,
     if (_hasValidator) {
       String? errorText = widget.listener!.onValidate!(controller, value);
       if (errorText != null || !_hasAsyncValidator) {
-        notifyError(errorText, FormeValidateState.invalid);
+        notifyError(
+            errorText,
+            errorText == null
+                ? FormeValidateState.valid
+                : FormeValidateState.invalid);
         return;
       }
     }
@@ -732,7 +736,11 @@ abstract class BaseValueFieldState<T, E extends FormeModel,
     if (_hasValidator) {
       String? errorText = widget.listener!.onValidate!(controller, value);
       if (errorText != null || !_hasAsyncValidator) {
-        notify(errorText, FormeValidateState.invalid);
+        notify(
+            errorText,
+            errorText == null
+                ? FormeValidateState.valid
+                : FormeValidateState.invalid);
         return Future.delayed(Duration.zero, () => errorText);
       }
     }
