@@ -1,3 +1,8 @@
+[![CodeFactor](https://www.codefactor.io/repository/github/wwwqyhme/forme/badge)](https://img.shields.io/codefactor/grade/github/wwwqyhme/forme)
+![license](https://img.shields.io/github/license/wwwqyhme/forme)
+[![stars](https://img.shields.io/github/stars/wwwqyhme/forme?style=social)](https://github.com/wwwqyhme/forme)
+[![PUB](https://img.shields.io/pub/v/forme?include_prereleases)](https://pub.dev/packages/forme)
+
 ## Screenshot
 
 ![screenshot](https://raw.githubusercontent.com/wwwqyhme/forme/main/forme_2.5.0_screenshot.gif)
