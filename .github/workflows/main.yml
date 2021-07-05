@@ -34,12 +34,11 @@ jobs:
         with:
           channel: ${{ matrix.channel }}
 
-      - name: Run Tests
+      - name: Run Analyze
         run: |
           flutter pub get
           flutter format --dry-run --set-exit-if-changed .
           flutter analyze --no-pub
-          flutter test --no-pub --coverage
       - name: Build Example
         run: |
           pushd example
