@@ -4,7 +4,7 @@ import 'base_page.dart';
 import 'package:forme/src/field/forme_radio_group.dart';
 
 class RadioTileFieldPage
-    extends BasePage<String, FormeRadioGroupModel<String>> {
+    extends BasePage<String?, FormeRadioGroupModel<String>> {
   @override
   Widget get body {
     return Column(

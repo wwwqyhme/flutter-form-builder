@@ -8,6 +8,30 @@ import 'forme_core.dart';
 ///used to compare two values
 typedef FormeValueComparator<T> = bool Function(T oldValue, T newValue);
 
+typedef FormeFieldInitialed<K extends FormeFieldController> = void Function(
+    K field);
+
+/// triggered when form field's value changed
+typedef FormeValueChanged<T, K extends FormeValueFieldController> = void
+    Function(K, T newValue);
+
+/// triggered when form field's focus changed
+typedef FormeFocusChanged<K extends FormeFieldController> = void Function(
+  K field,
+  bool hasFocus,
+);
+
+/// listen field errorText change
+typedef FormeErrorChanged<K extends FormeValueFieldController> = void Function(
+    K field, FormeValidateError? error);
+
+typedef FormeAsyncValidator<T, K extends FormeValueFieldController>
+    = Future<String?> Function(K field, T value);
+typedef FormeValidator<T, K extends FormeValueFieldController> = String?
+    Function(K field, T value);
+typedef FormeFieldSetter<T, K extends FormeValueFieldController> = void
+    Function(K field, T value);
+
 class FormeFieldListener<K extends FormeFieldController> {
   /// called after [FormeController] or [FormeFieldController] initialed
   ///
@@ -43,6 +67,11 @@ class FormeValueFieldListener<T, K extends FormeValueFieldController>
   final FormeAsyncValidator<T, K>? onAsyncValidate;
   final FormeFieldSetter<T, K>? onSaved;
 
+  /// this listener will be always triggered after async validate completed even though you called quietly validate on [FormeValueFieldController] manually
+  ///
+  /// rebuild field is allowed  here **BUT NOT RECOMMEND**
+  final void Function(K, FormeValidateError error)? onAsyncValidateComplete;
+
   FormeValueFieldListener({
     FormeFieldInitialed<K>? onInitialed,
     FormeFocusChanged<K>? onFocusChanged,
@@ -53,6 +82,7 @@ class FormeValueFieldListener<T, K extends FormeValueFieldController>
     this.onSaved,
     AutovalidateMode? autovalidateMode,
     Duration? asyncValidatorDebounce,
+    this.onAsyncValidateComplete,
   })  : this.autovalidateMode = autovalidateMode ?? AutovalidateMode.disabled,
         this.asyncValidatorDebounce =
             asyncValidatorDebounce ?? Duration(milliseconds: 500),
@@ -61,30 +91,6 @@ class FormeValueFieldListener<T, K extends FormeValueFieldController>
           onFocusChanged: onFocusChanged,
         );
 }
-
-typedef FormeFieldInitialed<K extends FormeFieldController> = void Function(
-    K field);
-
-/// triggered when form field's value changed
-typedef FormeValueChanged<T, K extends FormeValueFieldController> = void
-    Function(K, T newValue);
-
-/// triggered when form field's focus changed
-typedef FormeFocusChanged<K extends FormeFieldController> = void Function(
-  K field,
-  bool hasFocus,
-);
-
-/// listen field errorText change
-typedef FormeErrorChanged<K extends FormeValueFieldController> = void Function(
-    K field, FormeValidateError? error);
-
-typedef FormeAsyncValidator<T, K extends FormeValueFieldController>
-    = Future<String?> Function(K field, T value);
-typedef FormeValidator<T, K extends FormeValueFieldController> = String?
-    Function(K field, T value);
-typedef FormeFieldSetter<T, K extends FormeValueFieldController> = void
-    Function(K field, T value);
 
 abstract class FormeDecoratorBuilder<T> {
   Widget build(
@@ -161,6 +167,14 @@ class CommonField<E extends FormeModel>
   CommonFieldState<E> createState() => CommonFieldState();
 }
 
+class CommonFieldState<E extends FormeModel>
+    extends BaseCommonFieldState<E, FormeFieldController<E>> {
+  @override
+  FormeFieldController<E> createFormeFieldController() {
+    return defaultFormeFieldController();
+  }
+}
+
 abstract class BaseValueField<T, E extends FormeModel,
         K extends FormeValueFieldController<T, E>> extends StatefulWidget
     with StatefulField<E, K> {
@@ -228,6 +242,14 @@ class ValueField<T, E extends FormeModel>
 
   @override
   ValueFieldState<T, E> createState() => ValueFieldState();
+}
+
+class ValueFieldState<T, E extends FormeModel>
+    extends BaseValueFieldState<T, E, FormeValueFieldController<T, E>> {
+  @override
+  FormeValueFieldController<T, E> createFormeFieldController() {
+    return defaultFormeValueFieldController();
+  }
 }
 
 class SimpleValueField<T> extends ValueField<T, FormeEmptyModel> {

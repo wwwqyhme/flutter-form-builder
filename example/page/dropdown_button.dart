@@ -3,7 +3,7 @@ import 'package:forme/forme.dart';
 import 'base_page.dart';
 
 class DropdownButtonFieldPage
-    extends BasePage<String, FormeDropdownButtonModel> {
+    extends BasePage<String?, FormeDropdownButtonModel> {
   @override
   Widget get body {
     return Column(

@@ -141,6 +141,8 @@ class _FormeState extends State<Forme> {
   final List<AbstractFieldState> states = [];
   late final _FormeController controller;
 
+  Map<String, dynamic> get initialValue => widget.initialValue;
+
   bool? _readOnly;
   bool? _quietlyValidate;
 
@@ -215,6 +217,15 @@ class _FormeState extends State<Forme> {
   void unregisterField(AbstractFieldState state) {
     states.remove(state);
   }
+
+  Iterable<FormeValueFieldController> get valueFieldControllers =>
+      valueFieldStates.map((e) => e.controller);
+
+  Iterable<BaseValueFieldState> get valueFieldStates {
+    return states
+        .where((element) => element is BaseValueFieldState)
+        .map((e) => e as BaseValueFieldState);
+  }
 }
 
 class _InheritedFormScope extends InheritedWidget {
@@ -241,9 +252,8 @@ class _FormScope {
   FormeController get formeController => state.controller;
   bool get readOnly => state.readOnly;
   bool get quietlyValidate => state.quietlyValidate;
-  dynamic getInitialValue(String name) => state.widget.initialValue[name];
-  bool hasInitialValue(String name) =>
-      state.widget.initialValue.containsKey(name);
+  dynamic getInitialValue(String name) => state.initialValue[name];
+  bool hasInitialValue(String name) => state.initialValue.containsKey(name);
 
   void registerField(AbstractFieldState state) {
     this.state.registerField(state);
@@ -467,14 +477,6 @@ abstract class BaseCommonFieldState<E extends FormeModel,
   }
 }
 
-class CommonFieldState<E extends FormeModel>
-    extends BaseCommonFieldState<E, FormeFieldController<E>> {
-  @override
-  FormeFieldController<E> createFormeFieldController() {
-    return defaultFormeFieldController();
-  }
-}
-
 /// this State is only used for [ValueField]
 abstract class BaseValueFieldState<T, E extends FormeModel,
         K extends FormeValueFieldController<T, E>>
@@ -493,7 +495,6 @@ abstract class BaseValueFieldState<T, E extends FormeModel,
   bool _hasInteractedByUser = false;
   int _validateGen = 0;
   late T _value;
-
   T get value => _value;
   T? get oldValue => _oldValue;
 
@@ -552,8 +553,8 @@ abstract class BaseValueFieldState<T, E extends FormeModel,
         _hasInteractedByUser = true;
         _value = newValue;
         _oldValue = oldValue;
-        _valueNotifier.value = newValue;
       });
+      _valueNotifier.value = newValue;
     }
   }
 
@@ -611,16 +612,17 @@ abstract class BaseValueFieldState<T, E extends FormeModel,
   @protected
   void onErrorChanged(FormeValidateError? error) {}
 
+  AutovalidateMode get autovalidateMode =>
+      widget.listener?.autovalidateMode ?? AutovalidateMode.disabled;
+
   @override
   @mustCallSuper
   Widget build(BuildContext context) {
     bool needValidate = _hasAnyValidator &&
         widget.enabled &&
-        ((widget.listener!.autovalidateMode == AutovalidateMode.always) ||
-            (widget.listener!.autovalidateMode ==
-                    AutovalidateMode.onUserInteraction &&
+        ((autovalidateMode == AutovalidateMode.always) ||
+            (autovalidateMode == AutovalidateMode.onUserInteraction &&
                 _hasInteractedByUser));
-
     if (needValidate) {
       _validate();
     }
@@ -673,22 +675,28 @@ abstract class BaseValueFieldState<T, E extends FormeModel,
       _asyncValidatorDebounce?.cancel();
       _asyncValidatorDebounce =
           Timer(widget.listener!.asyncValidatorDebounce, () {
-        FormeValidateState? state;
-        String? errorText;
+        late FormeValidateError error;
         widget.listener!.onAsyncValidate!(controller, value).then((text) {
-          state = text == null
-              ? FormeValidateState.valid
-              : FormeValidateState.invalid;
-          errorText = text;
-          return errorText;
+          error = FormeValidateError(
+              text,
+              text == null
+                  ? FormeValidateState.valid
+                  : FormeValidateState.invalid);
+        }).onError((_error, stackTrace) {
+          debugPrintStack(stackTrace: stackTrace);
+          error = FormeValidateError(
+            null,
+            FormeValidateState.fail,
+            error: _error,
+          );
         }).whenComplete(() {
           if (mounted && gen == _validateGen) {
             setState(() {
-              _error = FormeValidateError(
-                  errorText, state == null ? FormeValidateState.fail : state!);
+              _error = error;
               _ignoreValidate = true;
             });
-            _errorNotifier.value = _error;
+            _errorNotifier.value = error;
+            widget.listener?.onAsyncValidateComplete?.call(controller, error);
           }
         });
       });
@@ -725,10 +733,10 @@ abstract class BaseValueFieldState<T, E extends FormeModel,
       return !quietly && gen == _validateGen && mounted;
     }
 
-    void notify(String? errorText, FormeValidateState state) {
+    void notify(FormeValidateError error) {
       if (needNotify()) {
         setState(() {
-          _error = FormeValidateError(errorText, state);
+          _error = error;
         });
         _errorNotifier.value = _error;
       }
@@ -737,45 +745,40 @@ abstract class BaseValueFieldState<T, E extends FormeModel,
     if (_hasValidator) {
       String? errorText = widget.listener!.onValidate!(controller, value);
       if (errorText != null || !_hasAsyncValidator) {
-        notify(
+        notify(FormeValidateError(
             errorText,
             errorText == null
                 ? FormeValidateState.valid
-                : FormeValidateState.invalid);
+                : FormeValidateState.invalid));
         return Future.delayed(Duration.zero, () => errorText);
       }
     }
 
     if (_hasAsyncValidator) {
       if (!quietly) {
-        notify(null, FormeValidateState.validating);
+        notify(FormeValidateError(null, FormeValidateState.validating));
       }
-      FormeValidateState? state;
-      String? errorText;
+
+      late FormeValidateError error;
       return widget.listener!.onAsyncValidate!(controller, value).then((text) {
-        state = text == null
-            ? FormeValidateState.valid
-            : FormeValidateState.invalid;
-        errorText = text;
-        return errorText;
+        error = FormeValidateError(
+            text,
+            text == null
+                ? FormeValidateState.valid
+                : FormeValidateState.invalid);
+      }).onError((_error, stackTrace) {
+        debugPrintStack(stackTrace: stackTrace);
+        error =
+            FormeValidateError(null, FormeValidateState.fail, error: _error);
       }).whenComplete(() {
-        if (needNotify()) {
-          notify(errorText, state == null ? FormeValidateState.fail : state!);
-        }
+        notify(error);
+        widget.listener?.onAsyncValidateComplete?.call(controller, error);
       });
     }
   }
 
   void save() {
     widget.listener?.onSaved?.call(controller, value);
-  }
-}
-
-class ValueFieldState<T, E extends FormeModel>
-    extends BaseValueFieldState<T, E, FormeValueFieldController<T, E>> {
-  @override
-  FormeValueFieldController<T, E> createFormeFieldController() {
-    return _FormeValueFieldController(this, _FormeFieldController(this));
   }
 }
 
@@ -818,7 +821,7 @@ class _FormeController extends FormeController {
   @override
   Map<String, dynamic> get data {
     Map<String, dynamic> map = {};
-    valueFieldControllers.forEach((element) {
+    state.valueFieldControllers.forEach((element) {
       String name = element.name;
       dynamic value = element.value;
       map[name] = value;
@@ -834,7 +837,7 @@ class _FormeController extends FormeController {
   @override
   Map<FormeValueFieldController, String> get errors {
     Map<FormeValueFieldController, String> errorMap = {};
-    for (FormeValueFieldController controller in valueFieldControllers) {
+    for (FormeValueFieldController controller in state.valueFieldControllers) {
       String? errorText = controller.error?.text;
       if (errorText == null) continue;
       errorMap[controller] = errorText;
@@ -857,7 +860,7 @@ class _FormeController extends FormeController {
   Future<Map<FormeValueFieldController, String>> validate(
       {bool quietly = false}) {
     return Future.wait(
-            valueFieldControllers
+            state.valueFieldControllers
                 .map((controller) {
                   Future<String?>? future =
                       controller.validate(quietly: quietly);
@@ -879,12 +882,12 @@ class _FormeController extends FormeController {
   }
 
   @override
-  void reset() => valueFieldControllers.forEach((element) {
+  void reset() => state.valueFieldControllers.forEach((element) {
         element.reset();
       });
 
   @override
-  void save() => valueFieldStates.forEach((element) {
+  void save() => state.valueFieldStates.forEach((element) {
         element.save();
       });
 
@@ -908,15 +911,6 @@ class _FormeController extends FormeController {
     for (AbstractFieldState state in state.states) {
       if (state.name == name) return state.controller as T;
     }
-  }
-
-  Iterable<FormeValueFieldController> get valueFieldControllers =>
-      valueFieldStates.map((e) => e.controller);
-
-  Iterable<BaseValueFieldState> get valueFieldStates {
-    return state.states
-        .where((element) => element is BaseValueFieldState)
-        .map((e) => e as BaseValueFieldState);
   }
 }
 

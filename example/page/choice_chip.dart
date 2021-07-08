@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:forme/forme.dart';
 import 'base_page.dart';
 
-class ChoiceChipFieldPage extends BasePage<String, FormeChoiceChipModel> {
+class ChoiceChipFieldPage extends BasePage<String?, FormeChoiceChipModel> {
   @override
   Widget get body {
     return Column(

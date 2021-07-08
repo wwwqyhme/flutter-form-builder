@@ -12,8 +12,6 @@ class FormeBottomSheetRenderData {
   final bool? isDismissible;
   final bool? enableDrag;
   final RouteSettings? routeSettings;
-
-  /// **you need to handle controller's dispose by yourself!!**
   final AnimationController? transitionAnimationController;
   final VoidCallback? beforeOpen;
   final VoidCallback? afterClose;
