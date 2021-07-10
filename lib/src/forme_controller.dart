@@ -347,12 +347,7 @@ abstract class FormeValueFieldControllerDelegate<T, E extends FormeModel>
 class FormeValidateError {
   final String? text;
   final FormeValidateState state;
-  final Object? error;
-  const FormeValidateError(
-    this.text,
-    this.state, {
-    this.error,
-  });
+  const FormeValidateError(this.text, this.state);
 
   bool get hasError => invalid;
   bool get valid => state == FormeValidateState.valid;

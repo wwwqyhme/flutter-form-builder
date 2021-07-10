@@ -27,6 +27,7 @@ cupertino_fields
 8. you can create a nonnull or nullable `ValueField` by `ValueField`'s generic type , eg:`ValueField<String>` is nonnull , but `ValueField<String?>` is nullable
 9. remove `clearValue` from `FormeValueFieldController`
 10. support `comparator` on `ValueField` , which used to compare values before update field's value
+11. support `autovalidateMode` on `Forme`
 
 ## Simple Usage
 
@@ -60,16 +61,6 @@ Widget forme = Forme(
 |onWillPop | false | `WillPopCallback` | Signature for a callback that verifies that it's OK to call Navigator.pop |
 | quietlyValidate | false | `bool` | if this attribute is true , will not display default error text|
 | onFocusChanged | false | `FormeFocusChanged` | listen form field's focus change |
-
-## Differences Between Form and Forme
-
-Forme is a form widget, but forme is not wrapped in a `Form`  , because I don't want to  refresh whole form after field's value changed or a validate performed , so it is a bit more complexable than `Form`.
-
-|    Difference      |   Form   |  Forme   |
-|  ----- |  ----- | ----- |
-| AutovalidateMode | support both Form and field| only support field   |
-| onChanged |   won't fired if value changed via `state.didChange` or `state.setValue`  | fired whenever field's value changed |
-|   rebuild strategy      |  when field value changed or perform a validation on  field , all form fields will be rebuilded   |  only rebuild field that value changed or validated |
 
 ## Forme Fields
 
@@ -121,7 +112,7 @@ Forme is a form widget, but forme is not wrapped in a `Form`  , because I don't 
 | FormeAsnycAutocompleteText | T | true |
 | FormeAutocompleteText | T | true |
 
-## fields from other package
+## fields from other packages
 
 1. [forme_cupertino_fields](https://pub.dev/packages/forme_cupertino_fields) cupertino style fields
 
@@ -288,7 +279,7 @@ when you use validators from `FormeValidates` , you must specific at least one e
 async validator is supported after Forme 2.5.0 , you can specific an `onAsyncValidate` on `ValueField`'s listener , the unique difference
 between `onValidate` and `onAsyncValidate` is `onAsyncValidate` return a `Future<String>` and `onValidate` return a `String`
 
-#### when perform a asyncValidator
+#### when to perform a asyncValidator
 
 if `ValueField.autovalidateMode` is `AutovalidateMode.disabled` , asyncValidator will never be performed unless you call `validate` from `FormeValueFieldController` manually.
 

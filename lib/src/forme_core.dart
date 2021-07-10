@@ -121,6 +121,16 @@ class Forme extends StatefulWidget {
   /// [FormeValueFieldController.errorText] will return null
   final bool quietlyValidate;
 
+  /// autovalidateMode
+  ///
+  /// if mode is [AutovalidateMode.onUserInteraction] , will validate and rebuild all fields which has a validator
+  /// after field was interacted by user
+  /// **if user changed field's value manually via [FormeValueFieldController.value] or changed field's model via [FormeFieldController.model] or [FormeFieldController.updateModel] ,
+  /// will also be regarded as interacted by user**
+  ///
+  /// if mode is [AutovalidateMode.always] , will revalidated all value fields after called reset
+  final AutovalidateMode autovalidateMode;
+
   Forme({
     FormeKey? key,
     this.readOnly = false,
@@ -131,7 +141,9 @@ class Forme extends StatefulWidget {
     this.onWillPop,
     this.quietlyValidate = false,
     this.onFocusChanged,
-  }) : super(key: key);
+    AutovalidateMode? autovalidateMode,
+  })  : this.autovalidateMode = autovalidateMode ?? AutovalidateMode.disabled,
+        super(key: key);
 
   @override
   _FormeState createState() => _FormeState();
@@ -184,6 +196,20 @@ class _FormeState extends State<Forme> {
     super.dispose();
   }
 
+  void reset() {
+    bool alwaysValidate = widget.autovalidateMode == AutovalidateMode.always;
+    valueFieldStates.forEach((element) {
+      element.reset();
+      if (alwaysValidate) element._validate();
+    });
+  }
+
+  void save() {
+    valueFieldStates.forEach((element) {
+      element.save();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
@@ -210,6 +236,21 @@ class _FormeState extends State<Forme> {
       state._errorNotifier.addListener(() {
         if (widget.onErrorChanged != null)
           widget.onErrorChanged!(state.controller, state._errorNotifier.value);
+      });
+      state._fieldDidChangedNotifier.addListener(() {
+        bool needValidate = false;
+        if (widget.autovalidateMode == AutovalidateMode.always) {
+          needValidate = true;
+        }
+        if (widget.autovalidateMode == AutovalidateMode.onUserInteraction) {
+          needValidate =
+              valueFieldStates.any((element) => element._hasInteractedByUser);
+        }
+        if (needValidate) {
+          valueFieldStates.forEach((element) {
+            element._validate();
+          });
+        }
       });
     }
   }
@@ -488,6 +529,10 @@ abstract class BaseValueFieldState<T, E extends FormeModel,
       FormeMountedValueNotifier(null, this);
   late final FormeMountedValueNotifier<T> _valueNotifier;
 
+  /// used to notify fieldDidChanged
+  /// used by [Forme]
+  final ValueNotifier<int> _fieldDidChangedNotifier = ValueNotifier(0);
+
   T? _oldValue;
   FormeValidateError? _error;
   Timer? _asyncValidatorDebounce;
@@ -554,6 +599,7 @@ abstract class BaseValueFieldState<T, E extends FormeModel,
         _value = newValue;
         _oldValue = oldValue;
       });
+      _fieldDidChangedNotifier.value++;
       _valueNotifier.value = newValue;
     }
   }
@@ -579,7 +625,10 @@ abstract class BaseValueFieldState<T, E extends FormeModel,
       _oldValue = oldValue;
       _value = initialValue;
     });
-    if (!compare(oldValue, initialValue)) _valueNotifier.value = initialValue;
+    _fieldDidChangedNotifier.value++;
+    if (!compare(oldValue, initialValue)) {
+      _valueNotifier.value = initialValue;
+    }
     _errorNotifier.value = null;
   }
 
@@ -591,6 +640,7 @@ abstract class BaseValueFieldState<T, E extends FormeModel,
   @override
   void dispose() {
     _asyncValidatorDebounce?.cancel();
+    _fieldDidChangedNotifier.dispose();
     _decoratorNotifier.dispose();
     _errorNotifier.dispose();
     _valueNotifier.dispose();
@@ -645,14 +695,16 @@ abstract class BaseValueFieldState<T, E extends FormeModel,
   }
 
   void _validate() {
+    _asyncValidatorDebounce?.cancel();
     if (_ignoreValidate) return;
+    if (!_hasAnyValidator) return;
 
     int gen = ++_validateGen;
 
     void notifyError(String? errorText, FormeValidateState state,
         {bool cancel = true}) {
       _error = FormeValidateError(errorText, state);
-      Future.delayed(Duration.zero, () {
+      WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
         if (mounted && gen == _validateGen) {
           _errorNotifier.value = _error;
         }
@@ -672,31 +724,23 @@ abstract class BaseValueFieldState<T, E extends FormeModel,
     }
     if (_hasAsyncValidator) {
       notifyError(null, FormeValidateState.validating);
-      _asyncValidatorDebounce?.cancel();
       _asyncValidatorDebounce =
           Timer(widget.listener!.asyncValidatorDebounce, () {
-        late FormeValidateError error;
+        FormeValidateError? error;
         widget.listener!.onAsyncValidate!(controller, value).then((text) {
           error = FormeValidateError(
               text,
               text == null
                   ? FormeValidateState.valid
                   : FormeValidateState.invalid);
-        }).onError((_error, stackTrace) {
-          debugPrintStack(stackTrace: stackTrace);
-          error = FormeValidateError(
-            null,
-            FormeValidateState.fail,
-            error: _error,
-          );
         }).whenComplete(() {
           if (mounted && gen == _validateGen) {
             setState(() {
-              _error = error;
+              _error =
+                  error ?? FormeValidateError(null, FormeValidateState.fail);
               _ignoreValidate = true;
             });
-            _errorNotifier.value = error;
-            widget.listener?.onAsyncValidateComplete?.call(controller, error);
+            _errorNotifier.value = _error;
           }
         });
       });
@@ -706,7 +750,9 @@ abstract class BaseValueFieldState<T, E extends FormeModel,
   @override
   _updateModel(E _model) {
     T oldValue = _value;
+    _hasInteractedByUser = true;
     super._updateModel(_model);
+    _fieldDidChangedNotifier.value++;
     if (!compare(oldValue, _value)) {
       _oldValue = oldValue;
       _valueNotifier.value = _value;
@@ -716,7 +762,9 @@ abstract class BaseValueFieldState<T, E extends FormeModel,
   @override
   _setModel(E _model) {
     T oldValue = _value;
+    _hasInteractedByUser = true;
     super._setModel(_model);
+    _fieldDidChangedNotifier.value++;
     if (!compare(oldValue, _value)) {
       _oldValue = oldValue;
       _valueNotifier.value = _value;
@@ -759,20 +807,16 @@ abstract class BaseValueFieldState<T, E extends FormeModel,
         notify(FormeValidateError(null, FormeValidateState.validating));
       }
 
-      late FormeValidateError error;
+      FormeValidateError? error;
       return widget.listener!.onAsyncValidate!(controller, value).then((text) {
         error = FormeValidateError(
             text,
             text == null
                 ? FormeValidateState.valid
                 : FormeValidateState.invalid);
-      }).onError((_error, stackTrace) {
-        debugPrintStack(stackTrace: stackTrace);
-        error =
-            FormeValidateError(null, FormeValidateState.fail, error: _error);
       }).whenComplete(() {
-        notify(error);
-        widget.listener?.onAsyncValidateComplete?.call(controller, error);
+        error ??= FormeValidateError(null, FormeValidateState.fail);
+        notify(error!);
       });
     }
   }
@@ -882,14 +926,10 @@ class _FormeController extends FormeController {
   }
 
   @override
-  void reset() => state.valueFieldControllers.forEach((element) {
-        element.reset();
-      });
+  void reset() => state.reset();
 
   @override
-  void save() => state.valueFieldStates.forEach((element) {
-        element.save();
-      });
+  void save() => state.save();
 
   @override
   T valueField<T extends FormeValueFieldController>(String name) =>

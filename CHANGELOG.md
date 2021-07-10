@@ -7,6 +7,7 @@
 5. `ValueField` is not a `FormField` any more
 6. you can create a nonnull or nullable `ValueField` by `ValueField`'s generic type , eg:`ValueField<String>` is nonnull , but `ValueField<String?>` is nullable
 7. remove `clearValue` from `FormeValueFieldController`
+8. support 'autovalidateMode' on `Forme`
 
 ## 2.1.2
 

@@ -63,14 +63,9 @@ class FormeValueFieldListener<T, K extends FormeValueFieldController>
 
   /// used to perform an async validate
   ///
-  /// if you specific both asyncValidator and validator , asyncValidator will only worked after validator validate success
+  /// if you specific both asyncValidator and validator , asyncValidator will only worked after validator passed
   final FormeAsyncValidator<T, K>? onAsyncValidate;
   final FormeFieldSetter<T, K>? onSaved;
-
-  /// this listener will be always triggered after async validate completed even though you called quietly validate on [FormeValueFieldController] manually
-  ///
-  /// rebuild field is allowed  here **BUT NOT RECOMMEND**
-  final void Function(K, FormeValidateError error)? onAsyncValidateComplete;
 
   FormeValueFieldListener({
     FormeFieldInitialed<K>? onInitialed,
@@ -82,7 +77,6 @@ class FormeValueFieldListener<T, K extends FormeValueFieldController>
     this.onSaved,
     AutovalidateMode? autovalidateMode,
     Duration? asyncValidatorDebounce,
-    this.onAsyncValidateComplete,
   })  : this.autovalidateMode = autovalidateMode ?? AutovalidateMode.disabled,
         this.asyncValidatorDebounce =
             asyncValidatorDebounce ?? Duration(milliseconds: 500),

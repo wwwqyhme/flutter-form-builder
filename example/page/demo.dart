@@ -582,6 +582,7 @@ class _DemoPageState extends State<DemoPage> {
     return Forme(
       child: child,
       key: formKey,
+      autovalidateMode: AutovalidateMode.onUserInteraction,
       onValueChanged: (a, b) {
         print(
             '${a.name}\'s value changed ... value: $b ... old value: ${a.oldValue}');
