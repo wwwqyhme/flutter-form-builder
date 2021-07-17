@@ -1,3 +1,11 @@
+## 2.5.1
+
+1. add `autovalidateByOrder` on `Forme` ,support validate form fields by order  , and stop validate further if validate failed
+2. add a nullable attribute `order` on `BaseValueField`
+3. `Future<Map<FormeValueFieldController, String>> validate({bool quietly = false})` changed to `  Future<FormeValidateSnapshot> validate({bool quietly = false, Set<String> names = const {}})`
+4. ` Future<String?>? validate({bool quietly = false})` changed to `Future<FormeFieldValidateSnapshot<T>> validate({bool quietly = false})`
+5. add `isValueChanged` method on `FormeController` , used to check whether form data changed after initialed
+
 ## 2.5.0
 
 1. remove `onValueChanged`,`onErrorChanged`,`onFocusChanged`,`onInitialed`,`validator`,`autovalidateMode` on `Field` , they are moved to `FormeFieldListener` , `validator` is renamed to `onValidate` 

@@ -61,6 +61,8 @@ Widget forme = Forme(
 |onWillPop | false | `WillPopCallback` | Signature for a callback that verifies that it's OK to call Navigator.pop |
 | quietlyValidate | false | `bool` | if this attribute is true , will not display default error text|
 | onFocusChanged | false | `FormeFocusChanged` | listen form field's focus change |
+| autovalidateMode| false | `AutovalidateMode` | auto validate form mode |
+| autovalidateByOrder | false | `bool` | whether auto validate form by order |
 
 ## Forme Fields
 
@@ -89,6 +91,7 @@ Widget forme = Forme(
 | --- | --- | --- | --- |
 | decoratorBuilder | false | `FormeDecoratorBuilder` | used to decorate a field |
 | listener | false | `FormeValueFieldListenable` |  user to listen `onValueChanged`,`onErrorChanged`,`onValidate`,`onAsyncValidate`,`onSaved`|
+| order | false | int | field order |
 
 ### currently supported fields
 
@@ -334,7 +337,8 @@ Map<String, dynamic> data = formeKey.data;
 **since 2.5.0 , this method will return a Future ranther than a Map** 
 
 ``` Dart
-Future<Map<FormeValueFieldController,String>> errorsFuture = formKey.validate({bool quietly = false});
+Future<FormeValidateSnapshot> future = formKey.validate({bool quietly = false,Set<String> names = const {}
+});
 ```
 
 ### set form data
@@ -365,6 +369,18 @@ bool quietlyValidate = formKey.quietlyValidate;
 
 ``` Dart
 formeKey.quieltyValidate = bool quietlyValidate;
+```
+
+### is value changed after initialed
+
+``` Dart
+bool isChanged = formeKey.isValueChanged
+```
+
+### get all field controllers
+
+``` Dart
+List<FormeFieldController> controllers = formeKey.controllers;
 ```
 
 ## Forme Field Methods
@@ -484,7 +500,7 @@ valueField.reset();
 **since 2.5.0 , this method will return a Future ranther than a String** 
 
 ``` Dart
-Future<String?>? errorFuture = valueField.validate({bool quietly = false});
+Future<FormeFieldValidateSnapshot> future = valueField.validate({bool quietly = false});
 ```
 
 ### get error
@@ -515,6 +531,12 @@ ValueListenable<dynamic> valueListenable = valueField.valueListenable;
 
 ``` Dart
 dynamic value = valueField.oldValue;
+```
+
+### is value changed
+
+``` Dart
+bool isChanged = valueField.isValueChanged
 ```
 
 ## build your field
