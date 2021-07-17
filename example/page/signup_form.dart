@@ -233,7 +233,7 @@ class _SignUpScreenState extends State<SignupFormPage> {
                       valueListenable:
                           formeKey.valueField('accept').errorTextListenable,
                       builder: (context, a, b) {
-                        if (a != null && a.hasError)
+                        if (a != null && a.invalid)
                           return Text(
                             a.text!,
                             style: TextStyle(
@@ -296,12 +296,12 @@ class _SignUpScreenState extends State<SignupFormPage> {
             padding: MaterialStateProperty.all(EdgeInsets.all(0.0)),
           ),
           onPressed: () {
-            int i = 0;
             formeKey.validate().then((value) {
-              value.forEach((key, value) {
-                if (i == 0) key.requestFocus();
-                i++;
+              value.invalidFields.forEach((element) {
+                print(
+                    '${element.controller.name} ${element.isValueChangedDuringValidation}');
               });
+              value.firstInvalidField?.controller.requestFocus();
             });
           },
           child: Container(
@@ -492,7 +492,7 @@ class CustomTextField extends StatelessWidget {
                 onAsyncValidate: listener?.onAsyncValidate,
                 onErrorChanged: (m, a) {
                   InputBorder border;
-                  if (a == null || !a.hasError) {
+                  if (a == null || !a.invalid) {
                     border = OutlineInputBorder(
                         borderRadius: BorderRadius.circular(30.0),
                         borderSide: BorderSide.none);
@@ -580,7 +580,7 @@ class CustomTextField extends StatelessWidget {
                                     ),
                                   );
                                 } else
-                                  return errorText.hasError
+                                  return errorText.invalid
                                       ? const IconButton(
                                           onPressed: null,
                                           icon: const Icon(
@@ -612,7 +612,7 @@ class CustomTextField extends StatelessWidget {
                       valueListenable:
                           formeKey.valueField(name).errorTextListenable,
                       builder: (context, a, b) {
-                        return a == null || !a.hasError
+                        return a == null || !a.invalid
                             ? SizedBox()
                             : Text(a.text!,
                                 style: TextStyle(

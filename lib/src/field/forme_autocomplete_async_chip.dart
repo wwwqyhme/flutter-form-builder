@@ -18,7 +18,9 @@ class FormeAsnycAutocompleteChip<T extends Object> extends BaseValueField<
     InputDecoration? decoration,
     FormeValueFieldListener<List<T>, FormeAsyncAutocompleteChipController<T>>?
         listener,
+    int? order,
   }) : super(
+          order: order,
           listener: listener,
           decoratorBuilder: decoratorBuilder,
           key: key,

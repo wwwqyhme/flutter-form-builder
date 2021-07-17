@@ -15,7 +15,9 @@ class FormeDropdownButton<T extends Object>
     FormeValueFieldListener<T?,
             FormeValueFieldController<T?, FormeDropdownButtonModel<T>>>?
         listener,
+    int? order,
   }) : super(
+          order: order,
           listener: listener,
           key: key,
           decoratorBuilder: decoratorBuilder ??

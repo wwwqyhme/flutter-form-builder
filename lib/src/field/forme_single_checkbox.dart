@@ -11,7 +11,9 @@ class FormeSingleCheckbox extends ValueField<bool, FormeSingleCheckboxModel> {
     FormeValueFieldListener<bool,
             FormeValueFieldController<bool, FormeSingleCheckboxModel>>?
         listener,
+    int? order,
   }) : super(
+          order: order,
           listener: listener,
           key: key,
           model: model ?? FormeSingleCheckboxModel(),

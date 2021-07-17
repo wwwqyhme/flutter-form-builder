@@ -21,7 +21,9 @@ class FormeDateTimeField
     FormeValueFieldListener<DateTime?,
             FormeValueFieldController<DateTime?, FormeDateTimeFieldModel>>?
         listener,
+    int? order,
   }) : super(
+          order: order,
           listener: listener,
           decoratorBuilder: decoratorBuilder,
           key: key,

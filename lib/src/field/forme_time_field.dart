@@ -17,7 +17,9 @@ class FormeTimeField extends ValueField<TimeOfDay?, FormeTimeFieldModel> {
     FormeValueFieldListener<TimeOfDay?,
             FormeValueFieldController<TimeOfDay?, FormeTimeFieldModel>>?
         listener,
+    int? order,
   }) : super(
+          order: order,
           listener: listener,
           key: key,
           decoratorBuilder: decoratorBuilder,

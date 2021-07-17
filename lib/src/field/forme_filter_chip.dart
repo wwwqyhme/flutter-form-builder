@@ -67,7 +67,9 @@ class FormeFilterChip<T extends Object>
     FormeValueFieldListener<List<T>,
             FormeValueFieldController<List<T>, FormeFilterChipModel<T>>>?
         listener,
+    int? order,
   }) : super(
+          order: order,
           listener: listener,
           decoratorBuilder: decoratorBuilder ??
               (decoration == null

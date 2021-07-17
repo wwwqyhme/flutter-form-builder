@@ -18,7 +18,9 @@ class FormeAsnycAutocompleteText<T extends Object> extends BaseValueField<
     int? maxLines = 1,
     FormeValueFieldListener<T, FormeAsyncAutocompleteTextController<T>>?
         listener,
+    int? order,
   }) : super(
+          order: order,
           listener: listener,
           decoratorBuilder: decoratorBuilder,
           key: key,

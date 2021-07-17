@@ -15,7 +15,9 @@ class FormeChoiceChip<T extends Object>
     FormeValueFieldListener<T,
             FormeValueFieldController<T?, FormeChoiceChipModel<T>>>?
         listener,
+    int? order,
   }) : super(
+          order: order,
           listener: listener,
           key: key,
           decoratorBuilder: decoratorBuilder ??

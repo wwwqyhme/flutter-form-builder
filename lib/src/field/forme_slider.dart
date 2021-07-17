@@ -19,7 +19,9 @@ class FormeSlider extends ValueField<double, FormeSliderModel> {
     FormeValueFieldListener<double,
             FormeValueFieldController<double, FormeSliderModel>>?
         listener,
+    int? order,
   }) : super(
+          order: order,
           listener: listener,
           decoratorBuilder: decoratorBuilder ??
               (decoration == null

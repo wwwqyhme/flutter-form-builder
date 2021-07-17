@@ -103,16 +103,15 @@ class _DemoPageState extends State<DemoPage> {
             child: Text('rebuild page')),
         TextButton(
             onPressed: () async {
-              Map<FormeValueFieldController, String> errorMap =
-                  await formKey.validate(quietly: false);
-              if (errorMap.isNotEmpty) {
-                MapEntry<FormeValueFieldController, String> entry =
-                    errorMap.entries.first;
+              FormeValidateSnapshot snapshots =
+                  (await formKey.validate(quietly: false));
+              if (!snapshots.isValid) {
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                  content: Text(entry.value),
+                  content: Text(snapshots.firstInvalidField!.value),
                   backgroundColor: Colors.red,
                 ));
-                FormeFieldController formeFieldController = entry.key;
+                FormeFieldController formeFieldController =
+                    snapshots.firstInvalidField!.controller;
                 formeFieldController.ensureVisible().then((value) {
                   formeFieldController.requestFocus();
                 });
@@ -582,6 +581,7 @@ class _DemoPageState extends State<DemoPage> {
     return Forme(
       child: child,
       key: formKey,
+      autovalidateByOrder: true,
       autovalidateMode: AutovalidateMode.onUserInteraction,
       onValueChanged: (a, b) {
         print(

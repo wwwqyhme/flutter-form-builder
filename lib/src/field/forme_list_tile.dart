@@ -50,7 +50,9 @@ class FormeListTile<T extends Object>
     FormeValueFieldListener<List<T>,
             FormeValueFieldController<List<T>, FormeListTileModel<T>>>?
         listener,
+    int? order,
   }) : super(
+            order: order,
             listener: listener,
             decoratorBuilder: decoratorBuilder ??
                 (decoration == null

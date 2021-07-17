@@ -20,5 +20,6 @@ export 'dropdown_button.dart';
 export 'async_autocomplete_text.dart';
 export 'autocomplete_text.dart';
 export 'async_autocomplete_chip.dart';
+export 'validate_by_order.dart';
 export 'signup_form.dart';
 export 'demo.dart';

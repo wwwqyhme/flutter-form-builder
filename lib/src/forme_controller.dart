@@ -36,8 +36,10 @@ abstract class FormeController {
   /// if [quietly] is true , this method will not update and display error though [Forme.quietlyValidate] is false
   ///
   /// **this method is depends on [Future.wait] and eagerError is true**
-  Future<Map<FormeValueFieldController, String>> validate(
-      {bool quietly = false});
+  ///
+  /// if [names] is not empty , will only validate these fields
+  Future<FormeValidateSnapshot> validate(
+      {bool quietly = false, Set<String> names});
 
   /// set forme data
   set data(Map<String, dynamic> data);
@@ -59,6 +61,16 @@ abstract class FormeController {
   ///
   /// **call this method (if Forme's quietlyValidate is false) if you want to display error by a custom way**
   set quietlyValidate(bool quietlyValidate);
+
+  /// whether form' value changed after initialized
+  ///
+  /// this method is relay on [BaseValueField.initialValue] and [Forme.initialValue]
+  ///
+  /// **comparator from [BaseValueField.comparator] is used to compare two values **
+  bool get isValueChanged;
+
+  /// get all registered controllers
+  List<FormeFieldController> get controllers;
 }
 
 /// used to control form field
@@ -168,7 +180,7 @@ abstract class FormeValueFieldController<T, E extends FormeModel>
   /// validate field , return errorText
   ///
   /// if [quietly] ,will not rebuild field and update and display error Text
-  Future<String?>? validate({bool quietly = false});
+  Future<FormeFieldValidateSnapshot<T>> validate({bool quietly = false});
 
   /// reset field
   ///
@@ -233,6 +245,13 @@ abstract class FormeValueFieldController<T, E extends FormeModel>
   ///
   /// **after field's value changed , you can use this method to get old value**
   T? get oldValue;
+
+  /// whether field's value changed after initialized
+  ///
+  /// this method is relay on [BaseValueField.initialValue] and [Forme.initialValue]
+  ///
+  /// the `comparator` from [BaseValueField.comparator] is used to compare value
+  bool get isValueChanged;
 
   static T of<T extends FormeValueFieldController>(BuildContext context) {
     return FormeKey.getValueFieldByContext<T>(context);
@@ -318,7 +337,7 @@ abstract class FormeValueFieldControllerDelegate<T, E extends FormeModel>
   @override
   set value(T value) => delegate.value = value;
   @override
-  Future<String?>? validate({bool quietly = false}) =>
+  Future<FormeFieldValidateSnapshot<T>> validate({bool quietly = false}) =>
       delegate.validate(quietly: quietly);
   @override
   void reset() => delegate.reset();
@@ -334,6 +353,8 @@ abstract class FormeValueFieldControllerDelegate<T, E extends FormeModel>
   ValueListenable<T?> get valueListenable => delegate.valueListenable;
   @override
   T? get oldValue => delegate.oldValue;
+  @override
+  bool get isValueChanged => delegate.isValueChanged;
 }
 
 /// forme validate error
@@ -349,7 +370,6 @@ class FormeValidateError {
   final FormeValidateState state;
   const FormeValidateError(this.text, this.state);
 
-  bool get hasError => invalid;
   bool get valid => state == FormeValidateState.valid;
   bool get invalid => state == FormeValidateState.invalid;
   bool get validating => state == FormeValidateState.validating;

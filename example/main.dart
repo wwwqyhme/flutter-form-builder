@@ -157,6 +157,14 @@ class HomePage extends StatelessWidget {
               child: Text('FormeAsyncAutocompleteChip')),
           TextButton(
               onPressed: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => ValidateByOrderPage()));
+              },
+              child: Text('One By One Validate')),
+          TextButton(
+              onPressed: () {
                 Navigator.of(context).pushNamed('/signup');
               },
               child: Text('Signup')),

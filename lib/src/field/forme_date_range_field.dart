@@ -19,7 +19,9 @@ class FormeDateRangeField
             FormeValueFieldController<DateTimeRange?,
                 FormeDateRangeFieldModel>>?
         listener,
+    int? order,
   }) : super(
+          order: order,
           decoratorBuilder: decoratorBuilder,
           key: key,
           model: (model ?? FormeDateRangeFieldModel())

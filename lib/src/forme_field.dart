@@ -188,6 +188,11 @@ abstract class BaseValueField<T, E extends FormeModel,
 
   /// comparator is used to compare value changed
   final FormeValueComparator<T> comparator;
+
+  /// used to support [Forme.autovalidateByOrder]
+  ///
+  /// **if not specified  , will use the order registered to [Forme]**
+  final int? order;
   BaseValueField({
     Key? key,
     FormeValueComparator? comparator,
@@ -199,6 +204,7 @@ abstract class BaseValueField<T, E extends FormeModel,
     this.decoratorBuilder,
     required this.initialValue,
     this.listener,
+    this.order,
   })  : this.comparator = comparator ?? _comparator(),
         super(key: key);
 
@@ -222,7 +228,9 @@ class ValueField<T, E extends FormeModel>
     bool enabled = true,
     required T initialValue,
     FormeValueFieldListener<T, FormeValueFieldController<T, E>>? listener,
+    int? order,
   }) : super(
+          order: order,
           decoratorBuilder: decoratorBuilder,
           key: key,
           name: name,

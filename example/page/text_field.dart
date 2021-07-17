@@ -144,8 +144,9 @@ class TextFieldPage extends BasePage<String, FormeTextFieldModel> {
               ));
             }),
             builderButton('validate', (context) {
-              controller.validate(quietly: false)!.then((value) {
-                if (value != null) showError(context, value);
+              controller.validate(quietly: false).then((value) {
+                if (value.error?.invalid ?? false)
+                  showError(context, value.error!.text!);
               });
             }),
           ],

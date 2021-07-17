@@ -22,7 +22,9 @@ class FormeRangeSlider extends ValueField<RangeValues, FormeRangeSliderModel> {
     FormeValueFieldListener<RangeValues,
             FormeValueFieldController<RangeValues, FormeRangeSliderModel>>?
         listener,
+    int? order,
   }) : super(
+            order: order,
             listener: listener,
             decoratorBuilder: decoratorBuilder ??
                 (decoration == null

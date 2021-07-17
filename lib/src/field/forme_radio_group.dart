@@ -15,7 +15,9 @@ class FormeRadioGroup<T extends Object>
     FormeValueFieldListener<T?,
             FormeValueFieldController<T?, FormeRadioGroupModel<T>>>?
         listener,
+    int? order,
   }) : super(
+            order: order,
             listener: listener,
             decoratorBuilder: decoratorBuilder ??
                 (decoration == null
