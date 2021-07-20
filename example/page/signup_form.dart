@@ -301,7 +301,7 @@ class _SignUpScreenState extends State<SignupFormPage> {
                 print(
                     '${element.controller.name} ${element.isValueChangedDuringValidation}');
               });
-              value.firstInvalidField?.controller.requestFocus();
+              value.firstInvalidField?.controller.focusNode?.requestFocus();
             });
           },
           child: Container(

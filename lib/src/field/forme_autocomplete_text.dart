@@ -234,7 +234,7 @@ class _FormeAutocompleteTextState<T extends Object> extends BaseValueFieldState<
     if (current.optionsBuilder != null) {
       WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
         focusWhenUnFocused = true;
-        unfocus();
+        focusNode.unfocus();
       });
     }
   }

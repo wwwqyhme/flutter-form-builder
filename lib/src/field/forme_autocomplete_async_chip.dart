@@ -75,7 +75,7 @@ class FormeAsnycAutocompleteChip<T extends Object> extends BaseValueField<
                         .map((e) => (state.model.chipBuilder ??
                                 state.defaultChipBuilder)(state.context, e, () {
                               state.didChange(List.of(state.value)..remove(e));
-                              state.unfocus();
+                              state.focusNode.unfocus();
                             }))
                         .toList()),
               ],

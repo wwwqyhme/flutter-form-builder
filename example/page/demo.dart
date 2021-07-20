@@ -113,7 +113,7 @@ class _DemoPageState extends State<DemoPage> {
                 FormeFieldController formeFieldController =
                     snapshots.firstInvalidField!.controller;
                 formeFieldController.ensureVisible().then((value) {
-                  formeFieldController.requestFocus();
+                  formeFieldController.focusNode?.requestFocus();
                 });
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(

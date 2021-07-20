@@ -14,10 +14,22 @@ class ValidateByOrderPage<T, E extends FormeModel> extends StatelessWidget {
       body: Padding(
         padding: EdgeInsets.symmetric(horizontal: 20),
         child: Forme(
-          autovalidateMode: AutovalidateMode.onUserInteraction,
-          autovalidateByOrder: true,
+          // autovalidateMode: AutovalidateMode.onUserInteraction,
+          //     autovalidateByOrder: true,
           child: Column(
             children: [
+              Builder(builder: (context) {
+                return TextButton(
+                    onPressed: () {
+                      FormeKey.of(context)
+                          .validate(validateByOrder: true, clearError: true)
+                          .then((value) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('validate completed!')));
+                      });
+                    },
+                    child: Text('validate by order'));
+              }),
               FormeTextField(
                 name: 'username',
                 listener: FormeValueFieldListener(
@@ -40,19 +52,15 @@ class ValidateByOrderPage<T, E extends FormeModel> extends StatelessWidget {
                     labelText: 'username', hintText: 'input at least 10 chars'),
               ),
               FormeTextField(
-                order: 10,
                 name: 'password',
                 maxLines: 1,
                 model: FormeTextFieldModel(obscureText: true),
                 decoration: InputDecoration(labelText: 'password'),
                 listener: FormeValueFieldListener(
-                    onErrorChanged: (f, e) {
-                      print(e?.text);
-                    },
                     onValidate: FormeValidates.all([
-                      FormeValidates.notEmpty(),
-                      FormeValidates.size(min: 6),
-                    ], errorText: 'input at least 6 chars')),
+                  FormeValidates.notEmpty(),
+                  FormeValidates.size(min: 6),
+                ], errorText: 'input at least 6 chars')),
               ),
               FormeSlider(
                 name: 'age',

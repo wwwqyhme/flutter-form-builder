@@ -337,7 +337,9 @@ Map<String, dynamic> data = formeKey.data;
 **since 2.5.0 , this method will return a Future ranther than a Map** 
 
 ``` Dart
-Future<FormeValidateSnapshot> future = formKey.validate({bool quietly = false,Set<String> names = const {}
+Future<FormeValidateSnapshot> future = formKey.validate({bool quietly = false,Set<String> names = const {},
+bool clearError = false,
+bool validateByOrder = false,
 });
 ```
 

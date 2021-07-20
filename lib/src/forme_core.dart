@@ -56,9 +56,18 @@ class FormeKey extends LabeledGlobalKey<State> implements FormeController {
   bool hasField(String name) => _currentController.hasField(name);
 
   @override
-  Future<FormeValidateSnapshot> validate(
-          {bool quietly = false, Set<String> names = const {}}) =>
-      _currentController.validate(quietly: quietly, names: names);
+  Future<FormeValidateSnapshot> validate({
+    bool quietly = false,
+    Set<String> names = const {},
+    bool clearError = false,
+    bool validateByOrder = false,
+  }) =>
+      _currentController.validate(
+        quietly: quietly,
+        names: names,
+        validateByOrder: validateByOrder,
+        clearError: clearError,
+      );
 
   @override
   void reset() => _currentController.reset();
@@ -138,6 +147,9 @@ class Forme extends StatefulWidget {
   /// if mode is [AutovalidateMode.always] , will revalidated all value fields after called reset
   final AutovalidateMode autovalidateMode;
 
+  /// validated by field order , only one field will be validated at a time.
+  ///
+  /// will not continue if any field validation is not passed
   final bool autovalidateByOrder;
 
   Forme({
@@ -530,12 +542,6 @@ mixin AbstractFieldState<T extends StatefulField<E, K>, E extends FormeModel,
     _focusNode?.requestFocus();
   }
 
-  void unfocus({
-    UnfocusDisposition disposition = UnfocusDisposition.scope,
-  }) {
-    _focusNode?.unfocus(disposition: disposition);
-  }
-
   @override
   void didUpdateWidget(T oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -602,6 +608,9 @@ abstract class BaseValueFieldState<T, E extends FormeModel,
   T get initialValue => _formScope.hasInitialValue(name)
       ? _formScope.getInitialValue(name)
       : widget.initialValue;
+
+  AutovalidateMode get autovalidateMode =>
+      widget.listener?.autovalidateMode ?? AutovalidateMode.disabled;
 
   /// **when you want to init something that relies on initialValue,
   /// you should do that in [beforeInitiation] rather than in this method**
@@ -713,9 +722,6 @@ abstract class BaseValueFieldState<T, E extends FormeModel,
   @protected
   void onErrorChanged(FormeValidateError? error) {}
 
-  AutovalidateMode get autovalidateMode =>
-      widget.listener?.autovalidateMode ?? AutovalidateMode.disabled;
-
   bool get needValidate =>
       _hasAnyValidator &&
       widget.enabled &&
@@ -750,6 +756,14 @@ abstract class BaseValueFieldState<T, E extends FormeModel,
 
   bool get isValueChanged => !compare(initialValue, this.value);
 
+  _clearError() {
+    _validateGen++;
+    setState(() {
+      _error = null;
+    });
+    _errorNotifier.value = null;
+  }
+
   void _validate2(VoidCallback onValid) {
     _asyncValidatorDebounce?.cancel();
     if (_ignoreValidate) {
@@ -775,13 +789,18 @@ abstract class BaseValueFieldState<T, E extends FormeModel,
     if (_ignoreValidate || !_hasAnyValidator) return;
     int gen = ++_validateGen;
 
-    void notifyError(FormeValidateError error) {
-      _error = error;
+    void afterUpdateError() {
       if (_error!.valid) {
         _validateValidCallback?.call();
-      } else if (!error.validating) {
+      }
+      if (!_error!.validating) {
         _validateValidCallback = null;
       }
+    }
+
+    void notifyError(FormeValidateError error) {
+      _error = error;
+      afterUpdateError();
       WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
         _errorNotifier.value = _error;
       });
@@ -816,10 +835,7 @@ abstract class BaseValueFieldState<T, E extends FormeModel,
                   error ?? FormeValidateError(null, FormeValidateState.fail);
               _ignoreValidate = true;
             });
-            if (_error!.valid) {
-              _validateValidCallback?.call();
-              _validateValidCallback = null;
-            }
+            afterUpdateError();
             _errorNotifier.value = _error;
           }
         });
@@ -862,7 +878,7 @@ abstract class BaseValueFieldState<T, E extends FormeModel,
   Future<FormeFieldValidateSnapshot<T>> _performValidate(
       {bool quietly = false}) {
     T value = this.value;
-    if (!_hasValidator) {
+    if (!_hasAnyValidator) {
       return Future.delayed(Duration.zero,
           () => FormeFieldValidateSnapshot._(value, null, order, this));
     }
@@ -997,17 +1013,46 @@ class _FormeController extends FormeController {
       state.states.any((element) => element.name == name);
 
   @override
-  Future<FormeValidateSnapshot> validate(
-      {bool quietly = false, Set<String> names = const {}}) {
+  Future<FormeValidateSnapshot> validate({
+    bool quietly = false,
+    Set<String> names = const {},
+    bool clearError = false,
+    bool validateByOrder = false,
+  }) {
+    List<BaseValueFieldState> states = (state.valueFieldStates
+            .where((element) =>
+                element._hasAnyValidator &&
+                (names.isEmpty ? true : names.contains(element.name)))
+            .toList()
+              ..sort((a, b) => a.order.compareTo(b.order)))
+        .toList();
+    if (states.isEmpty)
+      return Future.delayed(Duration.zero, () => FormeValidateSnapshot._([]));
+    if (clearError)
+      states.forEach((element) {
+        element._clearError();
+      });
+    if (validateByOrder) return _validateByOrder(states, quietly);
     return Future.wait(
-            state.valueFieldControllers
-                .where((element) =>
-                    names.isEmpty ? true : names.contains(element.name))
-                .map((controller) => controller.validate(quietly: quietly)),
+            states.map((state) => state._performValidate(quietly: quietly)),
             eagerError: true)
         .then((value) {
       value.sort((a, b) => a._order.compareTo(b._order));
       return FormeValidateSnapshot._(value);
+    });
+  }
+
+  Future<FormeValidateSnapshot> _validateByOrder(
+      List<BaseValueFieldState> states, bool quietly,
+      {int index = 0, List<FormeFieldValidateSnapshot> list = const []}) {
+    int length = controllers.length;
+    list = List.of(list);
+    return states[index]._performValidate(quietly: quietly).then((value) {
+      list.add(value);
+      if (value.invalid || index == length - 1) {
+        return FormeValidateSnapshot._(list);
+      }
+      return _validateByOrder(states, quietly, index: index + 1, list: list);
     });
   }
 
@@ -1084,20 +1129,10 @@ class _FormeFieldController<E extends FormeModel>
   FormeController get formeController => FormeKey.of(state.context);
 
   @override
-  bool get hasFocus => state._focusNode?.hasFocus ?? false;
+  FocusNode? get focusNode => state._focusNode;
 
   @override
   String get name => state.name;
-
-  @override
-  void requestFocus() => state.requestFocus();
-
-  @override
-  void unfocus({UnfocusDisposition disposition = UnfocusDisposition.scope}) =>
-      state.unfocus(disposition: disposition);
-
-  @override
-  void nextFocus() => state._focusNode?.nextFocus();
 
   @override
   void updateModel(E model) => state._updateModel(model);

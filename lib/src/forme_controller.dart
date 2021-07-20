@@ -35,11 +35,19 @@ abstract class FormeController {
   ///
   /// if [quietly] is true , this method will not update and display error though [Forme.quietlyValidate] is false
   ///
+  /// if [clearError] is true, will clear field's error before validate
+  ///
+  /// if [validateByOrder] is true, only one field will be validated at a time ! will not continue validate if any field validation not password or failed
+  ///
   /// **this method is depends on [Future.wait] and eagerError is true**
   ///
   /// if [names] is not empty , will only validate these fields
-  Future<FormeValidateSnapshot> validate(
-      {bool quietly = false, Set<String> names});
+  Future<FormeValidateSnapshot> validate({
+    bool quietly = false,
+    Set<String> names,
+    bool clearError = false,
+    bool validateByOrder = false,
+  });
 
   /// set forme data
   set data(Map<String, dynamic> data);
@@ -87,23 +95,12 @@ abstract class FormeFieldController<E extends FormeModel> {
   /// set readOnly
   set readOnly(bool readOnly);
 
-  // whether field is focused
-  bool get hasFocus;
-
-  /// request focus
+  /// get focus node
   ///
-  /// if current field don't have a focusNode or focusNode is unfocusable,this method will no effect
-  void requestFocus();
-
-  /// unfocus
+  /// maybe null if field does not request a focusnode yet
   ///
-  /// if current field don't have a focusNode or focusNode is unfocusable,this method will no effect
-  void unfocus({
-    UnfocusDisposition disposition = UnfocusDisposition.scope,
-  });
-
-  /// focus next
-  void nextFocus();
+  /// **don't dispose it by yourself!**
+  FocusNode? get focusNode;
 
   /// set state model on field
   ///
@@ -177,7 +174,7 @@ abstract class FormeValueFieldController<T, E extends FormeModel>
   /// set field value
   set value(T value);
 
-  /// validate field , return errorText
+  /// validate field
   ///
   /// if [quietly] ,will not rebuild field and update and display error Text
   Future<FormeFieldValidateSnapshot<T>> validate({bool quietly = false});
@@ -197,7 +194,7 @@ abstract class FormeValueFieldController<T, E extends FormeModel>
   /// 3. [FormeValidateError.state] is `validating` , means an async validation is in progress
   /// 4. [FormeValidateError.state] is `fail` , means an error is occurred when performing an async validation , but [Form ValidateError] will not include this error , you must handle it by yourself
   ///
-  /// **you still can get error text even though [Forme.quietlyValidate] is true**
+  /// **you can still get error text even though [Forme.quietlyValidate] is true**
   ///
   /// **value notifier is always be trigger before errorNotifier , so  when you want to get error in onValueChanged , you should call this method in [WidgetsBinding.instance.addPostFrameCallback]**
   FormeValidateError? get error;
@@ -309,14 +306,7 @@ abstract class FormeFieldControllerDelegate<E extends FormeModel>
         alignment: alignment,
       );
   @override
-  void requestFocus() => delegate.requestFocus();
-  @override
-  void unfocus({UnfocusDisposition disposition = UnfocusDisposition.scope}) =>
-      delegate.unfocus(disposition: disposition);
-  @override
-  void nextFocus() => delegate.nextFocus();
-  @override
-  bool get hasFocus => delegate.hasFocus;
+  FocusNode? get focusNode => delegate.focusNode;
   @override
   String get name => delegate.name;
   @override

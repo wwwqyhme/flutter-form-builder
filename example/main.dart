@@ -44,135 +44,152 @@ class HomePage extends StatelessWidget {
       ),
       body: ListView(
         children: [
-          TextButton(
-              onPressed: () {
-                Navigator.of(context).pushNamed('/textfield');
-              },
-              child: Text('FormeTextField')),
-          TextButton(
-              onPressed: () {
-                Navigator.of(context).pushNamed('/timefield');
-              },
-              child: Text('FormeTimeField')),
-          TextButton(
-              onPressed: () {
-                Navigator.of(context).pushNamed('/datetimefield');
-              },
-              child: Text('FormeDateTimeField')),
-          TextButton(
-              onPressed: () {
-                Navigator.of(context).pushNamed('/daterangefield');
-              },
-              child: Text('FormeDateRangeField')),
-          TextButton(
-              onPressed: () {
-                Navigator.of(context).pushNamed('/numberfield');
-              },
-              child: Text('FormeNumberField')),
-          TextButton(
-              onPressed: () {
-                Navigator.of(context).pushNamed('/dropdownbutton');
-              },
-              child: Text('FormeDropdown')),
-          TextButton(
-              onPressed: () {
-                Navigator.of(context).pushNamed('/choicechip');
-              },
-              child: Text('FormeChoiceChip')),
-          TextButton(
-              onPressed: () {
-                Navigator.of(context).pushNamed('/filterchip');
-              },
-              child: Text('FormeFilterChip')),
-          TextButton(
-              onPressed: () {
-                Navigator.of(context).pushNamed('/slider');
-              },
-              child: Text('FormeSlider')),
-          TextButton(
-              onPressed: () {
-                Navigator.of(context).pushNamed('/rangeslider');
-              },
-              child: Text('FormeRangeSlider')),
-          TextButton(
-              onPressed: () {
-                Navigator.of(context).pushNamed('/row');
-              },
-              child: Text('FormeRow')),
-          TextButton(
-              onPressed: () {
-                Navigator.of(context).pushNamed('/column');
-              },
-              child: Text('FormeColumn')),
-          TextButton(
-              onPressed: () {
-                Navigator.of(context).pushNamed('/radiotile');
-              },
-              child: Text('FormeRadioTile')),
-          TextButton(
-              onPressed: () {
-                Navigator.of(context).pushNamed('/checkboxtile');
-              },
-              child: Text('FormeCheckboxTile')),
-          TextButton(
-              onPressed: () {
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (context) => CheckboxPage()));
-              },
-              child: Text('FormeSingleCheckbox')),
-          TextButton(
-              onPressed: () {
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (context) => SwitchPage()));
-              },
-              child: Text('FormeSingleSwitch')),
-          TextButton(
-              onPressed: () {
-                Navigator.of(context).pushNamed('/switchtile');
-              },
-              child: Text('FormeSwitchTile')),
-          TextButton(
-              onPressed: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => AsyncAutocompleteText()));
-              },
-              child: Text('FormeAsyncAutocompleteText')),
-          TextButton(
-              onPressed: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => AutocompleteText()));
-              },
-              child: Text('FormeAutocompleteText')),
-          TextButton(
-              onPressed: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => AsyncAutocompleteChip()));
-              },
-              child: Text('FormeAsyncAutocompleteChip')),
-          TextButton(
-              onPressed: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => ValidateByOrderPage()));
-              },
-              child: Text('One By One Validate')),
-          TextButton(
-              onPressed: () {
-                Navigator.of(context).pushNamed('/signup');
-              },
-              child: Text('Signup')),
-          TextButton(
-              onPressed: () {
-                Navigator.of(context).pushNamed('/demo');
-              },
-              child: Text('demo')),
+          ExpansionTile(
+            title: Text('fields'),
+            children: [
+              TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pushNamed('/textfield');
+                  },
+                  child: Text('FormeTextField')),
+              TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pushNamed('/timefield');
+                  },
+                  child: Text('FormeTimeField')),
+              TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pushNamed('/datetimefield');
+                  },
+                  child: Text('FormeDateTimeField')),
+              TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pushNamed('/daterangefield');
+                  },
+                  child: Text('FormeDateRangeField')),
+              TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pushNamed('/numberfield');
+                  },
+                  child: Text('FormeNumberField')),
+              TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pushNamed('/dropdownbutton');
+                  },
+                  child: Text('FormeDropdown')),
+              TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pushNamed('/choicechip');
+                  },
+                  child: Text('FormeChoiceChip')),
+              TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pushNamed('/filterchip');
+                  },
+                  child: Text('FormeFilterChip')),
+              TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pushNamed('/slider');
+                  },
+                  child: Text('FormeSlider')),
+              TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pushNamed('/rangeslider');
+                  },
+                  child: Text('FormeRangeSlider')),
+              TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pushNamed('/row');
+                  },
+                  child: Text('FormeRow')),
+              TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pushNamed('/column');
+                  },
+                  child: Text('FormeColumn')),
+              TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pushNamed('/radiotile');
+                  },
+                  child: Text('FormeRadioTile')),
+              TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pushNamed('/checkboxtile');
+                  },
+                  child: Text('FormeCheckboxTile')),
+              TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => CheckboxPage()));
+                  },
+                  child: Text('FormeSingleCheckbox')),
+              TextButton(
+                  onPressed: () {
+                    Navigator.push(context,
+                        MaterialPageRoute(builder: (context) => SwitchPage()));
+                  },
+                  child: Text('FormeSingleSwitch')),
+              TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pushNamed('/switchtile');
+                  },
+                  child: Text('FormeSwitchTile')),
+              TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => AsyncAutocompleteText()));
+                  },
+                  child: Text('FormeAsyncAutocompleteText')),
+              TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => AutocompleteText()));
+                  },
+                  child: Text('FormeAutocompleteText')),
+              TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => AsyncAutocompleteChip()));
+                  },
+                  child: Text('FormeAsyncAutocompleteChip')),
+            ],
+          ),
+          ExpansionTile(
+            title: Text('page'),
+            children: [
+              TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pushNamed('/signup');
+                  },
+                  child: Text('Signup')),
+              TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pushNamed('/demo');
+                  },
+                  child: Text('demo')),
+            ],
+          ),
+          ExpansionTile(
+            title: Text('validate'),
+            children: [
+              TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => ValidateByOrderPage()));
+                  },
+                  child: Text('validate by order')),
+            ],
+          ),
         ],
       ),
     );

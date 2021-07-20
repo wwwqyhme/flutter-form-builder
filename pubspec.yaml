@@ -1,6 +1,6 @@
 name: forme
-description: a powerful flutter form widget , for me,for you , renamed from form_builder
-version: 2.5.1
+description: a powerful flutter form widget , support async validation , renamed from form_builder
+version: 2.5.2
 homepage: https://github.com/wwwqyhme/forme
 
 environment:
