@@ -20,8 +20,9 @@ class FormeDateRangeField
                 FormeDateRangeFieldModel>>?
         listener,
     int? order,
+    bool quietlyValidate = false,
   }) : super(
-          order: order,
+          quietlyValidate: quietlyValidate,
           decoratorBuilder: decoratorBuilder,
           key: key,
           model: (model ?? FormeDateRangeFieldModel())

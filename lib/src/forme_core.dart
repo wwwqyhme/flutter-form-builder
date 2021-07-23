@@ -102,6 +102,10 @@ class FormeKey extends LabeledGlobalKey<State> implements FormeController {
   @override
   List<FormeFieldController<FormeModel>> get controllers =>
       _currentController.controllers;
+
+  @override
+  ValueListenable<FormeFieldController?> fieldListenable(String name) =>
+      _currentController.fieldListenable(name);
 }
 
 /// build your form !
@@ -174,6 +178,7 @@ class Forme extends StatefulWidget {
 class _FormeState extends State<Forme> {
   final List<AbstractFieldState> states = [];
   late final _FormeController controller;
+  final Map<String, ValueNotifier<FormeFieldController?>> fieldNotifiers = {};
 
   Map<String, dynamic> get initialValue => widget.initialValue;
   AutovalidateMode get autovalidateMode => widget.autovalidateMode;
@@ -216,6 +221,10 @@ class _FormeState extends State<Forme> {
 
   @override
   void dispose() {
+    fieldNotifiers.forEach((key, value) {
+      value.dispose();
+    });
+    fieldNotifiers.clear();
     super.dispose();
   }
 
@@ -226,13 +235,22 @@ class _FormeState extends State<Forme> {
     if (widget.autovalidateMode == AutovalidateMode.always) _validateForm();
   }
 
+  ValueNotifier<FormeFieldController?> fieldListenable(String name) {
+    FormeFieldController? controller;
+    states.where((element) => element.name == name).forEach((element) {
+      controller = element.controller;
+    });
+    return fieldNotifiers.putIfAbsent(
+        name, () => FormeMountedValueNotifier(controller, this));
+  }
+
   _validateForm() {
     if (widget.autovalidateByOrder) {
       List<BaseValueFieldState> valueFieldStates = this
           .valueFieldStates
           .where((element) => element._hasAnyValidator)
-          .toList();
-      valueFieldStates.sort((a, b) => a.order.compareTo(b.order));
+          .toList()
+            ..sort((a, b) => a.order.compareTo(b.order));
       if (valueFieldStates.isEmpty) return;
       _validateByOrder(valueFieldStates);
     } else {
@@ -298,10 +316,12 @@ class _FormeState extends State<Forme> {
         }
       });
     }
+    fieldNotifiers[state.name]?.value = state.controller;
   }
 
   void unregisterField(AbstractFieldState state) {
     states.remove(state);
+    fieldNotifiers[state.name]?.value = null;
   }
 
   Iterable<FormeValueFieldController> get valueFieldControllers =>
@@ -602,7 +622,10 @@ abstract class BaseValueFieldState<T, E extends FormeModel,
   bool get _hasAsyncValidator => widget.listener?.onAsyncValidate != null;
   bool get _hasAnyValidator => _hasValidator || _hasAsyncValidator;
 
-  String? get errorText => _formScope.quietlyValidate ? null : _error?.text;
+  String? get errorText =>
+      (_formScope.quietlyValidate || widget.quietlyValidate)
+          ? null
+          : _error?.text;
 
   /// get initialValue
   T get initialValue => _formScope.hasInitialValue(name)
@@ -1090,6 +1113,10 @@ class _FormeController extends FormeController {
   @override
   List<FormeFieldController<FormeModel>> get controllers =>
       state.states.map((e) => e.controller).toList();
+
+  @override
+  ValueListenable<FormeFieldController?> fieldListenable(String name) =>
+      _ValueListenable(state.fieldListenable(name));
 }
 
 class _FormeFieldController<E extends FormeModel>

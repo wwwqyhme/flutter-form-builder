@@ -79,6 +79,26 @@ abstract class FormeController {
 
   /// get all registered controllers
   List<FormeFieldController> get controllers;
+
+  /// listen when field initialed or disposed
+  ///
+  /// if [FormeFieldController] is null , means field is not initialed or has been disposed, otherwise means field is initialed
+  ///
+  ///  ```
+  ///   Forme(
+  ///     Builder((context){
+  ///       FormeKey.of(context).valueField('username') //will cause an error
+  ///     });
+  ///     ValueListenable<FormeFieldController?>(
+  ///       listenable:FormeKey.of(context).fieldListenable('username'),
+  ///       builder:(context,field,child) {
+  ///         if(field != null) // ok
+  ///       }
+  ///     )
+  ///     FormeTextField(name:'username')
+  ///   )
+  ///   ```
+  ValueListenable<FormeFieldController?> fieldListenable(String name);
 }
 
 /// used to control form field
@@ -348,12 +368,6 @@ abstract class FormeValueFieldControllerDelegate<T, E extends FormeModel>
 }
 
 /// forme validate error
-///
-/// if error is null , means not perform a validate yet (or reset)
-///
-/// if error is not null and text is null , means field is valid
-///
-/// if error is not null and text is not null , means field is not valid
 @immutable
 class FormeValidateError {
   final String? text;

@@ -19,7 +19,9 @@ class FormeAsnycAutocompleteText<T extends Object> extends BaseValueField<
     FormeValueFieldListener<T, FormeAsyncAutocompleteTextController<T>>?
         listener,
     int? order,
+    bool quietlyValidate = false,
   }) : super(
+          quietlyValidate: quietlyValidate,
           order: order,
           listener: listener,
           decoratorBuilder: decoratorBuilder,

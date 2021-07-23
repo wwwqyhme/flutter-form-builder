@@ -13,8 +13,9 @@ class FormeSingleSwitch extends ValueField<bool, FormeSingleSwitchModel> {
             FormeValueFieldController<bool, FormeSingleSwitchModel>>?
         listener,
     int? order,
+    bool quietlyValidate = false,
   }) : super(
-          order: order,
+          quietlyValidate: quietlyValidate,
           listener: listener,
           key: key,
           model: model ?? FormeSingleSwitchModel(),

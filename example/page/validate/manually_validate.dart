@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:forme/forme.dart';
 
-class ValidateByOrderPage<T, E extends FormeModel> extends StatelessWidget {
+class ManuallyValidatePage<T, E extends FormeModel> extends StatelessWidget {
   final FormeKey formKey = FormeKey();
 
   @override
@@ -9,7 +9,7 @@ class ValidateByOrderPage<T, E extends FormeModel> extends StatelessWidget {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
-        title: Text('Validate By Order'),
+        title: Text('manually validate'),
       ),
       body: Padding(
         padding: EdgeInsets.symmetric(horizontal: 20),
@@ -30,6 +30,18 @@ class ValidateByOrderPage<T, E extends FormeModel> extends StatelessWidget {
                     },
                     child: Text('validate by order'));
               }),
+              Builder(builder: (context) {
+                return TextButton(
+                    onPressed: () {
+                      FormeKey.of(context)
+                          .validate(clearError: true)
+                          .then((value) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('validate completed!')));
+                      });
+                    },
+                    child: Text('validate all'));
+              }),
               FormeTextField(
                 name: 'username',
                 listener: FormeValueFieldListener(
@@ -38,8 +50,6 @@ class ValidateByOrderPage<T, E extends FormeModel> extends StatelessWidget {
                       if (v.length < 10) return 'input at least 10 chars';
                     });
                   },
-                  onValidate: FormeValidates.size(
-                      min: 5, errorText: 'input at least 5 chars'),
                   onErrorChanged: (f, e) {
                     f.updateModel(FormeTextFieldModel(
                         decoration: InputDecoration(
@@ -57,10 +67,19 @@ class ValidateByOrderPage<T, E extends FormeModel> extends StatelessWidget {
                 model: FormeTextFieldModel(obscureText: true),
                 decoration: InputDecoration(labelText: 'password'),
                 listener: FormeValueFieldListener(
-                    onValidate: FormeValidates.all([
-                  FormeValidates.notEmpty(),
-                  FormeValidates.size(min: 6),
-                ], errorText: 'input at least 6 chars')),
+                  onErrorChanged: (f, e) {
+                    f.updateModel(FormeTextFieldModel(
+                        decoration: InputDecoration(
+                            helperText: e != null && e.validating
+                                ? 'async validating'
+                                : '')));
+                  },
+                  onAsyncValidate: (f, v) {
+                    return Future.delayed(Duration(milliseconds: 800), () {
+                      if (v.length < 10) return 'input at least 10 chars';
+                    });
+                  },
+                ),
               ),
               FormeSlider(
                 name: 'age',

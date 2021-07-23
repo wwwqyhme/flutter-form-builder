@@ -16,8 +16,9 @@ class FormeChoiceChip<T extends Object>
             FormeValueFieldController<T?, FormeChoiceChipModel<T>>>?
         listener,
     int? order,
+    bool quietlyValidate = false,
   }) : super(
-          order: order,
+          quietlyValidate: quietlyValidate,
           listener: listener,
           key: key,
           decoratorBuilder: decoratorBuilder ??

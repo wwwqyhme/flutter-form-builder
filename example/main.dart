@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:forme/page/validate/custom_error_display.dart';
 import 'page/page.dart';
 
 void main() {
@@ -10,7 +11,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'For Me For You',
+      title: 'Forme',
       home: HomePage(),
       routes: {
         '/textfield': (context) => TextFieldPage(),
@@ -185,9 +186,17 @@ class HomePage extends StatelessWidget {
                     Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => ValidateByOrderPage()));
+                            builder: (context) => ManuallyValidatePage()));
                   },
-                  child: Text('validate by order')),
+                  child: Text('manually validate')),
+              TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => CustomErrorDisplayPage()));
+                  },
+                  child: Text('custom error display')),
             ],
           ),
         ],

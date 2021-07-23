@@ -12,8 +12,9 @@ class FormeSingleCheckbox extends ValueField<bool, FormeSingleCheckboxModel> {
             FormeValueFieldController<bool, FormeSingleCheckboxModel>>?
         listener,
     int? order,
+    bool quietlyValidate = false,
   }) : super(
-          order: order,
+          quietlyValidate: quietlyValidate,
           listener: listener,
           key: key,
           model: model ?? FormeSingleCheckboxModel(),

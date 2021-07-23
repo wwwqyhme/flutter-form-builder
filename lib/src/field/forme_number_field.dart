@@ -17,8 +17,9 @@ class FormeNumberField extends ValueField<num?, FormeNumberFieldModel> {
             FormeValueFieldController<num?, FormeNumberFieldModel>>?
         listener,
     int? order,
+    bool quietlyValidate = false,
   }) : super(
-          order: order,
+          quietlyValidate: quietlyValidate,
           listener: listener,
           decoratorBuilder: decoratorBuilder,
           key: key,
