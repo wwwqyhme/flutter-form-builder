@@ -21,5 +21,6 @@ export 'field/async_autocomplete_text.dart';
 export 'field/autocomplete_text.dart';
 export 'field/async_autocomplete_chip.dart';
 export 'validate/manually_validate.dart';
+export 'validate/custom_error_display.dart';
 export 'signup_form.dart';
 export 'demo.dart';

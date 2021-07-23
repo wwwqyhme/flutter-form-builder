@@ -1,3 +1,8 @@
+## 2.5.3
+
+1. `BaseValueField` support `quietlyValidate`
+2. `FormeController` add `fieldListenable` method , used to listen field's initial and dispose
+
 ## 2.5.2
 
 1. `FormeController`'s `validate` method support `clearError` and `validateByOrder` params. if `clearError` is true , field error will be cleared before validate. if `validateByOrder` is true , will only validate one field at a time , and break validation chain  if any field validate not passed or failed

@@ -92,6 +92,7 @@ Widget forme = Forme(
 | decoratorBuilder | false | `FormeDecoratorBuilder` | used to decorate a field |
 | listener | false | `FormeValueFieldListenable` |  user to listen `onValueChanged`,`onErrorChanged`,`onValidate`,`onAsyncValidate`,`onSaved`|
 | order | false | int | field order |
+| quietlyValidate | false | `bool` | if this attribute is true , will not display default error text|
 
 ### currently supported fields
 
@@ -379,10 +380,16 @@ formeKey.quieltyValidate = bool quietlyValidate;
 bool isChanged = formeKey.isValueChanged
 ```
 
-### get all field controllers
+### get all field controllers (2.5.2)
 
 ``` Dart
 List<FormeFieldController> controllers = formeKey.controllers;
+```
+
+### get fieldListenable
+
+``` Dart
+ValueListenable<FormeFieldController> fieldListenable = formeKey.fieldListenable(String name);
 ```
 
 ## Forme Field Methods
