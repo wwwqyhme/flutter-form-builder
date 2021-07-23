@@ -51,7 +51,9 @@ class FormeListTile<T extends Object>
             FormeValueFieldController<List<T>, FormeListTileModel<T>>>?
         listener,
     int? order,
+    bool quietlyValidate = false,
   }) : super(
+            quietlyValidate: quietlyValidate,
             order: order,
             listener: listener,
             decoratorBuilder: decoratorBuilder ??

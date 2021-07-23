@@ -23,7 +23,9 @@ class FormeRangeSlider extends ValueField<RangeValues, FormeRangeSliderModel> {
             FormeValueFieldController<RangeValues, FormeRangeSliderModel>>?
         listener,
     int? order,
+    bool quietlyValidate = false,
   }) : super(
+            quietlyValidate: quietlyValidate,
             order: order,
             listener: listener,
             decoratorBuilder: decoratorBuilder ??
